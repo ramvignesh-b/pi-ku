@@ -1,0 +1,26 @@
+services:
+  db:
+    # postgres database
+    image: postgres:16-alpine
+    container_name: piku_db
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "${DB_PORT}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+
+  mailpit:
+    # email testing
+    image: axllent/mailpit
+    container_name: piku_mail
+    ports:
+      - "8025:8025" # Web UI
+      - "${EMAIL_PORT}:1025" # SMTP
+    restart: always
+
+volumes:
+  postgres_data:

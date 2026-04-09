@@ -1,0 +1,10 @@
+# Environment variables
+.env
+
+# Frontend
+node_modules/
+dist/
+.vite/
+
+# IDE
+.vscode/
