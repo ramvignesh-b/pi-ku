@@ -1,6 +1,8 @@
 from django.urls import path
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
+from users.views import ActivationView
+
 from .views import MeView, RegisterView
 
 urlpatterns = [
@@ -11,4 +13,6 @@ urlpatterns = [
     path("refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     # Get current user info
     path("me/", MeView.as_view(), name="me"),
+    # Activate user account
+    path("activate/<str:uidb64>/<str:token>/", ActivationView.as_view(), name="activate"),
 ]

@@ -11,6 +11,8 @@ class CustomUserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
         if not email:
             raise ValueError(_("The Email must be set"))
+        # set default activation state as False to enforce email verification
+        extra_fields.setdefault("is_active", False)
 
         email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
@@ -39,6 +41,10 @@ class User(AbstractUser):
 
     full_name = models.CharField(max_length=100)
     email = models.EmailField(_("email address"), unique=True)
+    kdf_salt = models.CharField(max_length=128, blank=True, null=True)
+
+    # Default is False to enforce email verification
+    is_active = models.BooleanField(default=False)
 
     objects = CustomUserManager()
 

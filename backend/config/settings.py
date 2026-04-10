@@ -110,7 +110,18 @@ SIMPLE_JWT = {
     "BLACKLIST_AFTER_ROTATION": True,
     "AUTH_HEADER_TYPES": ("Bearer",),
     "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
+    "AUTH_COOKIE": "refresh_token",
+    "AUTH_COOKIE_DOMAIN": f".{env('FRONTEND_DOMAIN')}",
+    "AUTH_COOKIE_SECURE": True,
+    "AUTH_COOKIE_HTTPONLY": True,
+    "AUTH_COOKIE_SAMESITE": "Lax",  # Allow cross-site for links from email. Otherwise we'd use strict
 }
+
+# Email config
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+FROM_EMAIL = env("FROM_EMAIL")
+
+FRONTEND_URL = env("FRONTEND_URL")
 
 
 # Password validation
