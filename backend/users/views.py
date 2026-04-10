@@ -58,11 +58,16 @@ class TokenGenerateView(TokenObtainPairView):
     permission_classes = (permissions.AllowAny,)
 
     def post(self, request, *args, **kwargs):
-        response = super().post(request, *args, **kwargs)
-        if response.status_code == status.HTTP_200_OK:
-            refresh_token = response.data["refresh"]
-            response = set_response_cookies(response, refresh_token)
-        return response
+        try:
+            response = super().post(request, *args, **kwargs)
+            if response.status_code == status.HTTP_200_OK:
+                refresh_token = response.data["refresh"]
+                response = set_response_cookies(response, refresh_token)
+            return response
+        except Exception:
+            return Response(
+                {"detail": "No active account found with the given credentials"}, status=status.HTTP_400_BAD_REQUEST
+            )
 
 
 class RefreshTokenView(TokenRefreshView):
