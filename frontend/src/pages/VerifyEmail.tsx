@@ -5,7 +5,11 @@ export default function VerifyEmail() {
   return (
     <div className="glass-card w-full max-w-sm p-8 text-center flex flex-col items-center gap-6 fade-zoom">
       <div className="auth-icon-container">
-        <EnvelopeSimpleOpenIcon size={32} weight="duotone" className="text-primary" />
+        <EnvelopeSimpleOpenIcon
+          size={32}
+          weight="duotone"
+          className="text-primary"
+        />
       </div>
 
       <div className="space-y-2">
@@ -25,7 +29,11 @@ export default function VerifyEmail() {
         </p>
       </div>
 
-      <p className="text-xs italic opacity-40 cursor-pointer underline" onClick={() => window.close()}>
+      <p
+        className="text-xs italic opacity-40 cursor-pointer underline"
+        onClick={() => window.close()}
+        onKeyDown={(e) => e.key === "Enter" && window.close()}
+      >
         You can close this window now.
       </p>
     </div>

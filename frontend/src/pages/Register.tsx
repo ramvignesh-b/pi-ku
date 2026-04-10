@@ -46,10 +46,10 @@ export default function Register() {
         password: data.password,
       });
       navigate("/verify-email");
-    } catch (err: any) {
+    } catch (err) {
       console.error("Registration error:", err);
       setApiError(
-        err.response?.data?.message || "Registration failed. Please try again."
+        err.response?.data?.message || "Registration failed. Please try again.",
       );
     } finally {
       setIsLoading(false);
@@ -109,7 +109,8 @@ export default function Register() {
           />
           <p className="text-sm text-warning-content font-medium opacity-90">
             Choose a password you won't forget. <br />
-            <span className="font-semibold underline">There is no reset.</span> If you lose it, your letters cannot be recovered.
+            <span className="font-semibold underline">There is no reset.</span>{" "}
+            If you lose it, your letters cannot be recovered.
           </p>
         </div>
 

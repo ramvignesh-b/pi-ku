@@ -17,7 +17,12 @@ export default function FormField({
 }: FormFieldProps) {
   return (
     <div className="form-control">
-      <label className="field-label font-display text-primary-content">{label}</label>
+      <label
+        htmlFor={registration.name}
+        className="field-label font-display text-primary-content"
+      >
+        {label}
+      </label>
       <input
         {...registration}
         type={type}

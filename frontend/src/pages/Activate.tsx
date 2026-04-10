@@ -1,7 +1,97 @@
+import { CheckCircleIcon, XCircleIcon } from "@phosphor-icons/react";
+import { useEffect, useRef, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import apiClient from "../api/apiClient";
+import Logo from "../components/Logo";
+
 export default function Activate() {
+  const { uidb64, token } = useParams();
+  const [status, setStatus] = useState<"loading" | "success" | "error">(
+    "loading",
+  );
+  const hasCalled = useRef(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!uidb64 || !token || hasCalled.current) return;
+
+    // prevent double api calls
+    hasCalled.current = true;
+
+    const activateAccount = async () => {
+      try {
+        await apiClient.get(`/activate/${uidb64}/${token}/`);
+        setStatus("success");
+      } catch (err) {
+        console.error("Activation error:", err);
+        setStatus("error");
+      }
+    };
+
+    activateAccount();
+  }, [uidb64, token]);
+
   return (
-    <div>
-      <h1>Activate</h1>
+    <div className="glass-card w-full max-w-sm p-8 text-center fade-zoom">
+      {status === "loading" && (
+        <div className="flex flex-col items-center gap-4 py-8">
+          <span className="loading loading-spinner loading-lg text-primary" />
+          <p className="text-sm opacity-70">Activating your account...</p>
+        </div>
+      )}
+
+      {status === "success" && (
+        <div className="flex flex-col items-center gap-6 animate-in fade-in zoom-in duration-500">
+          <div className="bg-success/10 p-4 rounded-full">
+            <CheckCircleIcon
+              size={64}
+              weight="duotone"
+              className="text-success"
+            />
+          </div>
+          <h2 className="font-display text-xl text-success">
+            Account Activated!
+          </h2>
+          <p className="opacity-70 mb-8 leading-relaxed">
+            Welcome to <Logo />
+            <br />
+            Your identity is now verified and ready for timeless letters.
+          </p>
+          <button
+            type="button"
+            className="btn btn-primary w-full shadow-lg"
+            onClick={() => navigate("/login")}
+          >
+            Open Drawer
+          </button>
+        </div>
+      )}
+
+      {status === "error" && (
+        <div className="flex flex-col items-center gap-6 animate-in fade-in zoom-in duration-500">
+          <div className="bg-error/10 p-4 rounded-full">
+            <XCircleIcon
+              size={64}
+              weight="duotone"
+              className="text-error-content"
+            />
+          </div>
+          <h2 className="font-display text-xl text-error-content">
+            Activation Failed
+          </h2>
+          <p className="opacity-70 mb-8 leading-relaxed">
+            The link might be expired or already used. Please try registering
+            again.
+          </p>
+          <button
+            type="button"
+            className="btn btn-ghost w-full"
+            onClick={() => navigate("/onboard")}
+          >
+            Back to Registration
+          </button>
+        </div>
+      )}
     </div>
   );
 }
