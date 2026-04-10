@@ -22,6 +22,7 @@
     "@tailwindcss/vite": "^4.2.2",
     "axios": "^1.15.0",
     "daisyui": "^5.5.19",
+    "fabric": "^7.2.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-hook-form": "^7.72.1",
