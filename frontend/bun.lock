@@ -5,6 +5,11 @@
     "": {
       "name": "frontend",
       "dependencies": {
+        "@fontsource-variable/jost": "^5.2.8",
+        "@fontsource-variable/playfair-display": "^5.2.8",
+        "@fontsource-variable/playwrite-hr-lijeva": "^5.2.7",
+        "@fontsource/cutive-mono": "^5.2.8",
+        "@fontsource/knewave": "^5.2.7",
         "@hookform/resolvers": "^5.2.2",
         "@phosphor-icons/react": "^2.1.10",
         "@tailwindcss/vite": "^4.2.2",
@@ -52,6 +57,16 @@
     "@emnapi/runtime": ["@emnapi/runtime@1.9.2", "", { "dependencies": { "tslib": "^2.4.0" } }, "sha512-3U4+MIWHImeyu1wnmVygh5WlgfYDtyf0k8AbLhMFxOipihf6nrWC4syIm/SwEeec0mNSafiiNnMJwbza/Is6Lw=="],
 
     "@emnapi/wasi-threads": ["@emnapi/wasi-threads@1.2.1", "", { "dependencies": { "tslib": "^2.4.0" } }, "sha512-uTII7OYF+/Mes/MrcIOYp5yOtSMLBWSIoLPpcgwipoiKbli6k322tcoFsxoIIxPDqW01SQGAgko4EzZi2BNv2w=="],
+
+    "@fontsource-variable/jost": ["@fontsource-variable/jost@5.2.8", "", {}, "sha512-+VDDHpbhgZ9A8KeHb7/LUMRR1LILVKIscNhVRSDzn3tFXoi1mFA/OhO8CZL/u2OujoGjZANjOdUZIgaxclxyjw=="],
+
+    "@fontsource-variable/playfair-display": ["@fontsource-variable/playfair-display@5.2.8", "", {}, "sha512-ZzVIXPOrL85yyOvZYoBzUszIJM+xKkHqni4IYn2CVLaGQQdJR8sBeC8yFNgjxSJ7ludTwta8qpULeOFuk5X75A=="],
+
+    "@fontsource-variable/playwrite-hr-lijeva": ["@fontsource-variable/playwrite-hr-lijeva@5.2.7", "", {}, "sha512-cQqbD8HHZDpiKdtgwUxgwAY76TC+GI9iZOxHSW0XkV/L8lA0X18z1wzR+J8yv9XZQYgLJ5WfzBGwzMSLnSLdPA=="],
+
+    "@fontsource/cutive-mono": ["@fontsource/cutive-mono@5.2.8", "", {}, "sha512-Y8PKAYfbpl9Empbb1HZBoirlj4W7RtU+G4EhvX27pHzO6RE1sO0I1ElZQH5DMCTS+MSJkMmQT33sJ0+Ji9U8eQ=="],
+
+    "@fontsource/knewave": ["@fontsource/knewave@5.2.7", "", {}, "sha512-uzx8jgcTiQgAwKvQ/hWdX7lOQPwS+K74Eij/WCVzYvAkCX7GRTnWnbxXXx0XsKR6UIN16kH/u40LW4K8aHJb1w=="],
 
     "@hookform/resolvers": ["@hookform/resolvers@5.2.2", "", { "dependencies": { "@standard-schema/utils": "^0.3.0" }, "peerDependencies": { "react-hook-form": "^7.55.0" } }, "sha512-A/IxlMLShx3KjV/HeTcTfaMxdwy690+L/ZADoeaTltLx+CVuzkeVIPuybK3jrRfw7YZnmdKsVVHAlEPIAEUNlA=="],
 

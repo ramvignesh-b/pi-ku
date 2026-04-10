@@ -12,6 +12,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@fontsource-variable/jost": "^5.2.8",
+    "@fontsource-variable/playfair-display": "^5.2.8",
+    "@fontsource-variable/playwrite-hr-lijeva": "^5.2.7",
+    "@fontsource/cutive-mono": "^5.2.8",
+    "@fontsource/knewave": "^5.2.7",
     "@hookform/resolvers": "^5.2.2",
     "@phosphor-icons/react": "^2.1.10",
     "@tailwindcss/vite": "^4.2.2",

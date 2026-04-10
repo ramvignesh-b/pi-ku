@@ -14,8 +14,8 @@
   --color-primary-content: #c8b890;
   --color-secondary: #2a1e13;
   --color-secondary-content: #e8d5b0;
-  --color-accent: #3d2e1e;
-  --color-accent-content: #c8903a;
+  --color-accent: #c8903a;
+  --color-accent-content: #3d2e1e;
   --color-neutral: #2e2820;
   --color-neutral-content: oklch(98% 0.016 73.684);
   --color-info: #2a3040;
@@ -24,7 +24,7 @@
   --color-success-content: #8aaa8a;
   --color-warning: #4a3010;
   --color-warning-content: #d4a050;
-  --color-error: #3d1e1a;
+  --color-error: #3d1e1f;
   --color-error-content: #c07060;
   --radius-selector: 1rem;
   --radius-field: 0rem;
@@ -34,4 +34,18 @@
   --border: 1px;
   --depth: 0;
   --noise: 0;
+}
+
+@theme {
+  --font-logo: "Knewave", system-ui;
+  --font-display: "Playwrite HR Lijeva Variable", cursive;
+  --font-sans: "Jost Variable", sans-serif;
+  --font-serif: "Playfair Display Variable", serif;
+  --color-glass-bg: rgba(35, 30, 24, 0.4);
+  --shadow-warm: 0 20px 50px -12px rgba(42, 30, 19, 0.5);
+  --radius-xl: 1.5rem;
+}
+
+.glass-card {
+  @apply bg-glass-bg backdrop-blur-xl border border-white/5 shadow-warm rounded-xl;
 }

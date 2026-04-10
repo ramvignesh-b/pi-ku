@@ -1,7 +1,9 @@
+import Logo from "../components/Logo";
+
 export default function Home() {
-    return (
-        <div>
-            <h1>Pi. Ku.</h1>
-        </div>
-    );
+  return (
+    <div>
+      <Logo/>
+    </div>
+  );
 }
