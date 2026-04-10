@@ -95,6 +95,7 @@ DATABASES = {
 }
 
 CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS")
+CORS_ALLOW_CREDENTIALS = True  # allow cookies with frontend
 
 AUTH_USER_MODEL = "users.User"
 

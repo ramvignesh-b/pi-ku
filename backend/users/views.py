@@ -4,8 +4,10 @@ from django.db import transaction
 from django.utils.http import urlsafe_base64_decode
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-from users.utils import send_activation_email
+from config import settings
+from users.utils import send_activation_email, set_response_cookies
 
 from .serializers import UserSerializer
 
@@ -50,3 +52,25 @@ class MeView(generics.RetrieveAPIView):
     def get_object(self):
         # Returns the user associated with the JWT token in the request
         return self.request.user
+
+
+class TokenLoginView(TokenObtainPairView):
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)
+        if response.status_code == status.HTTP_200_OK:
+            refresh_token = response.data["refresh"]
+            response = set_response_cookies(response, refresh_token)
+        return response
+
+
+class RefreshTokenView(TokenRefreshView):
+    def post(self, request, *args, **kwargs):
+        refresh_token = request.COOKIES.get(settings.SIMPLE_JWT["AUTH_COOKIE"])
+        if not refresh_token:
+            return Response({"detail": "Refresh token not found"}, status=status.HTTP_401_UNAUTHORIZED)
+        request.data["refresh"] = refresh_token
+        response = super().post(request, *args, **kwargs)
+        if response.status_code == status.HTTP_200_OK:
+            new_refresh_token = response.data["refresh"]
+            response = set_response_cookies(response, new_refresh_token)
+        return response
