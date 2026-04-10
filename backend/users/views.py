@@ -55,6 +55,8 @@ class MeView(generics.RetrieveAPIView):
 
 
 class TokenLoginView(TokenObtainPairView):
+    permission_classes = (permissions.AllowAny,)
+
     def post(self, request, *args, **kwargs):
         response = super().post(request, *args, **kwargs)
         if response.status_code == status.HTTP_200_OK:
@@ -64,6 +66,8 @@ class TokenLoginView(TokenObtainPairView):
 
 
 class RefreshTokenView(TokenRefreshView):
+    permission_classes = (permissions.IsAuthenticated,)
+
     def post(self, request, *args, **kwargs):
         refresh_token = request.COOKIES.get(settings.SIMPLE_JWT["AUTH_COOKIE"])
         if not refresh_token:
@@ -73,4 +77,19 @@ class RefreshTokenView(TokenRefreshView):
         if response.status_code == status.HTTP_200_OK:
             new_refresh_token = response.data["refresh"]
             response = set_response_cookies(response, new_refresh_token)
+        return response
+
+
+class LogoutView(generics.GenericAPIView):
+    permission_classes = (permissions.AllowAny,)
+
+    def post(self, request):
+        response = Response({"detail": "Successfully logged out"}, status=status.HTTP_200_OK)
+        # Clear the secure cookie
+        response.delete_cookie(
+            key=settings.SIMPLE_JWT["AUTH_COOKIE"],
+            domain=settings.SIMPLE_JWT.get("AUTH_COOKIE_DOMAIN"),
+            samesite=settings.SIMPLE_JWT.get("AUTH_COOKIE_SAMESITE"),
+            path="/",
+        )
         return response
