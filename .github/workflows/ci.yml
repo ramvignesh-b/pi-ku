@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Create .env from example
-        run: cp ../.env.example .env
+        run: cp ../.env.example ../.env
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
@@ -46,7 +46,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Create .env from example
-        run: cp ../.env.example .env
+        run: cp ../.env.example ../.env
       - name: Install uv
         uses: astral-sh/setup-uv@v5
         with:

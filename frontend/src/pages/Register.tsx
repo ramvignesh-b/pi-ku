@@ -1,5 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { InfoIcon } from "@phosphor-icons/react";
+import axios from "axios";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
@@ -48,9 +49,11 @@ export default function Register() {
       navigate("/verify-email");
     } catch (err) {
       console.error("Registration error:", err);
-      setApiError(
-        err.response?.data?.message || "Registration failed. Please try again.",
-      );
+      let message = "Registration failed. Please try again.";
+      if (axios.isAxiosError(err)) {
+        message = err.response?.data?.message || message;
+      }
+      setApiError(message);
     } finally {
       setIsLoading(false);
     }
