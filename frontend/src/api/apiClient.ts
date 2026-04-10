@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { type AxiosError } from "axios";
 
 const authApiClient = axios.create({
   baseURL: `${import.meta.env.VITE_API_URL}/api/auth/`,
@@ -10,8 +10,11 @@ const authApiClient = axios.create({
 
 authApiClient.interceptors.response.use(
   (response) => response,
-  async (error) => {
-    if (error.response.status === 401) {
+  async (error: AxiosError) => {
+    if (
+      error.response.status === 401 &&
+      !error.config.url?.includes("refresh/")
+    ) {
       // token expired, refresh it
       try {
         const response = await authApiClient.post("refresh/");
