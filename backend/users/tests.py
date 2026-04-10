@@ -13,7 +13,7 @@ class AuthTests(APITestCase):
         self.user = User.objects.create_user(
             email="test@example.com", password=self.password, full_name="Test User", is_active=True
         )
-        self.login_url = reverse("token_obtain_pair")
+        self.login_url = reverse("token_generate")
         self.refresh_url = reverse("token_refresh")
         self.logout_url = reverse("logout")
 

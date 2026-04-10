@@ -54,7 +54,7 @@ class MeView(generics.RetrieveAPIView):
         return self.request.user
 
 
-class TokenLoginView(TokenObtainPairView):
+class TokenGenerateView(TokenObtainPairView):
     permission_classes = (permissions.AllowAny,)
 
     def post(self, request, *args, **kwargs):
