@@ -12,14 +12,14 @@
     "enabled": true,
     "indentStyle": "space",
     "indentWidth": 2,
-    "includes": ["**/frontend", "!backend"]
+    "includes": ["**", "!backend"]
   },
   "linter": {
     "enabled": true,
     "rules": {
       "recommended": true
     },
-    "includes": ["**/frontend", "!backend"]
+    "includes": ["**", "!backend"]
   },
   "assist": {
     "actions": {
