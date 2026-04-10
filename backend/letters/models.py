@@ -1,6 +1,7 @@
 import uuid
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 
 
@@ -21,6 +22,18 @@ class Letter(models.Model):
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.DRAFT)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    encrypted_content = models.TextField(null=True, blank=True)
+    encrypted_metadata = models.TextField(null=True, blank=True)
+    unlock_at = models.DateTimeField(null=True, blank=True)
+    sealed_at = models.DateTimeField(null=True, blank=True)
+    opened_at = models.DateTimeField(null=True, blank=True)
+    burned_at = models.DateTimeField(null=True, blank=True)
+
+    def clean(self):
+        # custom validation
+        super().clean()
+        if self.type == Letter.Type.VAULT and self.status == Letter.Status.SEALED and not self.unlock_at:
+            raise ValidationError("A sealed VAULT letter must have an unlock_date.")
 
     def __str__(self):
         return f"{self.type} - {self.status}"
