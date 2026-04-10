@@ -31,7 +31,7 @@ export default function FormField({
           error ? "input-error" : ""
         }`}
       />
-      {error && <p className="field-error">{error}</p>}
+      {error && <p className="text-error-content">{error}</p>}
     </div>
   );
 }

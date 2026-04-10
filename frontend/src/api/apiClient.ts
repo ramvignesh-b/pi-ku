@@ -13,15 +13,23 @@ authApiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     if (
-      error.response.status === 401 &&
-      !error.config.url?.includes("refresh/")
+      error.response?.status === 401 &&
+      !error.config?.url?.includes("refresh/")
     ) {
-      // token expired, refresh it
       try {
         const response = await authApiClient.post("refresh/");
         if (response.status === 200) {
-          // refresh successful, retry the request
-          return authApiClient(error.config);
+          const newAccessToken = response.data.access;
+
+          // update the auth store so the retry uses the new token
+          useAuth.setState({
+            accessToken: newAccessToken,
+            isAuthenticated: true,
+          });
+          if (error.config) {
+            error.config.headers.Authorization = `Bearer ${newAccessToken}`;
+            return authApiClient(error.config);
+          }
         }
       } catch (error) {
         return Promise.reject(error);
