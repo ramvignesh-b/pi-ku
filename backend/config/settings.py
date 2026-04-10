@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "rest_framework",  # for API
     "corsheaders",  # for API and Frontend connect
     "users",  # custom user app
+    "letters",  # letters app
 ]
 
 MIDDLEWARE = [
