@@ -31,7 +31,7 @@ class ActivationView(generics.GenericAPIView):
     def get(self, request, uidb64, token):
         try:
             uid = urlsafe_base64_decode(uidb64).decode()
-            user = User.objects.get(pk=uid)
+            user = User.objects.get(public_id=uid)
         except (User.DoesNotExist, TypeError, ValueError):
             return Response({"detail": "Invalid activation link: User Error"}, status=status.HTTP_400_BAD_REQUEST)
         # validate token

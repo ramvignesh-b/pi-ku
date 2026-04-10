@@ -1,3 +1,5 @@
+import uuid
+
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -32,7 +34,11 @@ class CustomUserManager(BaseUserManager):
 class User(AbstractUser):
     """
     Database table structure.
+    Note: We use the default integer ID internally for database performance (joins/indexes)
+    but expose a random 'public_id' (UUID) in URLs and APIs for real privacy.
     """
+
+    public_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, db_index=True)
 
     # Reset default fields
     username = None
