@@ -1,4 +1,5 @@
 import axios, { type AxiosError } from "axios";
+import { useAuth } from "../store/useAuth";
 
 const authApiClient = axios.create({
   baseURL: `${import.meta.env.VITE_API_URL}/api/auth/`,
@@ -29,5 +30,14 @@ authApiClient.interceptors.response.use(
     return Promise.reject(error);
   },
 );
+
+// automatically attach access token to request
+authApiClient.interceptors.request.use((config) => {
+  const token = useAuth.getState().accessToken;
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
 export default authApiClient;
