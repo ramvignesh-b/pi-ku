@@ -66,7 +66,7 @@ class TokenGenerateView(TokenObtainPairView):
 
 
 class RefreshTokenView(TokenRefreshView):
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.AllowAny,)
 
     def post(self, request, *args, **kwargs):
         refresh_token = request.COOKIES.get(settings.SIMPLE_JWT["AUTH_COOKIE"])

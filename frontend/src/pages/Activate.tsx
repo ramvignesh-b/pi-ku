@@ -1,7 +1,7 @@
 import { CheckCircleIcon, XCircleIcon } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import apiClient from "../api/apiClient";
+import authApiClient from "../api/apiClient";
 import Logo from "../components/Logo";
 
 export default function Activate() {
@@ -20,7 +20,7 @@ export default function Activate() {
 
     const activateAccount = async () => {
       try {
-        await apiClient.get(`/activate/${uidb64}/${token}/`);
+        await authApiClient.get(`/activate/${uidb64}/${token}/`);
         setStatus("success");
       } catch (err) {
         console.error("Activation error:", err);

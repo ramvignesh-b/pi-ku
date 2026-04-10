@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
-import apiClient from "../api/apiClient";
+import authApiClient from "../api/apiClient";
 import Logo from "../components/Logo";
 import FormField from "../components/ui/FormField";
 
@@ -41,7 +41,7 @@ export default function Register() {
     setIsLoading(true);
     setApiError(null);
     try {
-      await apiClient.post("/register/", {
+      await authApiClient.post("/register/", {
         full_name: data.full_name,
         email: data.email,
         password: data.password,
