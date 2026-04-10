@@ -37,7 +37,6 @@
 }
 
 @theme {
-  --font-logo: "Knewave", system-ui;
   --font-display: "Playwrite HR Lijeva Variable", cursive;
   --font-sans: "Jost Variable", sans-serif;
   --font-serif: "Playfair Display Variable", serif;
