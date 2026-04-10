@@ -1,13 +1,13 @@
 from django.urls import path
 
-from .views import ActivationView, LogoutView, MeView, RegisterView, TokenLoginView, TokenRefreshView
+from .views import ActivationView, LogoutView, MeView, RefreshTokenView, RegisterView, TokenLoginView
 
 urlpatterns = [
     path("register/", RegisterView.as_view(), name="register"),
     # Login and get access and refresh tokens
     path("login/", TokenLoginView.as_view(), name="token_obtain_pair"),
     # Get a new access token using a refresh token
-    path("refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    path("refresh/", RefreshTokenView.as_view(), name="token_refresh"),
     # Get current user info
     path("me/", MeView.as_view(), name="me"),
     # Activate user account
