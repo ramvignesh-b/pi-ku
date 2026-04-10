@@ -41,6 +41,8 @@ class User(AbstractUser):
 
     full_name = models.CharField(max_length=100)
     email = models.EmailField(_("email address"), unique=True)
+
+    # salt for client-side key derivation
     kdf_salt = models.CharField(max_length=128, blank=True, null=True)
 
     # Default is False to enforce email verification
