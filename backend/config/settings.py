@@ -119,6 +119,12 @@ SIMPLE_JWT = {
 
 # Email config
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = env("EMAIL_HOST")
+EMAIL_PORT = env("EMAIL_PORT")
+EMAIL_USE_TLS = not DEBUG  # false for local, true for production
+EMAIL_USE_SSL = False  # since we enforce TLS
+EMAIL_HOST_USER = env("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
 FROM_EMAIL = env("FROM_EMAIL")
 
 FRONTEND_URL = env("FRONTEND_URL")
