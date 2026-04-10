@@ -1,8 +1,11 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
+from django.db import transaction
 from django.utils.http import urlsafe_base64_decode
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
+
+from users.utils import send_activation_email
 
 from .serializers import UserSerializer
 
@@ -13,6 +16,12 @@ class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     permission_classes = (permissions.AllowAny,)
     serializer_class = UserSerializer
+
+    def perform_create(self, serializer):
+        with transaction.atomic():
+            # making sure that if email fails, the user is not created
+            user = serializer.save()
+            send_activation_email(user)
 
 
 class ActivationView(generics.GenericAPIView):
