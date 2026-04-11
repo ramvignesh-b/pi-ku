@@ -16,7 +16,7 @@ class Letter(models.Model):
         SEALED = "SEALED", "Sealed"
         BURNED = "BURNED", "Burned"
 
-    public_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    public_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="letters")
     type = models.CharField(max_length=10, choices=Type.choices, default=Type.KEPT)
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.DRAFT)

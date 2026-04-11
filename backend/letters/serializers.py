@@ -30,7 +30,7 @@ class LetterSerializer(serializers.ModelSerializer):
             "updated_at",
             "images",
         ]  # user to be fetched from request
-        read_only_fields = ["public_id", "created_at", "updated_at"]
+        read_only_fields = ["created_at", "updated_at"]
 
     def validate(self, data):
         if (data.get("encrypted_content") or data.get("encrypted_metadata")) and not data.get("encrypted_dek"):
