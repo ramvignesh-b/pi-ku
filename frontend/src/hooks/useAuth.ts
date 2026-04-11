@@ -1,6 +1,6 @@
 import { api, publicApi } from "../api/apiClient";
 import { endpoints } from "../config/endpoints";
-import { useAuthStore } from "../store/useAuth";
+import { useAuthStore } from "../store/useAuthStore";
 
 interface UserProfile {
   public_id: string;

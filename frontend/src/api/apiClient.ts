@@ -1,6 +1,6 @@
 import axios from "axios";
 import { endpoints } from "../config/endpoints";
-import { useAuthStore } from "../store/useAuth";
+import { useAuthStore } from "../store/useAuthStore";
 
 // publicApi for endpoints that don't need authentication (login, refresh, register)
 export const publicApi = axios.create({
