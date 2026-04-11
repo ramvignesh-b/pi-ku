@@ -1,5 +1,6 @@
 import { create } from "zustand";
-import authApiClient from "../api/apiClient";
+import { postAuthApiClient, preAuthApiClient } from "../api/apiClient";
+import { endpoints } from "../config/endpoints";
 
 interface UserProfile {
   public_id: string;
@@ -17,14 +18,14 @@ interface AuthState {
   checkAuth: () => Promise<void>;
 }
 
-export const useAuth = create<AuthState>((set) => ({
+export const useAuth = create<AuthState>((set, get) => ({
   accessToken: null,
   isAuthenticated: false,
   user: null,
   isInitializing: true,
 
   login: async (credentials: any) => {
-    const response = await authApiClient.post("login/", credentials);
+    const response = await preAuthApiClient.post(endpoints.LOGIN, credentials);
     set({
       accessToken: response.data.access,
       isAuthenticated: true,
@@ -34,7 +35,10 @@ export const useAuth = create<AuthState>((set) => ({
 
   logout: async () => {
     try {
-      await authApiClient.post("logout/");
+      const token = get().accessToken;
+      if (token) {
+        await preAuthApiClient.post(endpoints.LOGOUT);
+      }
     } finally {
       set({
         accessToken: null,
@@ -46,7 +50,7 @@ export const useAuth = create<AuthState>((set) => ({
 
   checkAuth: async () => {
     try {
-      const response = await authApiClient.get("me/");
+      const response = await postAuthApiClient.get(endpoints.ME);
       set({
         user: response.data,
         isAuthenticated: true,

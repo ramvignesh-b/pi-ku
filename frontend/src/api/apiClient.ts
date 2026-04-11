@@ -1,23 +1,50 @@
 import axios, { type AxiosError } from "axios";
+import { endpoints } from "../config/endpoints";
 import { useAuth } from "../store/useAuth";
 
-const authApiClient = axios.create({
-  baseURL: `${import.meta.env.VITE_API_URL}/api/auth/`,
+const baseURL = import.meta.env.VITE_API_URL;
+
+export const preAuthApiClient = axios.create({
+  baseURL,
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-authApiClient.interceptors.response.use(
+export const postAuthApiClient = axios.create({
+  baseURL,
+  withCredentials: true,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+// automatically attach access token to requests
+postAuthApiClient.interceptors.request.use((config) => {
+  const token = useAuth.getState().accessToken;
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// handle 401 & auto token refresh
+postAuthApiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
+    const originalRequest = error.config;
+
+    // do not retry refresh request
     if (
       error.response?.status === 401 &&
-      !error.config?.url?.includes("refresh/")
+      originalRequest &&
+      !originalRequest.url?.includes(endpoints.REFRESH)
     ) {
       try {
-        const response = await authApiClient.post("refresh/");
+        // refresh the access token
+        const response = await preAuthApiClient.post(endpoints.REFRESH);
+
         if (response.status === 200) {
           const newAccessToken = response.data.access;
 
@@ -26,26 +53,16 @@ authApiClient.interceptors.response.use(
             accessToken: newAccessToken,
             isAuthenticated: true,
           });
-          if (error.config) {
-            error.config.headers.Authorization = `Bearer ${newAccessToken}`;
-            return authApiClient(error.config);
-          }
+
+          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+          return postAuthApiClient(originalRequest);
         }
-      } catch (error) {
-        return Promise.reject(error);
+      } catch (refreshError) {
+        useAuth.getState().logout();
+        return Promise.reject(refreshError);
       }
     }
+
     return Promise.reject(error);
   },
 );
-
-// automatically attach access token to request
-authApiClient.interceptors.request.use((config) => {
-  const token = useAuth.getState().accessToken;
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
-export default authApiClient;

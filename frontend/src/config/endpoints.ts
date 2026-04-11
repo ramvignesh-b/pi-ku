@@ -1,0 +1,21 @@
+export const endpoints = {
+  LOGIN: "/api/auth/login/",
+  REGISTER: "/api/auth/register/",
+  VERIFY_EMAIL: "/api/auth/verify-email/",
+  ACTIVATE: "/api/auth/activate/:uidb64/:token/",
+  ME: "/api/auth/me/",
+  REFRESH: "/api/auth/refresh/",
+  LOGOUT: "/api/auth/logout/",
+};
+
+// simple utility to handle path params
+export const replacePathParams = (
+  url: string,
+  params: Record<string, string>,
+): string => {
+  let result = url;
+  Object.entries(params).forEach(([key, value]) => {
+    result = result.replace(`:${key}`, value);
+  });
+  return result;
+};

@@ -1,8 +1,10 @@
 import { CheckCircleIcon, XCircleIcon } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import authApiClient from "../api/apiClient";
+import { preAuthApiClient } from "../api/apiClient";
 import Logo from "../components/Logo";
+import { endpoints, replacePathParams } from "../config/endpoints";
+import { ROUTES } from "../config/routes";
 
 export default function Activate() {
   const { uidb64, token } = useParams();
@@ -20,7 +22,11 @@ export default function Activate() {
 
     const activateAccount = async () => {
       try {
-        await authApiClient.get(`/activate/${uidb64}/${token}/`);
+        const url = replacePathParams(endpoints.ACTIVATE, {
+          uidb64,
+          token,
+        });
+        await preAuthApiClient.get(url);
         setStatus("success");
       } catch (err) {
         console.error("Activation error:", err);
@@ -80,7 +86,7 @@ export default function Activate() {
           <button
             type="button"
             className="btn btn-ghost w-full"
-            onClick={() => navigate("/onboard")}
+            onClick={() => navigate(ROUTES.ONBOARD)}
           >
             Back to Registration
           </button>
