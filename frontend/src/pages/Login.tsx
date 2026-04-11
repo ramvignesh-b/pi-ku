@@ -4,13 +4,15 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
+import { api, publicApi } from "../api/apiClient";
 import Logo from "../components/Logo";
 import FormField from "../components/ui/FormField";
+import { endpoints } from "../config/endpoints";
 import { ROUTES } from "../config/routes";
-import { useAuth } from "../store/useAuth";
+import { useAuth } from "../hooks/useAuth";
 
 const loginSchema = z.object({
-  email: z.email("Please enter a valid email"),
+  email: z.string().email("Please enter a valid email"),
   password: z.string().min(1, "Password is required"),
 });
 
@@ -20,7 +22,7 @@ export default function Login() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
-  const login = useAuth((state) => state.login);
+  const { login } = useAuth();
 
   const {
     register,
@@ -34,7 +36,18 @@ export default function Login() {
     setIsLoading(true);
     setApiError(null);
     try {
-      await login(data);
+      // 1. Authenticate
+      const { data: authData } = await publicApi.post(endpoints.LOGIN, data);
+
+      // 2. Fetch User Profile with the fresh token
+      // We pass the header explicitly to avoid any race conditions with interceptors
+      const { data: userData } = await api.get(endpoints.ME, {
+        headers: { Authorization: `Bearer ${authData.access}` },
+      });
+
+      // 3. Update store using the hook method
+      await login(authData.access, userData);
+
       navigate(ROUTES.DRAWER);
     } catch (err) {
       console.error("Login error:", err);
@@ -49,59 +62,61 @@ export default function Login() {
     }
   };
 
-  <div className="glass-card w-full max-w-sm p-2 transition-all duration-500 hover:shadow-2xl fade-zoom">
-    <form onSubmit={handleSubmit(onSubmit)} className="card-body gap-4">
-      <h1 className="card-title font-display text-2xl font-bold justify-center text-primary tracking-tight">
-        Sign in to <Logo />
-      </h1>
+  return (
+    <div className="glass-card w-full max-w-sm p-2 transition-all duration-500 hover:shadow-2xl fade-zoom">
+      <form onSubmit={handleSubmit(onSubmit)} className="card-body gap-4">
+        <h1 className="card-title font-display text-2xl font-bold justify-center text-primary tracking-tight">
+          Sign in to <Logo />
+        </h1>
 
-      {apiError && (
-        <div className="alert alert-error text-xs py-2 rounded-md">
-          <span>{apiError}</span>
+        {apiError && (
+          <div className="alert alert-error text-xs py-2 rounded-md">
+            <span>{apiError}</span>
+          </div>
+        )}
+
+        <FormField
+          label="Email"
+          type="email"
+          placeholder="you@email.com"
+          registration={register("email")}
+          error={errors.email?.message}
+        />
+
+        <FormField
+          label="Password"
+          type="password"
+          placeholder="••••••••"
+          registration={register("password")}
+          error={errors.password?.message}
+        />
+
+        <div className="card-actions mt-4">
+          <button
+            type="submit"
+            disabled={isLoading}
+            aria-label="Sign In"
+            className="btn btn-primary w-full shadow-lg"
+          >
+            {isLoading ? (
+              <span className="loading loading-spinner loading-sm" />
+            ) : (
+              "Sign In"
+            )}
+          </button>
         </div>
-      )}
 
-      <FormField
-        label="Email"
-        type="email"
-        placeholder="you@email.com"
-        registration={register("email")}
-        error={errors.email?.message}
-      />
-
-      <FormField
-        label="Password"
-        type="password"
-        placeholder="••••••••"
-        registration={register("password")}
-        error={errors.password?.message}
-      />
-
-      <div className="card-actions mt-4">
-        <button
-          type="submit"
-          disabled={isLoading}
-          aria-label="Sign In"
-          className="btn btn-primary w-full shadow-lg"
-        >
-          {isLoading ? (
-            <span className="loading loading-spinner loading-sm" />
-          ) : (
-            "Sign In"
-          )}
-        </button>
-      </div>
-
-      <div className="text-center text-sm font-medium text-base-content/70">
-        Don't have an account?{" "}
-        <button
-          type="button"
-          onClick={() => navigate(ROUTES.ONBOARD)}
-          className="link link-primary no-underline hover:underline font-bold"
-        >
-          Register
-        </button>
-      </div>
-    </form>
-  </div>;
+        <div className="text-center text-sm font-medium text-base-content/70">
+          Don't have an account?{" "}
+          <button
+            type="button"
+            onClick={() => navigate(ROUTES.ONBOARD)}
+            className="link link-primary no-underline hover:underline font-bold"
+          >
+            Register
+          </button>
+        </div>
+      </form>
+    </div>
+  );
 }

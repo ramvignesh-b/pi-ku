@@ -8,10 +8,12 @@
   color-scheme: dark;
 
   /* ── Base surfaces ── */
-  --color-base-100: oklch(14% 0.012 35);   /* was 0.018 hue 50 */
+  --color-base-100: oklch(14% 0.012 35); /* was 0.018 hue 50 */
   --color-base-200: oklch(18% 0.014 33);
   --color-base-300: oklch(22% 0.016 32);
-  --color-base-content: oklch(82% 0.02 70); /* aged parchment, not crisp white */
+  --color-base-content: oklch(
+    82% 0.02 70
+  ); /* aged parchment, not crisp white */
 
   /* ── Primary: old lamp gold — warm, incandescent ── */
   --color-primary: oklch(67% 0.11 78);
@@ -34,7 +36,7 @@
   --color-info-content: oklch(95% 0.01 240);
   --color-success: oklch(60% 0.08 150);
   --color-success-content: oklch(16% 0.03 150);
-  --color-warning: oklch(68% 0.08 72);      /* honey, not caution-sign amber */
+  --color-warning: oklch(68% 0.08 72); /* honey, not caution-sign amber */
   --color-warning-content: oklch(18% 0.03 60);
   --color-error: oklch(55% 0.1 22);
   --color-error-content: oklch(92% 0.01 22);
@@ -56,7 +58,12 @@
   --font-display: "Playwrite HR Lijeva Variable", cursive;
   --font-sans: "Jost Variable", sans-serif;
   --font-serif: "Playfair Display Variable", serif;
-  --color-glass-bg: rgba(28, 22, 16, 0.45);  /* slightly deeper to match new base */
+  --color-glass-bg: rgba(
+    28,
+    22,
+    16,
+    0.45
+  ); /* slightly deeper to match new base */
   --shadow-warm: 0 20px 50px -12px rgba(30, 20, 12, 0.6);
   --radius-xl: 1.5rem;
   --color-paper: oklch(97% 0.008 80);

@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
-import { preAuthApiClient } from "../api/apiClient";
+import { publicApi } from "../api/apiClient";
 import Logo from "../components/Logo";
 import FormField from "../components/ui/FormField";
 import { endpoints } from "../config/endpoints";
@@ -42,7 +42,7 @@ export default function Register() {
     setIsLoading(true);
     setApiError(null);
     try {
-      await preAuthApiClient.post(endpoints.REGISTER, {
+      await publicApi.post(endpoints.REGISTER, {
         full_name: data.full_name,
         email: data.email,
         password: data.password,

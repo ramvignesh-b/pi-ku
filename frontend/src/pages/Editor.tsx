@@ -1,3 +1,4 @@
+import { LockIcon, TrayIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import ComposeCanvas from "../components/ui/ComposeCanvas";
 import DateDisplay from "../components/ui/DateDisplay";
@@ -30,9 +31,30 @@ export default function Editor() {
 
         <div
           id="writer-toolbar"
-          className="flex items-center justify-center mb-4 min-h-12 bg-white/5 rounded-sm border border-white/5 font-display text-sm tracking-widest text-secondary-content"
+          className="flex items-center justify-between mb-8 h-14 bg-base-100/50 backdrop-blur-md rounded-full border border-base-content/5 px-6"
         >
-          Toolbar Placeholder
+          <div className="flex gap-4">Toolbar Placeholder</div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm text-[10px] tracking-[0.2em] uppercase font-bold text-base-content/60 hover:text-base-content"
+              title="Keep in your private drawer"
+            >
+              <TrayIcon size={18} weight="bold" />
+              <span className="hidden md:inline">Keep</span>
+            </button>
+
+            <div className="w-px h-4 bg-base-content/10 mx-2" />
+
+            <button
+              type="button"
+              className="btn btn-primary btn-sm rounded-full px-6 text-[10px] tracking-[0.3em] uppercase font-black"
+            >
+              <LockIcon size={14} weight="fill" className="mr-1" />
+              Seal
+            </button>
+          </div>
         </div>
         <ComposeCanvas />
       </div>

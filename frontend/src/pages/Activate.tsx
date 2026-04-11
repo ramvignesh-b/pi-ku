@@ -1,7 +1,7 @@
 import { CheckCircleIcon, XCircleIcon } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { preAuthApiClient } from "../api/apiClient";
+import { publicApi } from "../api/apiClient";
 import Logo from "../components/Logo";
 import { endpoints, replacePathParams } from "../config/endpoints";
 import { ROUTES } from "../config/routes";
@@ -26,7 +26,7 @@ export default function Activate() {
           uidb64,
           token,
         });
-        await preAuthApiClient.get(url);
+        await publicApi.get(url);
         setStatus("success");
       } catch (err) {
         console.error("Activation error:", err);

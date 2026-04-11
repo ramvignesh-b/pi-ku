@@ -1,64 +1,56 @@
-import axios, { type AxiosError } from "axios";
+import axios from "axios";
 import { endpoints } from "../config/endpoints";
-import { useAuth } from "../store/useAuth";
+import { useAuthStore } from "../store/useAuth";
 
-const baseURL = import.meta.env.VITE_API_URL;
-
-export const preAuthApiClient = axios.create({
-  baseURL,
+// publicApi for endpoints that don't need authentication (login, refresh, register)
+export const publicApi = axios.create({
+  baseURL: import.meta.env.VITE_API_URL,
   withCredentials: true,
-  headers: {
-    "Content-Type": "application/json",
-  },
 });
 
-export const postAuthApiClient = axios.create({
-  baseURL,
+// api for all authenticated requests
+export const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL,
   withCredentials: true,
-  headers: {
-    "Content-Type": "application/json",
-  },
 });
 
-// automatically attach access token to requests
-postAuthApiClient.interceptors.request.use((config) => {
-  const token = useAuth.getState().accessToken;
+// auto-attach access token to authenticated requests
+api.interceptors.request.use((config) => {
+  const token = useAuthStore.getState().accessToken;
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
 
-// handle 401 & auto token refresh
-postAuthApiClient.interceptors.response.use(
+// Handle 401 errors by attempting a silent refresh
+api.interceptors.response.use(
   (response) => response,
-  async (error: AxiosError) => {
+  async (error) => {
     const originalRequest = error.config;
 
-    // do not retry refresh request
-    if (
-      error.response?.status === 401 &&
-      originalRequest &&
-      !originalRequest.url?.includes(endpoints.REFRESH)
-    ) {
+    // If 401 and we haven't tried refreshing yet
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
       try {
-        // refresh the access token
-        const response = await preAuthApiClient.post(endpoints.REFRESH);
+        // Attempt silent refresh
+        const { data } = await publicApi.post(endpoints.REFRESH);
+        const newAccessToken = data.access;
 
-        if (response.status === 200) {
-          const newAccessToken = response.data.access;
-
-          // update the auth store so the retry uses the new token
-          useAuth.setState({
-            accessToken: newAccessToken,
-            isAuthenticated: true,
-          });
-
-          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-          return postAuthApiClient(originalRequest);
+        // Update store
+        const { user, setAuth } = useAuthStore.getState();
+        if (user) {
+          setAuth(newAccessToken, user);
         }
+
+        // Retry the original request with the new token
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+        return api(originalRequest);
       } catch (refreshError) {
-        useAuth.getState().logout();
+        // Refresh failed, perform logout to clear tokens
+        console.error("Session expired, logging out...");
+        useAuthStore.getState().clearAuth();
         return Promise.reject(refreshError);
       }
     }
