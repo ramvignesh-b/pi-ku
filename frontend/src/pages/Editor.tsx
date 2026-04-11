@@ -6,6 +6,7 @@ import {
 } from "@phosphor-icons/react";
 import type { FabricObject } from "fabric";
 import { useRef, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { api } from "../api/apiClient";
 import {
   type CanvasTools,
@@ -13,11 +14,14 @@ import {
 } from "../components/ui/ComposeCanvas";
 import DateDisplay from "../components/ui/DateDisplay";
 import { endpoints } from "../config/endpoints";
+import { ROUTES } from "../config/routes";
 import { useKeyStore } from "../store/useKeyStore";
 import { CryptoUtils } from "../utils/crypto";
 
 export default function Editor() {
-  const [_letterId] = useState(() => crypto.randomUUID());
+  const { public_id } = useParams();
+  const letterIdRef = useRef<string>(public_id ?? null);
+  const navigate = useNavigate();
   const [isSealing, setIsSealing] = useState(false);
   const [isSaveSuccess, setIsSaveSuccess] = useState(false);
 
@@ -35,6 +39,10 @@ export default function Editor() {
   };
 
   async function handleSeal(): Promise<void> {
+    if (!public_id) {
+      letterIdRef.current = crypto.randomUUID();
+      navigate(ROUTES.WRITE(letterIdRef.current), { replace: true });
+    }
     if (isSealing) return;
     setIsSealing(true);
     const cryptoUtils = new CryptoUtils();
@@ -85,7 +93,7 @@ export default function Editor() {
         }
     */
     const formData = new FormData();
-    formData.append("public_id", _letterId);
+    formData.append("public_id", letterIdRef.current);
     formData.append("type", "SENT");
     formData.append("status", "SEALED");
     formData.append("encrypted_content", encrypted_letter.encrypted_content);
@@ -96,7 +104,7 @@ export default function Editor() {
     });
 
     try {
-      await api.post(endpoints.LETTERS, formData);
+      await api.put(`${endpoints.LETTERS}${letterIdRef.current}/`, formData);
       setIsSaveSuccess(true);
       setTimeout(() => {
         setIsSaveSuccess(false);
@@ -111,13 +119,13 @@ export default function Editor() {
   return (
     <section className="flex-1 overflow-y-auto scrollbar-hide px-2 py-12 bg-base-300">
       {isSaveSuccess && (
-        <div className="modal bg-transparent modal-open">
-          <div className="modal-box bg-base-100">
+        <div className="modal modal-open bg-transparent backdrop-blur-md transition-all duration-300 ease-in-out">
+          <div className="modal-box bg-transparent">
             <div className="alert alert-success">
               <DownloadSimpleIcon size={18} weight="bold" />
-              <h3 className="font-bold text-lg">Letter saved successfully!</h3>
+              <h3 className="font-bold text-lg">Your letter is sealed!</h3>
             </div>
-            <div className="modal-action">
+            {/* <div className="modal-action">
               <button
                 type="button"
                 className="btn btn-primary"
@@ -125,7 +133,7 @@ export default function Editor() {
               >
                 Close
               </button>
-            </div>
+            </div> */}
           </div>
         </div>
       )}
