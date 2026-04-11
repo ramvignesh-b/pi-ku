@@ -9,6 +9,7 @@ import { publicApi } from "../api/apiClient";
 import Logo from "../components/Logo";
 import FormField from "../components/ui/FormField";
 import { endpoints } from "../config/endpoints";
+import { ROUTES } from "../config/routes";
 
 // validation logic
 const registerSchema = z
@@ -47,7 +48,7 @@ export default function Register() {
         email: data.email,
         password: data.password,
       });
-      navigate("/verify-email");
+      navigate(ROUTES.VERIFY_EMAIL);
     } catch (err) {
       console.error("Registration error:", err);
       let message = "Registration failed. Please try again.";

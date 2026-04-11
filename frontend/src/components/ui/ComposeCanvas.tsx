@@ -3,7 +3,11 @@ import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 
 const PAD = 36;
 
-export const ComposeCanvas = forwardRef((_props, ref) => {
+export type CanvasTools = {
+  addImage: (url: string) => void;
+};
+
+export const ComposeCanvas = forwardRef<CanvasTools>((_props, ref) => {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fabricRef = useRef<fabric.Canvas | null>(null);
@@ -137,6 +141,8 @@ export const ComposeCanvas = forwardRef((_props, ref) => {
         fabricRef.current?.add(img);
         fabricRef.current?.setActiveObject(img);
         fabricRef.current?.requestRenderAll();
+
+        URL.revokeObjectURL(url); // cleanup browser upload
       });
     },
   }));
@@ -155,3 +161,4 @@ export const ComposeCanvas = forwardRef((_props, ref) => {
     </div>
   );
 });
+ComposeCanvas.displayName = "ComposeCanvas";

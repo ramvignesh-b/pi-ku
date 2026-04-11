@@ -1,13 +1,7 @@
 import { useCallback } from "react";
 import { api, publicApi } from "../api/apiClient";
 import { endpoints } from "../config/endpoints";
-import { useAuthStore } from "../store/useAuthStore";
-
-interface UserProfile {
-  public_id: string;
-  email: string;
-  full_name: string;
-}
+import { type UserProfile, useAuthStore } from "../store/useAuthStore";
 
 export const useAuth = () => {
   const { accessToken, user, isInitializing, setAuth, clearAuth } =
@@ -15,7 +9,7 @@ export const useAuth = () => {
 
   const isAuthenticated = !!accessToken;
 
-  const login = async (access: string, profile: UserProfile) => {
+  const login = (access: string, profile: UserProfile) => {
     setAuth(access, profile);
   };
 

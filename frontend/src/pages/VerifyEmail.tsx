@@ -29,13 +29,14 @@ export default function VerifyEmail() {
         </p>
       </div>
 
-      <p
+      <button
+        type="button"
         className="text-xs italic opacity-40 cursor-pointer underline"
         onClick={() => window.close()}
         onKeyDown={(e) => e.key === "Enter" && window.close()}
       >
         You can close this window now.
-      </p>
+      </button>
     </div>
   );
 }

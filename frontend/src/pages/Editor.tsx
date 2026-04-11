@@ -1,15 +1,18 @@
 import { ImageIcon, LockIcon, TrayIcon } from "@phosphor-icons/react";
 import { useRef, useState } from "react";
-import { ComposeCanvas } from "../components/ui/ComposeCanvas";
+import {
+  type CanvasTools,
+  ComposeCanvas,
+} from "../components/ui/ComposeCanvas";
 import DateDisplay from "../components/ui/DateDisplay";
 
 export default function Editor() {
   const [recipient, setRecipient] = useState("");
 
-  const canvasRef = useRef<any>(null);
-  const _fileInputRef = useRef<HTMLInputElement>(null);
-  const _handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const canvasRef = useRef<CanvasTools>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]; // pick one file at a time
     if (file) {
       const url = URL.createObjectURL(file);
       canvasRef.current?.addImage(url);
@@ -47,14 +50,14 @@ export default function Editor() {
             <button
               type="button"
               className="btn btn-ghost btn-sm"
-              onClick={() => _fileInputRef.current?.click()}
+              onClick={() => fileInputRef.current?.click()}
             >
               <ImageIcon size={18} weight="bold" />
             </button>
             <input
               type="file"
-              ref={_fileInputRef}
-              onChange={_handleImageUpload}
+              ref={fileInputRef}
+              onChange={handleImageUpload}
               accept="image/*"
               className="hidden"
             />

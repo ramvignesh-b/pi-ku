@@ -66,7 +66,8 @@ export async function encryptLetter(plaintext: string, masterKey: CryptoKey) {
   const rawKey = await crypto.subtle.exportKey("raw", dek);
 
   // conversion to base64 for transit
-  const toBase64 = (buffer: Uint8Array) => btoa(String.fromCharCode(...buffer));
+  const toBase64 = (buf: Uint8Array) =>
+    btoa(buf.reduce((acc, b) => acc + String.fromCharCode(b), ""));
 
   return {
     // This goes to the server
