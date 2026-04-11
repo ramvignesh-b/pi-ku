@@ -20,7 +20,7 @@ import { CryptoUtils } from "../utils/crypto";
 
 export default function Editor() {
   const { public_id } = useParams();
-  const letterIdRef = useRef<string>(public_id ?? null);
+  const letterIdRef = useRef<string>(public_id ?? "");
   const navigate = useNavigate();
   const [isSealing, setIsSealing] = useState(false);
   const [isSaveSuccess, setIsSaveSuccess] = useState(false);
