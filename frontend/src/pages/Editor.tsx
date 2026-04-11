@@ -85,6 +85,7 @@ export default function Editor() {
         }
     */
     const formData = new FormData();
+    formData.append("public_id", _letterId);
     formData.append("type", "SENT");
     formData.append("status", "SEALED");
     formData.append("encrypted_content", encrypted_letter.encrypted_content);
@@ -93,6 +94,7 @@ export default function Editor() {
     encImageFilesMap.forEach((image, filename) => {
       formData.append("image_files", image, filename);
     });
+
     try {
       await api.post(endpoints.LETTERS, formData);
       setIsSaveSuccess(true);
@@ -109,8 +111,8 @@ export default function Editor() {
   return (
     <section className="flex-1 overflow-y-auto scrollbar-hide px-2 py-12 bg-base-300">
       {isSaveSuccess && (
-        <div className="modal modal-open">
-          <div className="modal-box">
+        <div className="modal bg-transparent modal-open">
+          <div className="modal-box bg-base-100">
             <div className="alert alert-success">
               <DownloadSimpleIcon size={18} weight="bold" />
               <h3 className="font-bold text-lg">Letter saved successfully!</h3>
