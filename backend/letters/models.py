@@ -38,3 +38,13 @@ class Letter(models.Model):
 
     def __str__(self):
         return f"{self.type} - {self.status}"
+
+
+class LetterImage(models.Model):
+    public_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    letter = models.ForeignKey(Letter, on_delete=models.CASCADE, related_name="images")
+    file_name = models.CharField(max_length=255)
+    file = models.FileField(upload_to="encrypted-images/")
+
+    def __str__(self):
+        return f"Image {self.public_id} for {self.letter}"

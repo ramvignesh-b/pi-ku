@@ -1,6 +1,9 @@
 from django.contrib.auth import get_user_model
+from django.core.files.base import ContentFile
 from django.test import TestCase
 from rest_framework.test import APITestCase
+
+from letters.models import LetterImage
 
 from .models import Letter
 
@@ -75,3 +78,28 @@ class LetterAPITest(APITestCase):
             response.data["non_field_errors"],
             ["encrypted_dek is required when encrypted_content and encrypted_metadata are present"],
         )
+
+
+class LetterImageModelTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(email="img_test@pi-ku.app", password="password1234")
+        self.letter = Letter.objects.create(user=self.user, type="KEPT", status="DRAFT")
+
+    def test_create_letter_image(self):
+        """Test images can be associated with a letter (many to 1)"""
+        image_content = ContentFile(b"fake-encrypted-data", name="test_image.bin")
+        letter_image = LetterImage.objects.create(
+            letter=self.letter, file_name="encrypted_image.enc", file=image_content
+        )
+        self.assertEqual(letter_image.letter, self.letter)
+        self.assertTrue(letter_image.file.name.startswith("encrypted-images/"))
+        self.assertIsNotNone(letter_image.public_id)
+
+    def test_letter_cascade_deletes_images(self):
+        """TTest when a letter is deleted, its encrypted images are also removed"""
+        LetterImage.objects.create(
+            letter=self.letter, file_name="will_be_deleted.jpg", file=ContentFile(b"data", name="del.bin")
+        )
+        self.assertEqual(LetterImage.objects.count(), 1)
+        self.letter.delete()
+        self.assertEqual(LetterImage.objects.count(), 0)
