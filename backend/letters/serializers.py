@@ -1,9 +1,20 @@
 from rest_framework import serializers
 
+from letters.models import LetterImage
+
 from .models import Letter
 
 
+class LetterImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LetterImage
+        fields = ["public_id", "file", "file_name"]
+        read_only_fields = ["public_id"]
+
+
 class LetterSerializer(serializers.ModelSerializer):
+    images = LetterImageSerializer(many=True, read_only=True)
+
     class Meta:
         model = Letter
         fields = [
@@ -17,12 +28,9 @@ class LetterSerializer(serializers.ModelSerializer):
             "sealed_at",
             "created_at",
             "updated_at",
+            "images",
         ]  # user to be fetched from request
         read_only_fields = ["public_id", "created_at", "updated_at"]
-
-    def create(self, validated_data):
-        user = self.context["request"].user  # get user from access token
-        return Letter.objects.create(user=user, **validated_data)
 
     def validate(self, data):
         if (data.get("encrypted_content") or data.get("encrypted_metadata")) and not data.get("encrypted_dek"):

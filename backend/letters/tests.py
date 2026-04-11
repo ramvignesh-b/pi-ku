@@ -79,6 +79,29 @@ class LetterAPITest(APITestCase):
             ["encrypted_dek is required when encrypted_content and encrypted_metadata are present"],
         )
 
+    def test_create_letter_with_images_api(self):
+        """Test API can create a letter and attach encrypted images in one request"""
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        # Simulate local encryption files
+        image1 = SimpleUploadedFile("enc_img1.bin", b"encrypted_bytes_1", content_type="application/octet-stream")
+        image2 = SimpleUploadedFile("enc_img2.bin", b"encrypted_bytes_2", content_type="application/octet-stream")
+
+        payload = {
+            "type": "SENT",
+            "status": "SEALED",
+            "encrypted_content": "enc_content==",
+            "encrypted_metadata": "enc_metadata==",
+            "encrypted_dek": "enc_dek==",
+            "image_files": [image1, image2],
+        }
+
+        response = self.client.post(self.url, payload, format="multipart")
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(Letter.objects.count(), 1)
+        self.assertEqual(LetterImage.objects.count(), 2)
+
 
 class LetterImageModelTest(TestCase):
     def setUp(self):
