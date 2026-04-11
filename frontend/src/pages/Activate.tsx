@@ -66,7 +66,7 @@ export default function Activate() {
           <button
             type="button"
             className="btn btn-primary w-full shadow-lg"
-            onClick={() => navigate("/login")}
+            onClick={() => navigate(ROUTES.DRAWER)}
           >
             Open Drawer
           </button>
