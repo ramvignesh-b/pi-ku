@@ -6,6 +6,7 @@ export const endpoints = {
   ME: "/api/auth/me/",
   REFRESH: "/api/auth/refresh/",
   LOGOUT: "/api/auth/logout/",
+  LETTERS: "/api/letters/",
 };
 
 // simple utility to handle path params

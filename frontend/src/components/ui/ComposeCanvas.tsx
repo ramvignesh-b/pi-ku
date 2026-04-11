@@ -4,7 +4,10 @@ import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 const PAD = 36;
 
 export type CanvasTools = {
-  addImage: (url: string) => void;
+  addImage: (url: string, file: File) => void;
+  getData: () => { objects: any };
+  getJsonData: () => string;
+  getImages: () => { src: string; file: File }[];
 };
 
 export const ComposeCanvas = forwardRef<CanvasTools>((_props, ref) => {
@@ -130,11 +133,12 @@ export const ComposeCanvas = forwardRef<CanvasTools>((_props, ref) => {
   }, []);
 
   useImperativeHandle(ref, () => ({
-    addImage: (url: string) => {
+    addImage: (url: string, file: File) => {
       if (!fabricRef.current) return;
       fabric.FabricImage.fromURL(url).then((img) => {
         img.scaleToWidth(300);
         img.set({
+          _customRawFile: file,
           left: PAD,
           top: PAD,
         });
@@ -144,6 +148,21 @@ export const ComposeCanvas = forwardRef<CanvasTools>((_props, ref) => {
 
         URL.revokeObjectURL(url); // cleanup browser upload
       });
+    },
+    getData: () => {
+      if (!fabricRef.current) return "";
+      return fabricRef.current.toJSON();
+    },
+    getJsonData: () => {
+      if (!fabricRef.current) return "";
+      return JSON.stringify(fabricRef.current.toJSON()); // convert to json string
+    },
+    getImages: () => {
+      if (!fabricRef.current) return [];
+      return fabricRef.current.getObjects("Image").map((img: any) => ({
+        src: img._element.currentSrc,
+        file: img._customRawFile,
+      }));
     },
   }));
 

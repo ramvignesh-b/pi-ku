@@ -1,13 +1,19 @@
 import { ImageIcon, LockIcon, TrayIcon } from "@phosphor-icons/react";
+import type { FabricObject } from "fabric";
 import { useRef, useState } from "react";
+import { api } from "../api/apiClient";
 import {
   type CanvasTools,
   ComposeCanvas,
 } from "../components/ui/ComposeCanvas";
 import DateDisplay from "../components/ui/DateDisplay";
+import { endpoints } from "../config/endpoints";
+import { useKeyStore } from "../store/useKeyStore";
+import { CryptoUtils } from "../utils/crypto";
 
 export default function Editor() {
   const [recipient, setRecipient] = useState("");
+  const masterKey = useKeyStore.getState().masterKey;
 
   const canvasRef = useRef<CanvasTools>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -15,9 +21,71 @@ export default function Editor() {
     const file = e.target.files?.[0]; // pick one file at a time
     if (file) {
       const url = URL.createObjectURL(file);
-      canvasRef.current?.addImage(url);
+      canvasRef.current?.addImage(url, file);
     }
   };
+
+  async function handleSeal(): Promise<void> {
+    const cryptoUtils = new CryptoUtils();
+    await cryptoUtils.initialize();
+
+    const images = canvasRef.current?.getImages() || [];
+    const imageEncMap = new Map<string, string>();
+    const encImageFilesMap = new Map<string, Blob>();
+
+    if (!masterKey) {
+      throw new Error("Master key is not initialized");
+    }
+
+    for (const image of images) {
+      const encrypted_image = await cryptoUtils.encryptImage(
+        image.file,
+        masterKey,
+      );
+      imageEncMap.set(image.src, encrypted_image.filename);
+      encImageFilesMap.set(
+        encrypted_image.filename,
+        encrypted_image.encryptedBlob,
+      );
+    }
+
+    // replace image src with encrypted image filename
+    const canvasData = canvasRef.current?.getData() ?? { objects: [] };
+    canvasData.objects = canvasData.objects?.map(
+      (obj: FabricObject & { src: string }) =>
+        obj.type === "Image" ? { ...obj, src: imageEncMap.get(obj.src) } : obj,
+    );
+
+    const encrypted_letter = await cryptoUtils.encryptLetter(
+      JSON.stringify(canvasData),
+      masterKey,
+    );
+    const encrypted_metadata = "";
+
+    // upload to server
+
+    // sample payload
+    /*
+    payload = {
+            "type": "SENT",
+            "status": "SEALED",
+            "encrypted_content": "enc_content==",
+            "encrypted_metadata": "enc_metadata==",
+            "encrypted_dek": "enc_dek==",
+            "image_files": [image1, image2],
+        }
+    */
+    const formData = new FormData();
+    formData.append("type", "SENT");
+    formData.append("status", "SEALED");
+    formData.append("encrypted_content", encrypted_letter.encrypted_content);
+    formData.append("encrypted_dek", encrypted_letter.encrypted_dek);
+    formData.append("encrypted_metadata", encrypted_metadata);
+    encImageFilesMap.forEach((image, filename) => {
+      formData.append("image_files", image, filename);
+    });
+    await api.post(endpoints.LETTERS, formData);
+  }
 
   return (
     <section className="flex-1 overflow-y-auto scrollbar-hide px-2 py-12 bg-base-300">
@@ -78,6 +146,7 @@ export default function Editor() {
             <button
               type="button"
               className="btn btn-primary btn-sm rounded-full px-6"
+              onClick={handleSeal}
             >
               <LockIcon size={14} weight="fill" className="mr-1" />
               Seal
