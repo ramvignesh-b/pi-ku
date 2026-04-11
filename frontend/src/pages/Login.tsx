@@ -42,7 +42,7 @@ export default function Login() {
         headers: { Authorization: `Bearer ${authData.access}` },
       });
 
-      login(authData.access, userData);
+      login(authData.access, userData, data.password);
 
       navigate(ROUTES.DRAWER);
     } catch (err) {

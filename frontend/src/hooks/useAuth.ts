@@ -1,15 +1,35 @@
 import { useCallback } from "react";
 import { api, publicApi } from "../api/apiClient";
 import { endpoints } from "../config/endpoints";
-import { type UserProfile, useAuthStore } from "../store/useAuthStore";
+import type { UserProfile } from "../store/useAuthStore";
+import { useAuthStore } from "../store/useAuthStore";
+import { useKeyStore } from "../store/useKeyStore";
+import { CryptoUtils } from "../utils/crypto";
+import {
+  clearMasterKey,
+  loadMasterKey,
+  saveMasterKey,
+} from "../utils/keystore";
 
 export const useAuth = () => {
   const { accessToken, user, isInitializing, setAuth, clearAuth } =
     useAuthStore();
+  const { setMasterKey } = useKeyStore();
 
   const isAuthenticated = !!accessToken;
 
-  const login = (access: string, profile: UserProfile) => {
+  // called after successful login — derive & save master key
+  const login = async (
+    access: string,
+    profile: UserProfile,
+    password: string,
+  ) => {
+    const masterKey = await CryptoUtils.deriveMasterKey(
+      password,
+      profile.email,
+    );
+    await saveMasterKey(masterKey);
+    setMasterKey(masterKey);
     setAuth(access, profile);
   };
 
@@ -18,6 +38,8 @@ export const useAuth = () => {
       await api.post(endpoints.LOGOUT);
     } finally {
       clearAuth();
+      setMasterKey(null);
+      await clearMasterKey();
     }
   };
 
@@ -34,17 +56,20 @@ export const useAuth = () => {
     try {
       // try refresh
       const { data: refreshData } = await publicApi.post(endpoints.REFRESH);
-      // fetch user profile with the new access token
       const { data: userData } = await api.get(endpoints.ME, {
         headers: { Authorization: `Bearer ${refreshData.access}` },
       });
-      // update auth details in memory
       setAuth(refreshData.access, userData);
-    } catch (err) {
-      console.error("Initialization failed:", err);
+
+      // restore master key from IndexedDB
+      const masterKey = await loadMasterKey();
+      if (masterKey) setMasterKey(masterKey);
+    } catch {
       clearAuth();
+      setMasterKey(null);
+      await clearMasterKey();
     }
-  }, []);
+  }, [setMasterKey]);
 
   return {
     isAuthenticated,
