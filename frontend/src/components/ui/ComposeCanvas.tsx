@@ -1,9 +1,9 @@
 import * as fabric from "fabric";
-import { useEffect, useRef } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 
 const PAD = 36;
 
-export default function ComposeCanvas() {
+export const ComposeCanvas = forwardRef((_props, ref) => {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fabricRef = useRef<fabric.Canvas | null>(null);
@@ -125,6 +125,22 @@ export default function ComposeCanvas() {
     };
   }, []);
 
+  useImperativeHandle(ref, () => ({
+    addImage: (url: string) => {
+      if (!fabricRef.current) return;
+      fabric.FabricImage.fromURL(url).then((img) => {
+        img.scaleToWidth(300);
+        img.set({
+          left: PAD,
+          top: PAD,
+        });
+        fabricRef.current?.add(img);
+        fabricRef.current?.setActiveObject(img);
+        fabricRef.current?.requestRenderAll();
+      });
+    },
+  }));
+
   return (
     <div
       ref={wrapperRef}
@@ -138,4 +154,4 @@ export default function ComposeCanvas() {
       />
     </div>
   );
-}
+});

@@ -1,10 +1,20 @@
-import { LockIcon, TrayIcon } from "@phosphor-icons/react";
-import { useState } from "react";
-import ComposeCanvas from "../components/ui/ComposeCanvas";
+import { ImageIcon, LockIcon, TrayIcon } from "@phosphor-icons/react";
+import { useRef, useState } from "react";
+import { ComposeCanvas } from "../components/ui/ComposeCanvas";
 import DateDisplay from "../components/ui/DateDisplay";
 
 export default function Editor() {
   const [recipient, setRecipient] = useState("");
+
+  const canvasRef = useRef<any>(null);
+  const _fileInputRef = useRef<HTMLInputElement>(null);
+  const _handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const url = URL.createObjectURL(file);
+      canvasRef.current?.addImage(url);
+    }
+  };
 
   return (
     <section className="flex-1 overflow-y-auto scrollbar-hide px-2 py-12 bg-base-300">
@@ -33,7 +43,22 @@ export default function Editor() {
           id="writer-toolbar"
           className="flex items-center justify-between mb-8 h-14 bg-base-100/50 backdrop-blur-md rounded-full border border-base-content/5 px-6"
         >
-          <div className="flex gap-4">Toolbar Placeholder</div>
+          <div className="flex gap-4">
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              onClick={() => _fileInputRef.current?.click()}
+            >
+              <ImageIcon size={18} weight="bold" />
+            </button>
+            <input
+              type="file"
+              ref={_fileInputRef}
+              onChange={_handleImageUpload}
+              accept="image/*"
+              className="hidden"
+            />
+          </div>
 
           <div className="flex items-center gap-2">
             <button
@@ -56,7 +81,7 @@ export default function Editor() {
             </button>
           </div>
         </div>
-        <ComposeCanvas />
+        <ComposeCanvas ref={canvasRef} />
       </div>
     </section>
   );

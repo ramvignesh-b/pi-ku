@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import { api, publicApi } from "../api/apiClient";
 import { endpoints } from "../config/endpoints";
 import { useAuthStore } from "../store/useAuthStore";
@@ -9,14 +10,8 @@ interface UserProfile {
 }
 
 export const useAuth = () => {
-  const {
-    accessToken,
-    user,
-    isInitializing,
-    setAuth,
-    clearAuth,
-    setInitializing,
-  } = useAuthStore();
+  const { accessToken, user, isInitializing, setAuth, clearAuth } =
+    useAuthStore();
 
   const isAuthenticated = !!accessToken;
 
@@ -32,8 +27,11 @@ export const useAuth = () => {
     }
   };
 
-  const initialize = async () => {
-    // If we already have a session in memory, don't trigger refresh/me again
+  const initialize = useCallback(async () => {
+    const { accessToken, user, setAuth, clearAuth, setInitializing } =
+      useAuthStore.getState();
+
+    // If session in memory, don't trigger refresh/me again
     if (accessToken && user) {
       setInitializing(false);
       return;
@@ -42,19 +40,17 @@ export const useAuth = () => {
     try {
       // try refresh
       const { data: refreshData } = await publicApi.post(endpoints.REFRESH);
-
       // fetch user profile with the new access token
       const { data: userData } = await api.get(endpoints.ME, {
         headers: { Authorization: `Bearer ${refreshData.access}` },
       });
-
       // update auth details in memory
       setAuth(refreshData.access, userData);
     } catch (err) {
       console.error("Initialization failed:", err);
       clearAuth();
     }
-  };
+  }, []);
 
   return {
     isAuthenticated,
