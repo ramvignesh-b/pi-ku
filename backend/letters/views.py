@@ -17,10 +17,11 @@ class LetterView(generics.ListCreateAPIView):
 
     def put(self, request, public_id):
         serializer = self.get_serializer(data=request.data)
+
         serializer.is_valid(raise_exception=True)
 
         letter, created = Letter.objects.update_or_create(
-            public_id=public_id, user=request.user, defaults=serializer.validated_data
+            public_id=public_id, user=self.request.user, defaults=serializer.validated_data
         )
 
         LetterImage.objects.filter(letter=letter).delete()

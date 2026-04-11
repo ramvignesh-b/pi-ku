@@ -55,13 +55,14 @@ class LetterAPITest(APITestCase):
     def test_create_draft_letter_api(self):
         """Test API can successfully create a basic draft letter."""
         payload = {
+            "public_id": "4281edcc-5459-4ff2-bb5e-669fb44e0757",
             "type": "KEPT",
             "encrypted_content": "enc_xyz==",
             "encrypted_metadata": "enc_meta==",
             "encrypted_dek": "enc_dek==",
         }
 
-        response = self.client.post(self.url, payload)
+        response = self.client.put(self.url + payload["public_id"] + "/", payload)
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Letter.objects.count(), 1)
         self.assertEqual(Letter.objects.get().status, "DRAFT")
