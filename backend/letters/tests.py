@@ -51,7 +51,12 @@ class LetterAPITest(APITestCase):
 
     def test_create_draft_letter_api(self):
         """Test API can successfully create a basic draft letter."""
-        payload = {"type": "KEPT", "encrypted_content": "enc_xyz==", "encrypted_metadata": "enc_meta=="}
+        payload = {
+            "type": "KEPT",
+            "encrypted_content": "enc_xyz==",
+            "encrypted_metadata": "enc_meta==",
+            "encrypted_dek": "enc_dek==",
+        }
 
         response = self.client.post(self.url, payload)
         self.assertEqual(response.status_code, 201)
@@ -59,3 +64,14 @@ class LetterAPITest(APITestCase):
         self.assertEqual(Letter.objects.get().status, "DRAFT")
         self.assertEqual(Letter.objects.get().type, "KEPT")
         self.assertEqual(Letter.objects.get().user, self.user)
+
+    def test_encrypted_dek_is_required_when_storing_encrypted_content_and_metadata(self):
+        """encrypted_dek is required when encrypted_content and encrypted_metadata are present"""
+        payload = {"type": "KEPT", "encrypted_content": "enc_xyz==", "encrypted_metadata": "enc_meta=="}
+        response = self.client.post(self.url, payload)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(Letter.objects.count(), 0)
+        self.assertEqual(
+            response.data["non_field_errors"],
+            ["encrypted_dek is required when encrypted_content and encrypted_metadata are present"],
+        )

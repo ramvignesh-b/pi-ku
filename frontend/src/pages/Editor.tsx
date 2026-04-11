@@ -49,7 +49,7 @@ export default function Editor() {
 
             <button
               type="button"
-              className="btn btn-primary btn-sm rounded-full px-6 text-[10px] tracking-[0.3em] uppercase font-black"
+              className="btn btn-primary btn-sm rounded-full px-6"
             >
               <LockIcon size={14} weight="fill" className="mr-1" />
               Seal
