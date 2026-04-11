@@ -73,7 +73,7 @@ export default function Editor() {
 
     // replace image src with encrypted image filename
     const canvasData = canvasRef.current?.getData();
-    canvasData.objects = canvasData.objects?.map(
+    canvasData?.objects?.map(
       (
         obj: Record<string, unknown>, // fabric is too quirky for any other type
       ) =>
