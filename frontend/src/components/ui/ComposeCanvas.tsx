@@ -3,9 +3,11 @@ import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 
 const PAD = 36;
 
+type CanvasJSON = ReturnType<fabric.Canvas["toJSON"]>;
+
 export type CanvasTools = {
   addImage: (url: string, file: File) => void;
-  getData: () => { objects: any[] };
+  getData: () => { objects: CanvasJSON["objects"] }; // no-any hack :/
   getJsonData: () => string;
   getImages: () => { src: string; file: File }[];
 };

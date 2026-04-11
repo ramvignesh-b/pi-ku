@@ -4,7 +4,6 @@ import {
   LockIcon,
   TrayIcon,
 } from "@phosphor-icons/react";
-import type { FabricObject } from "fabric";
 import { useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { api } from "../api/apiClient";
@@ -73,10 +72,14 @@ export default function Editor() {
     }
 
     // replace image src with encrypted image filename
-    const canvasData = canvasRef.current?.getData() ?? { objects: [] };
+    const canvasData = canvasRef.current?.getData();
     canvasData.objects = canvasData.objects?.map(
-      (obj: FabricObject & { src: string }) =>
-        obj.type === "Image" ? { ...obj, src: imageEncMap.get(obj.src) } : obj,
+      (
+        obj: Record<string, unknown>, // fabric is too quirky for any other type
+      ) =>
+        obj.type === "Image"
+          ? { ...obj, src: imageEncMap.get(obj.src as string) }
+          : obj,
     );
 
     const encrypted_letter = await cryptoUtils.encryptLetter(
