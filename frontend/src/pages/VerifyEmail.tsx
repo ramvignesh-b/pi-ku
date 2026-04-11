@@ -33,7 +33,6 @@ export default function VerifyEmail() {
         type="button"
         className="text-xs italic opacity-40 cursor-pointer underline"
         onClick={() => window.close()}
-        onKeyDown={(e) => e.key === "Enter" && window.close()}
       >
         You can close this window now.
       </button>

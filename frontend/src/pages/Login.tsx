@@ -36,17 +36,13 @@ export default function Login() {
     setIsLoading(true);
     setApiError(null);
     try {
-      // 1. Authenticate
       const { data: authData } = await publicApi.post(endpoints.LOGIN, data);
 
-      // 2. Fetch User Profile with the fresh token
-      // We pass the header explicitly to avoid any race conditions with interceptors
       const { data: userData } = await api.get(endpoints.ME, {
         headers: { Authorization: `Bearer ${authData.access}` },
       });
 
-      // 3. Update store using the hook method
-      await login(authData.access, userData);
+      login(authData.access, userData);
 
       navigate(ROUTES.DRAWER);
     } catch (err) {
