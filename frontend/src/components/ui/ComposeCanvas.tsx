@@ -5,10 +5,14 @@ const PAD = 36;
 
 export type CanvasTools = {
   addImage: (url: string, file: File) => void;
-  getData: () => { objects: any };
+  getData: () => { objects: any[] };
   getJsonData: () => string;
   getImages: () => { src: string; file: File }[];
 };
+
+export interface FabricImageWithFile extends fabric.FabricImage {
+  _customRawFile: File;
+}
 
 export const ComposeCanvas = forwardRef<CanvasTools>((_props, ref) => {
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -150,7 +154,7 @@ export const ComposeCanvas = forwardRef<CanvasTools>((_props, ref) => {
       });
     },
     getData: () => {
-      if (!fabricRef.current) return "";
+      if (!fabricRef.current) return { objects: [] };
       return fabricRef.current.toJSON();
     },
     getJsonData: () => {
@@ -159,8 +163,11 @@ export const ComposeCanvas = forwardRef<CanvasTools>((_props, ref) => {
     },
     getImages: () => {
       if (!fabricRef.current) return [];
-      return fabricRef.current.getObjects("Image").map((img: any) => ({
-        src: img._element.currentSrc,
+      const images = fabricRef.current.getObjects(
+        "Image",
+      ) as FabricImageWithFile[];
+      return images.map((img) => ({
+        src: (img.getElement() as HTMLImageElement).currentSrc,
         file: img._customRawFile,
       }));
     },

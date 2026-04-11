@@ -16,7 +16,11 @@ class LetterView(generics.ListCreateAPIView):
         return Letter.objects.filter(user=self.request.user)
 
     def put(self, request, public_id):
-        serializer = self.get_serializer(data=request.data)
+        data = request.data.copy()
+        # remove public_id from data to avoid UniqueValidator firing
+        # since we use it from the URL for update_or_create anyway
+        data.pop("public_id", None)
+        serializer = self.get_serializer(data=data)
 
         serializer.is_valid(raise_exception=True)
 

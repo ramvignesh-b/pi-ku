@@ -19,9 +19,11 @@ import { useKeyStore } from "../store/useKeyStore";
 import { CryptoUtils } from "../utils/crypto";
 
 export default function Editor() {
+  const navigate = useNavigate();
+  // check for existing letter
   const { public_id } = useParams();
   const letterIdRef = useRef<string>(public_id ?? "");
-  const navigate = useNavigate();
+
   const [isSealing, setIsSealing] = useState(false);
   const [isSaveSuccess, setIsSaveSuccess] = useState(false);
 
@@ -40,9 +42,11 @@ export default function Editor() {
 
   async function handleSeal(): Promise<void> {
     if (!public_id) {
+      // if no uuid slug, then generate a new one and update params
       letterIdRef.current = crypto.randomUUID();
       navigate(ROUTES.WRITE(letterIdRef.current), { replace: true });
     }
+
     if (isSealing) return;
     setIsSealing(true);
     const cryptoUtils = new CryptoUtils();
@@ -79,7 +83,11 @@ export default function Editor() {
       JSON.stringify(canvasData),
       masterKey,
     );
-    const encrypted_metadata = "";
+
+    const encrypted_metadata = await cryptoUtils.encryptMetadata(
+      { recipient },
+      masterKey,
+    );
 
     // upload to server
     /*
@@ -98,7 +106,7 @@ export default function Editor() {
     formData.append("status", "SEALED");
     formData.append("encrypted_content", encrypted_letter.encrypted_content);
     formData.append("encrypted_dek", encrypted_letter.encrypted_dek);
-    formData.append("encrypted_metadata", encrypted_metadata);
+    formData.append("encrypted_metadata", encrypted_metadata.encrypted_content);
     encImageFilesMap.forEach((image, filename) => {
       formData.append("image_files", image, filename);
     });
