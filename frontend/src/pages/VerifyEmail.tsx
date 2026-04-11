@@ -22,7 +22,7 @@ export default function VerifyEmail() {
 
       <div className="divider opacity-10"></div>
 
-      <div className="bg-base-200/50 p-4 rounded-lg text-xs leading-relaxed text-left opacity-70">
+      <div className="alert bg-base-200/50 p-4 rounded-lg text-xs leading-relaxed text-left opacity-70">
         <p>
           Didn't receive it? Check your spam folder or wait for a few minutes.
           The link will expire in 24 hours.

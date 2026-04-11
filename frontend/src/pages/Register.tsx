@@ -62,9 +62,9 @@ export default function Register() {
   return (
     <div className="glass-card w-full max-w-sm p-2 transition-all duration-500 hover:shadow-2xl fade-zoom">
       <form onSubmit={handleSubmit(onSubmit)} className="card-body gap-4">
-        <h2 className="card-title font-display text-2xl font-bold justify-center text-primary tracking-tight">
+        <h1 className="card-title font-display text-2xl font-bold justify-center text-primary tracking-tight">
           Create a <Logo /> Account
-        </h2>
+        </h1>
 
         {apiError && (
           <div className="alert alert-error text-xs py-2 rounded-md">
@@ -104,15 +104,11 @@ export default function Register() {
         />
 
         {/* Warning */}
-        <div className="bg-warning/10 border-l-2 border-warning p-3 rounded-r-md flex gap-2">
-          <InfoIcon
-            size={20}
-            weight="duotone"
-            className="text-warning mt-0.5 shrink-0"
-          />
-          <p className="text-sm text-warning-content font-medium opacity-90">
+        <div className="alert alert-warning items-start text-left p-3 gap-2 rounded-md border-warning/20">
+          <InfoIcon size={20} weight="duotone" className="mt-0.5 shrink-0" />
+          <p className="text-sm font-semibold">
             Choose a password you won't forget. <br />
-            <span className="font-semibold underline">There is no reset.</span>{" "}
+            <span className="underline decoration-2">There is no reset.</span>{" "}
             If you lose it, your letters cannot be recovered.
           </p>
         </div>
@@ -121,6 +117,7 @@ export default function Register() {
           <button
             type="submit"
             disabled={isLoading}
+            aria-label="Register"
             className="btn btn-primary w-full shadow-lg"
           >
             {isLoading ? (

@@ -1,8 +1,10 @@
 import { useEffect } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import Logo from "./components/Logo";
+import { ROUTES } from "./config/routes";
 import Activate from "./pages/Activate";
 import Drawer from "./pages/Drawer";
+import Editor from "./pages/Editor";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -30,17 +32,18 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-base-200 p-8 flex items-center justify-center">
+      <main className="min-h-screen bg-base-200 flex items-center justify-center w-full">
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/onboard" element={<Register />} />
-          <Route path="/verify-email" element={<VerifyEmail />} />
-          <Route path="/activate/:uidb64/:token" element={<Activate />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/drawer" element={<Drawer />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path={ROUTES.HOME} element={<Home />} />
+          <Route path={ROUTES.ONBOARD} element={<Register />} />
+          <Route path={ROUTES.VERIFY_EMAIL} element={<VerifyEmail />} />
+          <Route path={ROUTES.ACTIVATE} element={<Activate />} />
+          <Route path={ROUTES.LOGIN} element={<Login />} />
+          <Route path={ROUTES.DRAWER} element={<Drawer />} />
+          <Route path={ROUTES.WRITE} element={<Editor />} />
+          <Route path="*" element={<Navigate to={ROUTES.HOME} replace />} />
         </Routes>
-      </div>
+      </main>
     </BrowserRouter>
   );
 }

@@ -4,6 +4,8 @@ import "@fontsource/knewave/400.css";
 export default function Logo() {
   return (
     <span
+      role="img"
+      aria-label="Pi Ku"
       className="inline-flex items-baseline justify-center leading-none select-none"
       style={{ fontFamily: "'Knewave', serif" }}
     >

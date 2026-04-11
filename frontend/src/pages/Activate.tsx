@@ -70,15 +70,9 @@ export default function Activate() {
       {status === "error" && (
         <div className="flex flex-col items-center gap-6 animate-in fade-in zoom-in duration-500">
           <div className="bg-error/10 p-4 rounded-full">
-            <XCircleIcon
-              size={64}
-              weight="duotone"
-              className="text-error-content"
-            />
+            <XCircleIcon size={64} weight="duotone" className="text-error" />
           </div>
-          <h2 className="font-display text-xl text-error-content">
-            Activation Failed
-          </h2>
+          <h2 className="font-display text-xl text-error">Activation Failed</h2>
           <p className="opacity-70 mb-8 leading-relaxed">
             The link might be expired or already used. Please try registering
             again.

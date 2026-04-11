@@ -19,19 +19,20 @@ export default function FormField({
     <div className="form-control">
       <label
         htmlFor={registration.name}
-        className="field-label font-display text-primary-content"
+        className="field-label font-display text-base-content/90 font-medium"
       >
         {label}
       </label>
       <input
         {...registration}
+        id={registration.name}
         type={type}
         placeholder={placeholder}
         className={`input input-bordered focus:input-primary ${
           error ? "input-error" : ""
         }`}
       />
-      {error && <p className="text-error-content">{error}</p>}
+      {error && <p className="text-error">{error}</p>}
     </div>
   );
 }
