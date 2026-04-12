@@ -16,7 +16,9 @@ class LetterView(generics.ListCreateAPIView):
         return Letter.objects.filter(user=self.request.user)
 
     def put(self, request, public_id):
-        data = request.data.copy()
+        # avoiding deepcopy due to osmething called pickle
+        data = request.data.dict()
+        print(data)
         # remove public_id from data to avoid UniqueValidator firing
         # since we use it from the URL for update_or_create anyway
         data.pop("public_id", None)
