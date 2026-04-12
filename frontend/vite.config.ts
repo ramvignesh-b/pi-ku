@@ -12,5 +12,5 @@ export default defineConfig(({ mode }) => {
       port: Number(env.FRONTEND_PORT),
       host: env.FRONTEND_DOMAIN,
     },
-  }
+  };
 });

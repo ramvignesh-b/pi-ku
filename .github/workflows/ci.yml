@@ -26,6 +26,8 @@ jobs:
         run: bun run check
       - name: Type Check & Build
         run: bun run build
+      - name: Run Unit Tests
+        run: bun run test
 
   backend:
     name: Backend CI

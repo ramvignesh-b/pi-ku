@@ -184,7 +184,7 @@ export class CryptoUtils {
    * Metadata functions
    */
   public async encryptMetadata(
-    metadata: Record<string, string>,
+    metadata: Record<string, unknown>,
     masterKey: CryptoKey,
   ): Promise<EncryptedLetter> {
     const { encryptedContent, encrypted_dek, sharingKey } =

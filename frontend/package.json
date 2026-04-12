@@ -9,7 +9,11 @@
     "lint": "biome lint --write ./src",
     "format": "biome format --write ./src",
     "check": "biome check --write ./src",
-    "preview": "vite preview"
+    "check-all": "biome check --write .",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@fontsource-variable/jost": "^5.2.8",
@@ -44,6 +48,7 @@
     "@vitejs/plugin-react": "^6.0.1",
     "@vitest/coverage-v8": "^4.1.4",
     "fake-indexeddb": "^6.2.5",
+    "jsdom": "^29.0.2",
     "msw": "^2.13.2",
     "typescript": "~6.0.2",
     "vite": "^8.0.4",
