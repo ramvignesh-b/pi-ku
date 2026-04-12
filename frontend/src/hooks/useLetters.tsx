@@ -1,0 +1,88 @@
+import { useEffect, useMemo, useState } from "react";
+import { api } from "../api/apiClient";
+import { endpoints } from "../config/endpoints";
+import { useKeyStore } from "../store/useKeyStore";
+import { CryptoUtils } from "../utils/crypto";
+
+export interface Letter {
+  public_id: string;
+  type: "KEPT" | "VAULT" | "SENT";
+  status: "DRAFT" | "SEALED" | "BURNED";
+  updated_at: string;
+  sealed_at?: string;
+  unlock_at?: string;
+  encrypted_metadata: string;
+  encrypted_content: string;
+  encrypted_dek: string;
+}
+
+export interface LetterMetadata {
+  recipient: string;
+  tags?: string[];
+}
+
+export interface ProcessedLetter extends Letter {
+  metadata: LetterMetadata;
+}
+
+async function decryptLetters(
+  letters: Letter[],
+  masterKey: CryptoKey,
+): Promise<ProcessedLetter[]> {
+  const cryptoUtils = new CryptoUtils();
+
+  return Promise.all(
+    letters.map(async (letter) => {
+      try {
+        const metadata = (await cryptoUtils.decryptMetadata(
+          {
+            encrypted_content: letter.encrypted_metadata,
+            encrypted_dek: letter.encrypted_dek,
+          },
+          masterKey,
+        )) as LetterMetadata;
+
+        return { ...letter, metadata };
+      } catch (err) {
+        console.warn("Decryption failed for letter:", letter.public_id, err);
+        return {
+          ...letter,
+          metadata: { recipient: "Encrypted Letter" },
+        };
+      }
+    }),
+  );
+}
+
+export function useLetters() {
+  const [letters, setLetters] = useState<ProcessedLetter[]>([]);
+  const [loading, setLoading] = useState(false);
+  const { masterKey } = useKeyStore();
+
+  useEffect(() => {
+    if (!masterKey) return;
+
+    setLoading(true);
+    api
+      .get(endpoints.LETTERS)
+      .then((res) => decryptLetters(res.data, masterKey))
+      .then(setLetters)
+      .catch((err) => console.error("Drawer load failed:", err))
+      .finally(() => setLoading(false));
+  }, [masterKey]);
+
+  const drawerItems = useMemo(() => {
+    return {
+      drafts: letters.filter((l) => l.status === "DRAFT"),
+      kept: letters.filter((l) => l.type === "KEPT" && l.status === "SEALED"),
+      vault: letters.filter((l) => l.type === "VAULT"),
+      sent: letters.filter((l) => l.type === "SENT" && l.status === "SEALED"),
+    };
+  }, [letters]);
+
+  return {
+    ...drawerItems,
+    loading,
+    refreshLetters: () => setLoading(true),
+  };
+}

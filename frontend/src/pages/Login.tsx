@@ -47,10 +47,10 @@ export default function Login() {
       navigate(ROUTES.DRAWER);
     } catch (err) {
       console.error("Login error:", err);
-      let message = "Invalid email or password";
-      if (axios.isAxiosError(err)) {
-        message =
-          err.response?.data?.detail || err.response?.data?.message || message;
+      let message =
+        "Sorry, we're experiencing technical issues.\nPlease try again later.";
+      if (axios.isAxiosError(err) && err.response?.status !== 500) {
+        message = err.response?.data?.detail || err.response?.data?.message;
       }
       setApiError(message);
     } finally {
@@ -90,6 +90,7 @@ export default function Login() {
         <div className="card-actions mt-4">
           <button
             type="submit"
+            name="login"
             disabled={isLoading}
             aria-label="Sign In"
             className="btn btn-primary w-full shadow-lg"
@@ -106,6 +107,7 @@ export default function Login() {
           Don't have an account?{" "}
           <button
             type="button"
+            name="register"
             onClick={() => navigate(ROUTES.ONBOARD)}
             className="link link-primary no-underline hover:underline font-bold"
           >

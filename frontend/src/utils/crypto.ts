@@ -5,7 +5,12 @@
 export interface EncryptedLetter {
   encrypted_content: string;
   encrypted_dek: string;
-  sharingKey: string;
+  sharingKey?: string | null;
+}
+
+export interface EncryptedLetterMetadata {
+  encrypted_content: string;
+  encrypted_dek: string;
 }
 
 export interface EncryptedImageUpload {
@@ -199,7 +204,7 @@ export class CryptoUtils {
   public async decryptMetadata(
     encrypted_metadata: EncryptedLetter,
     masterKey: CryptoKey,
-  ): Promise<Record<string, string>> {
+  ): Promise<Record<string, any>> {
     const plainBytes = await this.openEnvelope(
       encrypted_metadata.encrypted_content,
       encrypted_metadata.encrypted_dek,

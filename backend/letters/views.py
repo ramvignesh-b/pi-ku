@@ -15,23 +15,30 @@ class LetterView(generics.ListCreateAPIView):
         """return only letters of the authenticated user"""
         return Letter.objects.filter(user=self.request.user)
 
+
+class LetterDetailView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = LetterSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = "public_id"
+
+    def get_queryset(self):
+        return Letter.objects.filter(user=self.request.user)
+
     def put(self, request, public_id):
-        # avoiding deepcopy due to osmething called pickle
-        data = request.data.dict()
-        print(data)
-        # remove public_id from data to avoid UniqueValidator firing
-        # since we use it from the URL for update_or_create anyway
-        data.pop("public_id", None)
-        serializer = self.get_serializer(data=data)
+        # upsert: create if doesn't exist, else update
+        letter, created = Letter.objects.get_or_create(public_id=public_id, user=request.user)
 
+        # request.data handles both JSON and Multipart automatically in DRF
+        serializer = self.get_serializer(letter, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
+        serializer.save()
 
-        letter, created = Letter.objects.update_or_create(
-            public_id=public_id, user=self.request.user, defaults=serializer.validated_data
-        )
+        # Note: image_files is a list of binary files in request.FILES
+        if "image_files" in request.FILES:
+            letter.images.all().delete()
+            for image_file in request.FILES.getlist("image_files"):
+                LetterImage.objects.create(letter=letter, file=image_file, file_name=image_file.name)
 
-        LetterImage.objects.filter(letter=letter).delete()
-        for image_file in request.FILES.getlist("image_files"):
-            LetterImage.objects.create(letter=letter, file=image_file, file_name=image_file.name)
-
+        # Return fresh data including the new image URLs
+        serializer = self.get_serializer(letter)
         return Response(serializer.data, status=201 if created else 200)

@@ -2,9 +2,10 @@ import {
   DownloadSimpleIcon,
   ImageIcon,
   LockIcon,
+  SpinnerGapIcon,
   TrayIcon,
 } from "@phosphor-icons/react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { api } from "../api/apiClient";
 import {
@@ -17,20 +18,116 @@ import { ROUTES } from "../config/routes";
 import { useKeyStore } from "../store/useKeyStore";
 import { CryptoUtils } from "../utils/crypto";
 
+// convert blob url to file
+async function blobUrlToFile(
+  blobUrl: string,
+  fileName: string,
+  mimeType?: string,
+): Promise<File> {
+  const response = await fetch(blobUrl);
+  const blob = await response.blob();
+  return new File([blob], fileName, { type: mimeType ?? blob.type });
+}
+
 export default function Editor() {
   const navigate = useNavigate();
-  // check for existing letter
   const { public_id } = useParams();
   const letterIdRef = useRef<string>(public_id ?? "");
 
+  const [isInitialLoading, setIsInitialLoading] = useState(false);
   const [isSealing, setIsSealing] = useState(false);
   const [isSaveSuccess, setIsSaveSuccess] = useState(false);
 
   const [recipient, setRecipient] = useState("");
-  const masterKey = useKeyStore.getState().masterKey;
+  const { masterKey } = useKeyStore();
 
   const canvasRef = useRef<CanvasTools>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Initial load: Fetch and decrypt existing letter
+  useEffect(() => {
+    if (!public_id || !masterKey) return;
+
+    const loadExistingLetter = async () => {
+      setIsInitialLoading(true);
+      const cryptoUtils = new CryptoUtils();
+      try {
+        const res = await api.get(`${endpoints.LETTERS}${public_id}/`);
+        const letterData = res.data;
+
+        // metadata for recipient
+        const metadata = await cryptoUtils.decryptMetadata(
+          {
+            encrypted_content: letterData.encrypted_metadata,
+            encrypted_dek: letterData.encrypted_dek,
+          },
+          masterKey,
+        );
+        setRecipient(metadata.recipient || "");
+
+        // decrypt canvas data
+        const decryptedJsonStr = await cryptoUtils.decryptLetter(
+          {
+            encrypted_content: letterData.encrypted_content,
+            encrypted_dek: letterData.encrypted_dek,
+          },
+          masterKey,
+        );
+        const canvasData = JSON.parse(decryptedJsonStr);
+
+        // traverse through canvas images and replace encrypted image with decrypted image
+        if (canvasData.objects) {
+          for (const obj of canvasData.objects) {
+            if (obj.type === "Image" && typeof obj.src === "string") {
+              const filename = obj.src;
+              const remoteImage = letterData.images.find(
+                (img: any) => img.file_name === filename,
+              );
+
+              if (remoteImage) {
+                try {
+                  // fetch encrypted image blob using authenticated API
+                  const imageRes = await api.get(remoteImage.file, {
+                    responseType: "blob",
+                  });
+                  const encryptedBlob = imageRes.data;
+
+                  // decrypt image blob
+                  const blobUrl = await cryptoUtils.decryptImage(
+                    encryptedBlob,
+                    letterData.encrypted_dek,
+                    masterKey,
+                  );
+                  obj.src = blobUrl;
+                  obj._customRawFile = await blobUrlToFile(blobUrl, filename);
+                  console.log("Decrypted image object:", obj);
+                } catch (imgErr) {
+                  console.error(
+                    "Failed to decrypt image object:",
+                    filename,
+                    imgErr,
+                  );
+                }
+              }
+            }
+          }
+        }
+
+        // load updated data into canvas
+        requestAnimationFrame(() => {
+          canvasRef.current?.loadData(canvasData);
+        });
+      } catch (err) {
+        console.error("Failed to load existing letter:", err);
+      } finally {
+        setIsInitialLoading(false);
+      }
+    };
+
+    loadExistingLetter();
+  }, [public_id, masterKey]);
+
+  // --------------------------------------------------------------------------------------
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]; // pick one file at a time
     if (file) {
@@ -39,11 +136,13 @@ export default function Editor() {
     }
   };
 
-  async function handleSeal(): Promise<void> {
-    if (!public_id) {
+  const handleSave = async (status: "SEALED" | "DRAFT"): Promise<void> => {
+    if (!public_id && !letterIdRef.current) {
       // if no uuid slug, then generate a new one and update params
       letterIdRef.current = crypto.randomUUID();
       navigate(ROUTES.WRITE(letterIdRef.current), { replace: true });
+    } else if (public_id) {
+      letterIdRef.current = public_id;
     }
 
     if (isSealing) return;
@@ -60,27 +159,32 @@ export default function Editor() {
     }
 
     for (const image of images) {
-      const encrypted_image = await cryptoUtils.encryptImage(
-        image.file,
-        masterKey,
-      );
-      imageEncMap.set(image.src, encrypted_image.filename);
-      encImageFilesMap.set(
-        encrypted_image.filename,
-        encrypted_image.encryptedBlob,
-      );
+      if (image.src.endsWith(".bin")) continue;
+      try {
+        const encrypted_image = await cryptoUtils.encryptImage(
+          image.file,
+          masterKey,
+        );
+        imageEncMap.set(image.src, encrypted_image.filename);
+        encImageFilesMap.set(
+          encrypted_image.filename,
+          encrypted_image.encryptedBlob,
+        );
+      } catch (err) {
+        console.error("Failed to re-encrypt image:", err);
+      }
     }
 
     // replace image src with encrypted image filename
     const canvasData = canvasRef.current?.getData();
-    canvasData?.objects?.map(
-      (
-        obj: Record<string, unknown>, // fabric is too quirky for any other type
-      ) =>
-        obj.type === "Image"
-          ? { ...obj, src: imageEncMap.get(obj.src as string) }
-          : obj,
-    );
+    if (canvasData?.objects) {
+      canvasData.objects = canvasData.objects.map((obj: any) => {
+        if (obj.type === "Image" && imageEncMap.has(obj.src)) {
+          return { ...obj, src: imageEncMap.get(obj.src) };
+        }
+        return obj;
+      });
+    }
 
     const encrypted_letter = await cryptoUtils.encryptLetter(
       JSON.stringify(canvasData),
@@ -88,25 +192,14 @@ export default function Editor() {
     );
 
     const encrypted_metadata = await cryptoUtils.encryptMetadata(
-      { recipient },
+      { recipient, tags: [] },
       masterKey,
     );
 
-    // upload to server
-    /*
-    payload = {
-            "type": "SENT",
-            "status": "SEALED",
-            "encrypted_content": "enc_content==",
-            "encrypted_metadata": "enc_metadata==",
-            "encrypted_dek": "enc_dek==",
-            "image_files": [image1, image2],
-        }
-    */
     const formData = new FormData();
     formData.append("public_id", letterIdRef.current);
-    formData.append("type", "SENT");
-    formData.append("status", "SEALED");
+    formData.append("type", "KEPT");
+    formData.append("status", status);
     formData.append("encrypted_content", encrypted_letter.encrypted_content);
     formData.append("encrypted_dek", encrypted_letter.encrypted_dek);
     formData.append("encrypted_metadata", encrypted_metadata.encrypted_content);
@@ -125,30 +218,51 @@ export default function Editor() {
     } finally {
       setIsSealing(false);
     }
-  }
+  };
 
   return (
-    <section className="flex-1 overflow-y-auto scrollbar-hide px-2 py-12 bg-base-300">
-      {isSaveSuccess && (
-        <div className="modal modal-open bg-transparent backdrop-blur-md transition-all duration-300 ease-in-out">
-          <div className="modal-box bg-transparent">
-            <div className="alert alert-success">
-              <DownloadSimpleIcon size={18} weight="bold" />
-              <h3 className="font-bold text-lg">Your letter is sealed!</h3>
-            </div>
-            {/* <div className="modal-action">
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={() => setIsSaveSuccess(false)}
-              >
-                Close
-              </button>
-            </div> */}
+    <section className="flex-1 overflow-y-auto scrollbar-hide px-2 py-12 bg-base-300 relative">
+      {isInitialLoading && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-base-300/80 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-4">
+            <SpinnerGapIcon
+              size={48}
+              weight="bold"
+              className="animate-spin text-primary"
+            />
+            <p className="text-[10px] uppercase tracking-[0.4em] font-bold text-base-content/40">
+              Opening your draft...
+            </p>
           </div>
         </div>
       )}
-      <div className="max-w-[720px] mx-auto px-1 md:px-0">
+      {isSaveSuccess && (
+        <div
+          className="modal modal-open bg-base-100 backdrop-blur-md transition-all duration-2000 ease-in-out
+        animate-fade-in opacity-80"
+        >
+          <div className="alert alert-success opacity-90">
+            <DownloadSimpleIcon size={18} weight="bold" />
+            <h3 className="font-bold text-lg text-success-content">
+              Your letter is saved!
+            </h3>
+          </div>
+        </div>
+      )}
+      {isSealing && (
+        <div
+          className="modal modal-open bg-base-100 backdrop-blur-md transition-all duration-2000 ease-in-out
+        animate-fade-in opacity-80"
+        >
+          <div className="alert alert-neutral">
+            <SpinnerGapIcon size={18} weight="bold" className="animate-spin" />
+            <h3 className="font-bold text-neutral-content text-lg animate-pulse">
+              Securing your letter...
+            </h3>
+          </div>
+        </div>
+      )}
+      <div className="max-w-180 mx-auto px-1 md:px-0">
         <div className="flex justify-between items-end mb-16 border-b border-base-content/5 pb-8 px-0">
           <div className="flex flex-col gap-2 flex-1">
             <label
@@ -194,10 +308,11 @@ export default function Editor() {
             <button
               type="button"
               className="btn btn-ghost btn-sm text-[10px] tracking-[0.2em] uppercase font-bold text-base-content/60 hover:text-base-content"
-              title="Keep in your private drawer"
+              title="Store in your private drawer"
+              onClick={() => handleSave("DRAFT")}
             >
               <TrayIcon size={18} weight="bold" />
-              <span className="hidden md:inline">Keep</span>
+              <span className="hidden md:inline">Store</span>
             </button>
 
             <div className="w-px h-4 bg-base-content/10 mx-2" />
@@ -205,7 +320,7 @@ export default function Editor() {
             <button
               type="button"
               className="btn btn-primary btn-sm rounded-full px-6"
-              onClick={handleSeal}
+              onClick={() => handleSave("SEALED")}
             >
               <LockIcon size={14} weight="fill" className="mr-1" />
               Seal

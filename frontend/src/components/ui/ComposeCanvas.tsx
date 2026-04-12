@@ -10,6 +10,7 @@ export type CanvasTools = {
   getData: () => { objects: CanvasJSON["objects"] }; // no-any hack :/
   getJsonData: () => string;
   getImages: () => { src: string; file: File }[];
+  loadData: (data: any) => Promise<void>;
 };
 
 export interface FabricImageWithFile extends fabric.FabricImage {
@@ -27,7 +28,6 @@ export const ComposeCanvas = forwardRef<CanvasTools>((_props, ref) => {
     let canvas: fabric.Canvas | null = null;
 
     const init = async () => {
-      // lazy populate
       await document.fonts.ready;
       const waitForLayout = (): Promise<number> => {
         return new Promise((resolve) => {
@@ -48,23 +48,21 @@ export const ComposeCanvas = forwardRef<CanvasTools>((_props, ref) => {
         600,
       );
 
-      // init canvas
       canvas = new fabric.Canvas(canvasRef.current, {
         width: finalWidth,
         height: initialHeight,
         selection: false,
         preserveObjectStacking: true,
-        allowTouchScrolling: true, // for mobile
+        allowTouchScrolling: true,
       });
 
       fabricRef.current = canvas;
 
-      // transparent background
       const wrapperEl = canvas.getElement().parentElement;
       if (wrapperEl) wrapperEl.style.background = "transparent";
 
-      // the core textbox
       const textbox = new fabric.Textbox("Take a deep breath...", {
+        name: "main-textbox",
         originX: "left",
         originY: "top",
         left: PAD,
@@ -78,7 +76,7 @@ export const ComposeCanvas = forwardRef<CanvasTools>((_props, ref) => {
         editable: true,
         hasControls: false,
         hasBorders: false,
-        objectCaching: false, // for font crispness
+        objectCaching: false,
         splitByGrapheme: false,
         lockMovementX: true,
         lockMovementY: true,
@@ -89,7 +87,6 @@ export const ComposeCanvas = forwardRef<CanvasTools>((_props, ref) => {
       textboxRef.current = textbox;
       canvas.add(textbox);
 
-      // automatically adjust height
       textbox.on("changed", () => {
         if (!canvas || !wrapperRef.current) return;
         const neededHeight = textbox.top + textbox.height + PAD;
@@ -100,15 +97,12 @@ export const ComposeCanvas = forwardRef<CanvasTools>((_props, ref) => {
         }
       });
 
-      // auto focus
       setTimeout(() => {
         if (!isMounted) return;
         canvas?.setActiveObject(textbox);
         textbox.enterEditing();
         canvas?.renderAll();
 
-        // Accessibility fix for Fabric.js hidden textarea
-        // searching globally in case it is appended to body
         const hiddenTextareas = document.querySelectorAll(
           'textarea[data-fabric="textarea"]',
         );
@@ -151,8 +145,7 @@ export const ComposeCanvas = forwardRef<CanvasTools>((_props, ref) => {
         fabricRef.current?.add(img);
         fabricRef.current?.setActiveObject(img);
         fabricRef.current?.requestRenderAll();
-
-        URL.revokeObjectURL(url); // cleanup browser upload
+        URL.revokeObjectURL(url);
       });
     },
     getData: () => {
@@ -167,11 +160,35 @@ export const ComposeCanvas = forwardRef<CanvasTools>((_props, ref) => {
       if (!fabricRef.current) return [];
       const images = fabricRef.current.getObjects(
         "Image",
-      ) as FabricImageWithFile[];
+      ) as fabric.FabricImage[];
       return images.map((img) => ({
-        src: (img.getElement() as HTMLImageElement).currentSrc,
-        file: img._customRawFile,
+        src: img.getSrc(),
+        file: (img as any)._customRawFile,
       }));
+    },
+    loadData: async (data: any) => {
+      if (!fabricRef.current) return;
+      await fabricRef.current.loadFromJSON(data);
+
+      // find the textbox and restore focus
+      const objects = fabricRef.current.getObjects("Textbox");
+      if (objects.length > 0) {
+        const textbox = objects[0] as fabric.Textbox;
+        textbox.lockMovementX = true;
+        textbox.lockMovementY = true;
+        textbox.hasControls = false;
+        textbox.hasBorders = false;
+        textboxRef.current = textbox;
+        fabricRef.current.setActiveObject(textbox);
+        if (textbox.text) {
+          // move cursor to end
+          textbox.selectionStart = textbox.text.length;
+          textbox.selectionEnd = textbox.text.length;
+        }
+        textbox.enterEditing();
+      }
+
+      fabricRef.current.renderAll();
     },
   }));
 
