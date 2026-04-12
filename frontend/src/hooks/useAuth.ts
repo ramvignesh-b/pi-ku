@@ -36,6 +36,8 @@ export const useAuth = () => {
   const logout = async () => {
     try {
       await api.post(endpoints.LOGOUT);
+    } catch (error) {
+      console.error("Logout failed:", error);
     } finally {
       clearAuth();
       setMasterKey(null);
