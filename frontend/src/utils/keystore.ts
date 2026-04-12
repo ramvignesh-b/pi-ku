@@ -7,11 +7,17 @@ const db = openDB("piku-keys", 1, {
   },
 });
 
-export const saveMasterKey = async (key: CryptoKey) =>
-  (await db).put("master-key", key, "masterKey");
+export const saveMasterKey = async (key: CryptoKey) => {
+  const database = await db;
+  return await database.put("master-key", key, "masterKey");
+};
 
-export const loadMasterKey = async (): Promise<CryptoKey | null> =>
-  (await db).get("master-key", "masterKey") ?? null;
+export const loadMasterKey = async (): Promise<CryptoKey | null> => {
+  const database = await db;
+  return (await database.get("master-key", "masterKey")) || null;
+};
 
-export const clearMasterKey = async () =>
-  (await db).delete("master-key", "masterKey");
+export const clearMasterKey = async () => {
+  const database = await db;
+  return await database.delete("master-key", "masterKey");
+};
