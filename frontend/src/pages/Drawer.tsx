@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import Logo from "../components/Logo";
 import { DrawerSection } from "../components/ui/Drawer";
 import { LetterItem } from "../components/ui/LetterItem";
-import { ROUTES } from "../config/routes";
+import { PATHS } from "../config/routes";
 import { useAuth } from "../hooks/useAuth";
 import { useLetters } from "../hooks/useLetters";
 
@@ -127,7 +127,7 @@ export default function Drawer() {
       <button
         type="button"
         className="group mt-15 z-10 bg-transparent border border-dashed border-base-content/10 px-8 py-4 text-base-content/40 italic cursor-pointer transition-all hover:border-primary/40 hover:text-base-content/60 hover:bg-primary/5 hover:-translate-y-0.5 flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-primary/50 duration-1000"
-        onClick={() => navigate(ROUTES.WRITE(""), { replace: true })}
+        onClick={() => navigate(PATHS.write(""), { replace: true })}
       >
         <FeatherIcon
           size={18}

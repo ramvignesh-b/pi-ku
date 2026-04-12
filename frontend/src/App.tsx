@@ -72,7 +72,7 @@ export default function App() {
             }
           />
           <Route
-            path={`${ROUTES.WRITE()}:public_id?`}
+            path={ROUTES.WRITE}
             element={
               <ProtectedRoute>
                 <Editor />

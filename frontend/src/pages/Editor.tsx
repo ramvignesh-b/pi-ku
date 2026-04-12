@@ -14,7 +14,7 @@ import {
 } from "../components/ui/ComposeCanvas";
 import DateDisplay from "../components/ui/DateDisplay";
 import { endpoints } from "../config/endpoints";
-import { ROUTES } from "../config/routes";
+import { PATHS } from "../config/routes";
 import { useKeyStore } from "../store/useKeyStore";
 import { CryptoUtils } from "../utils/crypto";
 
@@ -140,7 +140,7 @@ export default function Editor() {
     if (!public_id && !letterIdRef.current) {
       // if no uuid slug, then generate a new one and update params
       letterIdRef.current = crypto.randomUUID();
-      navigate(ROUTES.WRITE(letterIdRef.current), { replace: true });
+      navigate(PATHS.write(letterIdRef.current), { replace: true });
     } else if (public_id) {
       letterIdRef.current = public_id;
     }

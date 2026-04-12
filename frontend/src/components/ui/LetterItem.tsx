@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { ROUTES } from "../../config/routes";
+import { PATHS } from "../../config/routes";
 
 export function LetterItem({
   preview,
@@ -15,9 +15,9 @@ export function LetterItem({
   const navigate = useNavigate();
   function handleNavigate(): void {
     if (status === "SEALED") {
-      navigate(ROUTES.READ(id));
+      navigate(PATHS.read(id));
     } else {
-      navigate(ROUTES.WRITE(id));
+      navigate(PATHS.write(id));
     }
   }
 
