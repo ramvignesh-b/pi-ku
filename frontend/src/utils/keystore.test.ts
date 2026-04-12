@@ -46,7 +46,7 @@ describe("keystore", () => {
     await saveMasterKey(key1);
     await saveMasterKey(key2);
     const loadedKey = await loadMasterKey();
-    const loadedJwk = await crypto.subtle.exportKey("jwk", loadedKey);
+    const loadedJwk = await crypto.subtle.exportKey("jwk", loadedKey!);
     const key1Jwk = await crypto.subtle.exportKey("jwk", key1);
     const key2Jwk = await crypto.subtle.exportKey("jwk", key2);
 

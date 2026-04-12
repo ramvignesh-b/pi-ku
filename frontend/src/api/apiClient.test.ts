@@ -49,7 +49,7 @@ describe("request interceptor", () => {
   });
 
   it("should not send Authorization header when the store has no token", async () => {
-    let capturedAuthHeader: string | null;
+    let capturedAuthHeader: string | null = "";
     server.use(
       http.get(`${API_URL}/api/auth/me/`, ({ request }) => {
         capturedAuthHeader = request.headers.get("Authorization");
