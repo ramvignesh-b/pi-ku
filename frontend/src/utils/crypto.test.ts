@@ -123,7 +123,7 @@ describe("encryptImage / decryptImage", () => {
 
     const result = await utils.encryptImage(file, masterKey);
     const encryptedLetter = await utils.encryptLetter("test", masterKey);
-    const sharingKey = encryptedLetter.sharingKey;
+    const sharingKey = encryptedLetter.sharingKey as string;
 
     const blobUrl = await utils.decryptImageWithSharingKey(
       result.encryptedBlob,
@@ -145,7 +145,8 @@ describe("Sharing Key Decryption (TDD)", () => {
     const letterContent = "hello, guest";
 
     const encryptedLetter = await utils.encryptLetter(letterContent, masterKey);
-    const sharingKey = encryptedLetter.sharingKey;
+    const sharingKey = encryptedLetter.sharingKey as string;
+
     const decryptedLetter = await utils.decryptLetterWithSharingKey(
       encryptedLetter.encrypted_content,
       sharingKey,
