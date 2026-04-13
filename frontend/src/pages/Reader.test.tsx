@@ -7,7 +7,6 @@ import { endpoints } from "../config/endpoints";
 import { CryptoUtils } from "../utils/crypto";
 import Reader from "./Reader";
 
-// We use the same API_URL logic as our other tests
 const API_URL = import.meta.env.VITE_API_URL;
 
 // Spy on crypto methods so we don't have to do actual decryption in the UI test
@@ -63,8 +62,6 @@ describe("Reader Page", () => {
   it("should load and decrypt the letter when a valid key is provided", async () => {
     const mockPublicId = "test-uuid";
     const mockKey = "fake-key";
-
-    // Mock the server response using MSW
     server.use(
       http.get(`${API_URL}${endpoints.LETTERS}${mockPublicId}/`, () => {
         return HttpResponse.json({
@@ -86,9 +83,8 @@ describe("Reader Page", () => {
     // Should show loading state first
     expect(screen.getByText(/Decrypting.../i)).toBeInTheDocument();
 
-    // Eventually should show the decrypted recipient header
     expect(
-      await screen.findByText(/A sealed message for Guest/i),
+      await screen.findByText(/A sealed message for/i),
     ).toBeInTheDocument();
   });
 

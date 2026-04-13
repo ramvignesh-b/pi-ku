@@ -40,7 +40,7 @@ describe("ProtectedRoute", () => {
       "/protected",
     );
 
-    expect(screen.getByText(/Initializing Identity/i)).toBeInTheDocument();
+    expect(screen.getByText(/Unsealing.../i)).toBeInTheDocument();
     expect(screen.queryByText("Secret")).not.toBeInTheDocument();
   });
 
@@ -90,7 +90,7 @@ describe("PublicRoute", () => {
       </PublicRoute>,
       "/public",
     );
-    expect(screen.getByText(/Initializing Identity/i)).toBeInTheDocument();
+    expect(screen.getByText(/Unsealing.../i)).toBeInTheDocument();
     expect(screen.queryByText("Login Page")).not.toBeInTheDocument();
   });
 

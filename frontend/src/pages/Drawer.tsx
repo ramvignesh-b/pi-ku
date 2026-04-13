@@ -2,7 +2,7 @@ import { FeatherIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Logo from "../components/Logo";
-import { DrawerSection } from "../components/ui/Drawer";
+import { DrawerSection } from "../components/ui/DrawerSection";
 import { LetterItem } from "../components/ui/LetterItem";
 import { PATHS } from "../config/routes";
 import { useAuth } from "../hooks/useAuth";
@@ -10,7 +10,7 @@ import { useLetters } from "../hooks/useLetters";
 
 export default function Drawer() {
   const { user, logout } = useAuth();
-  const [openSection, setOpenSection] = useState<string | null>("kept");
+  const [openSection, setOpenSection] = useState<string | null>();
   const navigate = useNavigate();
   const { drafts, kept, sent, vault, loading } = useLetters();
 

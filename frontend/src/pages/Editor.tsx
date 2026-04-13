@@ -35,19 +35,18 @@ export default function Editor() {
   const canvasRef = useRef<CanvasTools>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Initial load: Fetch and decrypt existing letter
   useEffect(() => {
     if (!public_id || !masterKey) return;
 
     const loadExistingLetter = async () => {
       setIsInitialLoading(true);
-      const crypto = new CryptoUtils();
+      const cryptoUtils = new CryptoUtils();
+
       try {
         const res = await api.get(`${endpoints.LETTERS}${public_id}/`);
         const letterData = res.data;
 
-        // Decrypt the metadata (for the recipient field)
-        const metadata = await crypto.decryptMetadata(
+        const metadata = await cryptoUtils.decryptMetadata(
           {
             encrypted_content: letterData.encrypted_metadata,
             encrypted_dek: letterData.encrypted_dek,
@@ -56,8 +55,7 @@ export default function Editor() {
         );
         setRecipient(metadata.recipient || "");
 
-        // Decrypt the main canvas JSON
-        const decryptedJsonStr = await crypto.decryptLetter(
+        const decryptedJsonStr = await cryptoUtils.decryptLetter(
           {
             encrypted_content: letterData.encrypted_content,
             encrypted_dek: letterData.encrypted_dek,
@@ -66,16 +64,15 @@ export default function Editor() {
         );
         const canvasData = JSON.parse(decryptedJsonStr);
 
-        // Batch decrypt images within the canvas
         await decryptCanvasImages(
           canvasData,
-          letterData.images,
+          letterData.images ?? [],
           letterData.encrypted_dek,
           masterKey,
-          true, // restore raw files for the editor
+          cryptoUtils,
+          true,
         );
 
-        // Load data into the Fabric canvas
         requestAnimationFrame(() => {
           canvasRef.current?.loadData(canvasData);
         });
@@ -115,14 +112,13 @@ export default function Editor() {
       const canvasData = canvasRef.current?.getData();
       const canvasImages = canvasRef.current?.getImages() || [];
 
-      // Secure any new images first
       const encImageFilesMap = await encryptCanvasImages(
         canvasData,
         canvasImages,
         masterKey,
+        cryptoUtils,
       );
 
-      // Encrypt the updated canvas JSON
       const encrypted_letter = await cryptoUtils.encryptLetter(
         JSON.stringify(canvasData),
         masterKey,
@@ -186,7 +182,7 @@ export default function Editor() {
           </div>
         </div>
       )}
-      {/* Sharing Modal */}
+
       {shareLink && (
         <div className="modal modal-open modal-bottom sm:modal-middle bg-base-100/20 backdrop-blur-md z-[100]">
           <div className="modal-box bg-base-100 border border-base-content/5 shadow-2xl relative">
@@ -233,10 +229,7 @@ export default function Editor() {
       )}
 
       {isSaveSuccess && !shareLink && (
-        <div
-          className="modal modal-open bg-base-100 backdrop-blur-md transition-all duration-2000 ease-in-out
-        animate-fade-in opacity-80"
-        >
+        <div className="modal modal-open bg-base-100 backdrop-blur-md transition-all duration-2000 ease-in-out animate-fade-in opacity-80">
           <div className="alert alert-success opacity-90">
             <DownloadSimpleIcon size={18} weight="bold" />
             <h3 className="font-bold text-lg text-success-content">
@@ -245,11 +238,9 @@ export default function Editor() {
           </div>
         </div>
       )}
+
       {isSealing && (
-        <div
-          className="modal modal-open bg-base-100 backdrop-blur-md transition-all duration-2000 ease-in-out
-        animate-fade-in opacity-80"
-        >
+        <div className="modal modal-open bg-base-100 backdrop-blur-md transition-all duration-2000 ease-in-out animate-fade-in opacity-80">
           <div className="alert alert-neutral">
             <SpinnerGapIcon size={18} weight="bold" className="animate-spin" />
             <h3 className="font-bold text-neutral-content text-lg animate-pulse">
@@ -258,6 +249,7 @@ export default function Editor() {
           </div>
         </div>
       )}
+
       <div className="max-w-180 mx-auto px-1 md:px-0">
         <div className="flex justify-between items-end mb-16 border-b border-base-content/5 pb-8 px-0">
           <div className="flex flex-col gap-2 flex-1">

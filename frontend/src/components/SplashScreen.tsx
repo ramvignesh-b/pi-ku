@@ -7,8 +7,8 @@ export default function SplashScreen() {
         <Logo />
         <div className="flex flex-col items-center gap-2">
           <span className="loading loading-ring loading-lg text-primary" />
-          <p className="text-xs uppercase tracking-widest opacity-40 font-display">
-            Initializing Identity
+          <p className="text-xs uppercase font-sans tracking-widest opacity-40">
+            Unsealing...
           </p>
         </div>
       </div>

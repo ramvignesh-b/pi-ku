@@ -1,8 +1,11 @@
 import { CrossIcon } from "@phosphor-icons/react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import { api } from "../api/apiClient";
-import { ComposeCanvas } from "../components/ui/ComposeCanvas";
+import {
+  type CanvasTools,
+  ComposeCanvas,
+} from "../components/ui/ComposeCanvas";
 import { endpoints } from "../config/endpoints";
 import { CryptoUtils } from "../utils/crypto";
 import { decryptCanvasImagesWithSharingKey } from "../utils/letterLogic";
@@ -11,10 +14,13 @@ export default function Reader() {
   const { public_id } = useParams();
   const location = useLocation();
   const sharingKey = location.hash.replace("#", "");
+
+  const canvasRef = useRef<CanvasTools>(null);
+
   const [isDecrypting, setIsDecrypting] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [canvasData, setCanvasData] = useState<any>(null);
   const [metadata, setMetadata] = useState<any>(null);
+  const [decryptedCanvasData, setDecryptedCanvasData] = useState<any>(null);
 
   useEffect(() => {
     if (!sharingKey) {
@@ -28,31 +34,34 @@ export default function Reader() {
         const response = await api.get(`${endpoints.LETTERS}${public_id}/`);
         const { encrypted_content, encrypted_metadata, images } = response.data;
 
-        const crypto = new CryptoUtils();
+        const cryptoUtils = new CryptoUtils();
 
-        // 1. Decrypt metadata using the sharing key from the URL
-        const decryptedMetadata = await crypto.decryptMetadataWithSharingKey(
-          encrypted_metadata,
-          sharingKey,
-        );
+        const decryptedMetadata =
+          await cryptoUtils.decryptMetadataWithSharingKey(
+            encrypted_metadata,
+            sharingKey,
+          );
         setMetadata(decryptedMetadata);
 
-        // 2. Decrypt the main letter content
-        const decryptedContent = await crypto.decryptLetterWithSharingKey(
+        const decryptedContent = await cryptoUtils.decryptLetterWithSharingKey(
           encrypted_content,
           sharingKey,
         );
         const json = JSON.parse(decryptedContent);
 
-        // 3. Batch decrypt any images on the canvas
         if (images && images.length > 0) {
-          await decryptCanvasImagesWithSharingKey(json, images, sharingKey);
+          await decryptCanvasImagesWithSharingKey(
+            json,
+            images,
+            sharingKey,
+            cryptoUtils,
+          );
         }
 
-        setCanvasData(json);
-        setIsDecrypting(false);
+        setDecryptedCanvasData(json);
       } catch (err: any) {
         setError(`Failed to load letter: ${err.message || "Unknown error"}`);
+      } finally {
         setIsDecrypting(false);
       }
     };
@@ -60,43 +69,66 @@ export default function Reader() {
     loadAndDecrypt();
   }, [public_id, sharingKey]);
 
+  useEffect(() => {
+    if (!isDecrypting && decryptedCanvasData && canvasRef.current) {
+      canvasRef.current.loadData(decryptedCanvasData);
+    }
+  }, [isDecrypting, decryptedCanvasData]);
+
   if (isDecrypting) {
     return (
-      <div className="min-h-screen bg-base-200 flex flex-col items-center justify-center p-8">
-        <span className="loading loading-ring loading-lg text-primary"></span>
-        <p className="mt-4 text-sm opacity-50 font-medium">Decrypting...</p>
+      <div className="min-h-screen flex items-center justify-center bg-base-200">
+        <div className="text-center space-y-4">
+          <p className="text-base-content/60">Decrypting...</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-base-200 flex flex-col items-center justify-center p-8 text-center">
-        <div className="alert alert-error max-w-md shadow-lg">
-          <CrossIcon size={24} />
-          <span>{error}</span>
+      <div className="min-h-screen flex items-center justify-center bg-base-200 px-6">
+        <div className="max-w-md w-full bg-base-100 shadow-xl rounded-2xl p-8 text-center space-y-4">
+          <p className="text-error font-medium">{error}</p>
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={() => (window.location.href = "/")}
+          >
+            Back to Home
+          </button>
         </div>
-        <button
-          type="button"
-          className="btn btn-ghost mt-6"
-          onClick={() => (window.location.href = "/")}
-        >
-          Back to Home
-        </button>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen w-full bg-base-200 flex flex-col items-center justify-center p-8 gap-4 overflow-hidden">
-      {metadata?.recipient && (
-        <div className="mb-6 animate-in fade-in slide-in-from-top duration-1000">
-          <h2 className="text-xl font-serif text-base-content/60 italic">
-            A sealed message for {metadata.recipient}
-          </h2>
+    <section className="min-h-screen w-full bg-base-200 px-4 py-8">
+      <div className="max-w-4xl mx-auto space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            {metadata?.recipient && (
+              <p className="text-base-content/60">
+                A sealed message for{" "}
+                <span className="font-semibold">
+                  {metadata.recipient || "Anonymous"}
+                </span>
+              </p>
+            )}
+          </div>
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            onClick={() => (window.location.href = "/")}
+          >
+            <CrossIcon size={18} />
+          </button>
         </div>
-      )}
-      {canvasData && <ComposeCanvas initialData={canvasData} readOnly={true} />}
-    </div>
+
+        <div className="bg-paper rounded-sm shadow-primary-content overflow-hidden">
+          <ComposeCanvas ref={canvasRef} readOnly />
+        </div>
+      </div>
+    </section>
   );
 }

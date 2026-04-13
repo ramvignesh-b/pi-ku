@@ -1,18 +1,18 @@
 import { api } from "../api/apiClient";
-import { CryptoUtils } from "./crypto";
+import type { CryptoUtils } from "./crypto";
 import { blobUrlToFile } from "./fileUtils";
 
-// Helpers to handle the complex process of locking and unlocking letters with images.
+export interface CanvasImageRef {
+  src: string;
+  file: File;
+}
 
-const crypto = new CryptoUtils();
-
-// Goes through the canvas objects and decrypts any images found.
-// This is used when opening an existing letter.
 export async function decryptCanvasImages(
   canvasData: any,
   remoteImages: any[],
   encrypted_dek: string,
   masterKey: CryptoKey,
+  cryptoUtils: CryptoUtils,
   includeRawFile = false,
 ) {
   if (!canvasData?.objects) return;
@@ -22,33 +22,32 @@ export async function decryptCanvasImages(
   );
 
   for (const obj of canvasData.objects) {
-    if (obj.type === "Image" && typeof obj.src === "string") {
-      const remoteUrl = imageMap.get(obj.src);
-      if (!remoteUrl) continue;
+    if (obj.type !== "Image") continue;
 
-      try {
-        const res = await api.get(remoteUrl, { responseType: "blob" });
-        const blobUrl = await crypto.decryptImage(
-          res.data,
-          encrypted_dek,
-          masterKey,
-        );
+    const originalFilename = obj.src;
+    const remoteUrl = imageMap.get(originalFilename);
+    if (!remoteUrl) continue;
 
-        obj.src = blobUrl;
-        if (includeRawFile) {
-          // We need the raw file in the editor so we can re-encrypt it if the user saves again.
-          obj._customRawFile = await blobUrlToFile(blobUrl, obj.src);
-        }
-      } catch (_err) {}
+    const res = await api.get(remoteUrl, { responseType: "blob" });
+    const blobUrl = await cryptoUtils.decryptImage(
+      res.data,
+      encrypted_dek,
+      masterKey,
+    );
+
+    obj.src = blobUrl;
+
+    if (includeRawFile) {
+      obj._customRawFile = await blobUrlToFile(blobUrl, originalFilename);
     }
   }
 }
 
-// Decrypts canvas images using just the sharing key (for guest access).
 export async function decryptCanvasImagesWithSharingKey(
   canvasData: any,
   remoteImages: any[],
   sharingKey: string,
+  cryptoUtils: CryptoUtils,
 ) {
   if (!canvasData?.objects) return;
 
@@ -57,36 +56,34 @@ export async function decryptCanvasImagesWithSharingKey(
   );
 
   for (const obj of canvasData.objects) {
-    if (obj.type === "Image" && typeof obj.src === "string") {
-      const remoteUrl = imageMap.get(obj.src);
-      if (!remoteUrl) continue;
+    if (obj.type !== "Image") continue;
 
-      try {
-        const res = await api.get(remoteUrl, { responseType: "blob" });
-        obj.src = await crypto.decryptImageWithSharingKey(res.data, sharingKey);
-      } catch (_err) {}
-    }
+    const remoteUrl = imageMap.get(obj.src);
+    if (!remoteUrl) continue;
+
+    const res = await api.get(remoteUrl, { responseType: "blob" });
+    obj.src = await cryptoUtils.decryptImageWithSharingKey(
+      res.data,
+      sharingKey,
+    );
   }
 }
 
-// Encrypts any new images the user added to the canvas.
-// Returns a map of filenames to encrypted blobs for uploading.
 export async function encryptCanvasImages(
   canvasData: any,
-  canvasImages: { src: string; file: File }[],
+  canvasImages: CanvasImageRef[],
   masterKey: CryptoKey,
+  cryptoUtils: CryptoUtils,
 ) {
   const encryptedFiles = new Map<string, Blob>();
   const filenameMapping = new Map<string, string>();
 
-  await crypto.initialize();
-
   for (const img of canvasImages) {
-    // If it already ends in .bin, it was already encrypted.
     if (img.src.endsWith(".bin")) continue;
+    if (!img.file) continue;
 
     try {
-      const { filename, encryptedBlob } = await crypto.encryptImage(
+      const { filename, encryptedBlob } = await cryptoUtils.encryptImage(
         img.file,
         masterKey,
       );
@@ -95,7 +92,6 @@ export async function encryptCanvasImages(
     } catch (_err) {}
   }
 
-  // Update the canvas JSON to use the new encrypted filenames instead of blob URLs.
   if (canvasData?.objects) {
     canvasData.objects = canvasData.objects.map((obj: any) => {
       if (obj.type === "Image" && filenameMapping.has(obj.src)) {
