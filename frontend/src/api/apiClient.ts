@@ -48,8 +48,6 @@ api.interceptors.response.use(
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         return api(originalRequest);
       } catch (refreshError) {
-        // Refresh failed, perform logout to clear tokens
-        console.error("Session expired, logging out...");
         useAuthStore.getState().clearAuth();
         return Promise.reject(refreshError);
       }

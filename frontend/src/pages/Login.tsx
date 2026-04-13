@@ -46,7 +46,6 @@ export default function Login() {
 
       navigate(ROUTES.DRAWER);
     } catch (err) {
-      console.error("Login error:", err);
       let message =
         "Sorry, we're experiencing technical issues.\nPlease try again later.";
       if (axios.isAxiosError(err) && err.response?.status !== 500) {

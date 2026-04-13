@@ -39,9 +39,7 @@ export async function decryptCanvasImages(
           // We need the raw file in the editor so we can re-encrypt it if the user saves again.
           obj._customRawFile = await blobUrlToFile(blobUrl, obj.src);
         }
-      } catch (err) {
-        console.error("Error decrypting image in canvas:", obj.src, err);
-      }
+      } catch (_err) {}
     }
   }
 }
@@ -66,9 +64,7 @@ export async function decryptCanvasImagesWithSharingKey(
       try {
         const res = await api.get(remoteUrl, { responseType: "blob" });
         obj.src = await crypto.decryptImageWithSharingKey(res.data, sharingKey);
-      } catch (err) {
-        console.error("Guest decryption failed for canvas image:", err);
-      }
+      } catch (_err) {}
     }
   }
 }
@@ -96,9 +92,7 @@ export async function encryptCanvasImages(
       );
       filenameMapping.set(img.src, filename);
       encryptedFiles.set(filename, encryptedBlob);
-    } catch (err) {
-      console.error("Failed to encrypt new canvas image:", err);
-    }
+    } catch (_err) {}
   }
 
   // Update the canvas JSON to use the new encrypted filenames instead of blob URLs.

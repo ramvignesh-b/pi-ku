@@ -50,7 +50,6 @@ export default function Register() {
       });
       navigate(ROUTES.VERIFY_EMAIL);
     } catch (err) {
-      console.error("Registration error:", err);
       let message = "Registration failed. Please try again.";
       if (axios.isAxiosError(err)) {
         message = err.response?.data?.message || message;

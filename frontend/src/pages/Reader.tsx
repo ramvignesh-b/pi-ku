@@ -52,7 +52,6 @@ export default function Reader() {
         setCanvasData(json);
         setIsDecrypting(false);
       } catch (err: any) {
-        console.error("Reader Error:", err);
         setError(`Failed to load letter: ${err.message || "Unknown error"}`);
         setIsDecrypting(false);
       }

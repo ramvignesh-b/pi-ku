@@ -79,8 +79,7 @@ export default function Editor() {
         requestAnimationFrame(() => {
           canvasRef.current?.loadData(canvasData);
         });
-      } catch (err) {
-        console.error("Failed to load existing letter:", err);
+      } catch (_err) {
       } finally {
         setIsInitialLoading(false);
       }
@@ -158,8 +157,7 @@ export default function Editor() {
       }
 
       setTimeout(() => setIsSaveSuccess(false), 5000);
-    } catch (error) {
-      console.error("Save failed:", error);
+    } catch (_error) {
     } finally {
       setIsSealing(false);
     }
@@ -169,9 +167,7 @@ export default function Editor() {
     if (!shareLink) return;
     try {
       await navigator.clipboard.writeText(shareLink);
-    } catch (err) {
-      console.error("Failed to copy:", err);
-    }
+    } catch (_err) {}
   };
 
   return (

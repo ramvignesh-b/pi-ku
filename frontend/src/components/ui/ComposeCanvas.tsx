@@ -67,10 +67,10 @@ export const ComposeCanvas = forwardRef<
       if (initialData) {
         await canvas.loadFromJSON(initialData);
         if (readOnly) {
-          canvas.getObjects().forEach((obj) => {
+          for (const obj of canvas.getObjects()) {
             obj.selectable = false;
             obj.evented = false;
-          });
+          }
         }
         canvas.renderAll();
       } else {
@@ -119,11 +119,11 @@ export const ComposeCanvas = forwardRef<
           const hiddenTextareas = document.querySelectorAll(
             'textarea[data-fabric="textarea"]',
           );
-          hiddenTextareas.forEach((ta) => {
-            if (!ta.getAttribute("aria-label")) {
-              ta.setAttribute("aria-label", "Canvas text input");
+          for (const textArea of hiddenTextareas) {
+            if (!textArea.getAttribute("aria-label")) {
+              textArea.setAttribute("aria-label", "Canvas text input");
             }
-          });
+          }
         }, 100);
 
         canvas.on("mouse:down", (opt) => {

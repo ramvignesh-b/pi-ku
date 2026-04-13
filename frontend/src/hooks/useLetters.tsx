@@ -43,8 +43,7 @@ async function decryptLetters(
         )) as LetterMetadata;
 
         return { ...letter, metadata };
-      } catch (err) {
-        console.warn("Decryption failed for letter:", letter.public_id, err);
+      } catch (_err) {
         return {
           ...letter,
           metadata: { recipient: "Encrypted Letter" },
@@ -67,7 +66,7 @@ export function useLetters() {
       .get(endpoints.LETTERS)
       .then((res) => decryptLetters(res.data, masterKey))
       .then(setLetters)
-      .catch((err) => console.error("Drawer load failed:", err))
+      .catch((_err) => {})
       .finally(() => setLoading(false));
   }, [masterKey]);
 

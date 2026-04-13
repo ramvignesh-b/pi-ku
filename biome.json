@@ -17,7 +17,26 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true
+      "recommended": true,
+      "complexity": {
+        "noForEach": "error",
+        "useLiteralKeys": "error"
+      },
+      "style": {
+        "useConst": "error",
+        "noNonNullAssertion": "warn"
+      },
+      "a11y": {
+        "useAltText": "error",
+        "noAutofocus": "warn"
+      },
+      "suspicious": {
+        "noExplicitAny": "warn",
+        "noConsole": "warn"
+      },
+      "correctness": {
+        "noUnusedVariables": "error"
+      }
     },
     "includes": ["**", "!backend"]
   },

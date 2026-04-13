@@ -15,8 +15,8 @@ export const replacePathParams = (
   params: Record<string, string>,
 ): string => {
   let result = url;
-  Object.entries(params).forEach(([key, value]) => {
+  for (const [key, value] of Object.entries(params)) {
     result = result.replace(`:${key}`, value);
-  });
+  }
   return result;
 };

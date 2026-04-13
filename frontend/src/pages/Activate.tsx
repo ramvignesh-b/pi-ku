@@ -28,8 +28,7 @@ export default function Activate() {
         });
         await publicApi.get(url);
         setStatus("success");
-      } catch (err) {
-        console.error("Activation error:", err);
+      } catch (_err) {
         setStatus("error");
       }
     };
