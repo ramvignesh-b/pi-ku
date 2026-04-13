@@ -36,7 +36,7 @@ export default function Editor() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!public_id || !masterKey) return;
+    if (!(public_id && masterKey)) return;
 
     const loadExistingLetter = async () => {
       setIsInitialLoading(true);
@@ -95,7 +95,7 @@ export default function Editor() {
   };
 
   const handleSave = async (status: "SEALED" | "DRAFT"): Promise<void> => {
-    if (!public_id && !letterIdRef.current) {
+    if (!(public_id || letterIdRef.current)) {
       letterIdRef.current = crypto.randomUUID();
       navigate(PATHS.write(letterIdRef.current), { replace: true });
     } else if (public_id) {

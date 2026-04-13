@@ -15,7 +15,7 @@ export default function Activate() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!uidb64 || !token || hasCalled.current) return;
+    if (!(uidb64 && token) || hasCalled.current) return;
 
     // prevent double api calls
     hasCalled.current = true;

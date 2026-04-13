@@ -44,7 +44,7 @@ export const ComposeCanvas = forwardRef<
       };
 
       const finalWidth = await waitForLayout();
-      if (!isMounted || !canvasRef.current || !wrapperRef.current) return;
+      if (!(isMounted && canvasRef.current && wrapperRef.current)) return;
 
       const initialHeight = Math.max(
         wrapperRef.current.clientHeight || 900,
@@ -101,7 +101,7 @@ export const ComposeCanvas = forwardRef<
         canvas.add(textbox);
 
         textbox.on("changed", () => {
-          if (!canvas || !wrapperRef.current) return;
+          if (!(canvas && wrapperRef.current)) return;
           const neededHeight = textbox.top + textbox.height + PAD;
           if (neededHeight > canvas.height) {
             const newH = neededHeight + PAD;

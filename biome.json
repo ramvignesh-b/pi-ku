@@ -20,7 +20,11 @@
       "recommended": true,
       "complexity": {
         "noForEach": "error",
-        "useLiteralKeys": "error"
+        "noUselessFragments": "error",
+        "useLiteralKeys": "error",
+        "noUselessCatch": "error",
+        "useSimplifiedLogicExpression": "error",
+        "noExcessiveCognitiveComplexity": "warn"
       },
       "style": {
         "useConst": "error",
