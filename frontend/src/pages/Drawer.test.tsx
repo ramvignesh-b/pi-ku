@@ -7,7 +7,7 @@ import Drawer from "./Drawer";
 
 describe("Drawer Page", () => {
   beforeEach(() => {
-    // Setup authenticated state
+    // Setup authenticated state for the test
     useAuthStore.setState({
       user: mockUser,
       accessToken: "fake-token",

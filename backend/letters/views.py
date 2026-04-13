@@ -1,5 +1,5 @@
 from rest_framework import generics
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from letters.models import Letter, LetterImage
@@ -18,11 +18,19 @@ class LetterView(generics.ListCreateAPIView):
 
 class LetterDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = LetterSerializer
-    permission_classes = [IsAuthenticated]
     lookup_field = "public_id"
 
+    def get_permissions(self):
+        if self.request.method == "GET":
+            return [AllowAny()]
+        return [IsAuthenticated()]
+
     def get_queryset(self):
-        return Letter.objects.filter(user=self.request.user)
+        if self.request.user.is_authenticated:
+            # author can see all their letters (DRAFT, SEALED, etc.)
+            return Letter.objects.filter(user=self.request.user)
+        # guests can ONLY see SEALED letters
+        return Letter.objects.filter(status=Letter.Status.SEALED)
 
     def put(self, request, public_id):
         # upsert: create if doesn't exist, else update

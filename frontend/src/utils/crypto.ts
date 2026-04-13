@@ -19,9 +19,6 @@ export interface EncryptedImageUpload {
   filename: string;
 }
 
-/*
- * Wrapper functions
- */
 interface SealedEnvelope {
   encryptedContent: string;
   encrypted_dek: string;
@@ -33,6 +30,7 @@ export class CryptoUtils {
   private static readonly PBKDF2_ITERATIONS = 100_000;
   private static readonly AES_GCM = { name: "AES-GCM", length: 256 };
 
+  // Generates a fresh Data Encryption Key (DEK)
   async initialize() {
     this.dek = await crypto.subtle.generateKey(CryptoUtils.AES_GCM, true, [
       "encrypt",
@@ -44,7 +42,6 @@ export class CryptoUtils {
   toBase64 = (buf: Uint8Array): string =>
     btoa(buf.reduce((s, b) => s + String.fromCharCode(b), ""));
 
-  // explicit loop ensures Uint8Array<ArrayBuffer> (not ArrayBufferLike)
   fromBase64 = (b64: string): Uint8Array<ArrayBuffer> => {
     const str = atob(b64);
     const arr = new Uint8Array(str.length);
@@ -60,24 +57,22 @@ export class CryptoUtils {
     return this.toBase64(packed);
   };
 
-  // split IV (first 12 bytes) back out from a packed base64 bundle
   unpackWithIv = (
     b64: string,
   ): [Uint8Array<ArrayBuffer>, Uint8Array<ArrayBuffer>] => {
-    const buf = this.fromBase64(b64); // ArrayBuffer-backed, so buf.buffer is ArrayBuffer
+    const buf = this.fromBase64(b64);
     return [new Uint8Array(buf.buffer, 0, 12), new Uint8Array(buf.buffer, 12)];
   };
 
   /**
-   * Derives a Master Key from a password and email (salt).
-   * Deterministic — same credentials always produce the same key.
+   * Derives a Master Key from a password + email (salt).
+   * Same credentials = same key.
    */
   public static async deriveMasterKey(
     password: string,
     email: string,
   ): Promise<CryptoKey> {
     const enc = new TextEncoder();
-
     const baseKey = await crypto.subtle.importKey(
       "raw",
       enc.encode(password),
@@ -100,11 +95,11 @@ export class CryptoUtils {
     );
   }
 
+  // Internal helper to encrypt data and wrap the key
   private async sealEnvelope(
     input: Uint8Array,
     masterKey: CryptoKey,
   ): Promise<SealedEnvelope> {
-    // copy into a fresh ArrayBuffer — WebCrypto requires ArrayBuffer-backed arrays
     const plainBytes = new Uint8Array(input);
 
     // encrypt the content with the DEK
@@ -132,12 +127,12 @@ export class CryptoUtils {
     };
   }
 
+  // Internal helper to unwrap the key and decrypt data
   private async openEnvelope(
     encryptedContent: string,
     encrypted_dek: string,
     masterKey: CryptoKey,
   ): Promise<Uint8Array<ArrayBuffer>> {
-    // unwrap the DEK using the master key
     const [dekIv, wrappedDek] = this.unpackWithIv(encrypted_dek);
     const dek = await crypto.subtle.unwrapKey(
       "raw",
@@ -149,7 +144,29 @@ export class CryptoUtils {
       ["decrypt"],
     );
 
-    // decrypt the content with the recovered DEK
+    const [contentIv, ciphertext] = this.unpackWithIv(encryptedContent);
+    const plainBytes = await crypto.subtle.decrypt(
+      { name: "AES-GCM", iv: contentIv },
+      dek,
+      ciphertext,
+    );
+
+    return new Uint8Array(plainBytes);
+  }
+
+  private async openEnvelopeWithSharingKey(
+    encryptedContent: string,
+    sharingKey: string,
+  ): Promise<Uint8Array<ArrayBuffer>> {
+    const dekBytes = this.fromBase64(sharingKey);
+    const dek = await crypto.subtle.importKey(
+      "raw",
+      dekBytes,
+      CryptoUtils.AES_GCM,
+      false,
+      ["decrypt"],
+    );
+
     const [contentIv, ciphertext] = this.unpackWithIv(encryptedContent);
     const plainBytes = await crypto.subtle.decrypt(
       { name: "AES-GCM", iv: contentIv },
@@ -169,7 +186,6 @@ export class CryptoUtils {
   ): Promise<EncryptedLetter> {
     const { encryptedContent, encrypted_dek, sharingKey } =
       await this.sealEnvelope(new TextEncoder().encode(plaintext), masterKey);
-
     return { encrypted_content: encryptedContent, encrypted_dek, sharingKey };
   }
 
@@ -177,17 +193,25 @@ export class CryptoUtils {
     { encrypted_content, encrypted_dek }: EncryptedLetter,
     masterKey: CryptoKey,
   ): Promise<string> {
-    const plainBytes = await this.openEnvelope(
+    const bytes = await this.openEnvelope(
       encrypted_content,
       encrypted_dek,
       masterKey,
     );
-    return new TextDecoder().decode(plainBytes);
+    return new TextDecoder().decode(bytes);
   }
 
-  /*
-   * Metadata functions
-   */
+  public async decryptLetterWithSharingKey(
+    encrypted_content: string,
+    sharingKey: string,
+  ): Promise<string> {
+    const bytes = await this.openEnvelopeWithSharingKey(
+      encrypted_content,
+      sharingKey,
+    );
+    return new TextDecoder().decode(bytes);
+  }
+
   public async encryptMetadata(
     metadata: Record<string, unknown>,
     masterKey: CryptoKey,
@@ -197,7 +221,6 @@ export class CryptoUtils {
         new TextEncoder().encode(JSON.stringify(metadata)),
         masterKey,
       );
-
     return { encrypted_content: encryptedContent, encrypted_dek, sharingKey };
   }
 
@@ -205,17 +228,25 @@ export class CryptoUtils {
     encrypted_metadata: EncryptedLetter,
     masterKey: CryptoKey,
   ): Promise<Record<string, any>> {
-    const plainBytes = await this.openEnvelope(
+    const bytes = await this.openEnvelope(
       encrypted_metadata.encrypted_content,
       encrypted_metadata.encrypted_dek,
       masterKey,
     );
-    return JSON.parse(new TextDecoder().decode(plainBytes));
+    return JSON.parse(new TextDecoder().decode(bytes));
   }
 
-  /*
-   * Image functions
-   */
+  public async decryptMetadataWithSharingKey(
+    encrypted_content: string,
+    sharingKey: string,
+  ): Promise<Record<string, any>> {
+    const bytes = await this.openEnvelopeWithSharingKey(
+      encrypted_content,
+      sharingKey,
+    );
+    return JSON.parse(new TextDecoder().decode(bytes));
+  }
+
   public async encryptImage(
     file: File,
     masterKey: CryptoKey,
@@ -239,13 +270,23 @@ export class CryptoUtils {
     masterKey: CryptoKey,
   ): Promise<string> {
     const encryptedBytes = new Uint8Array(await encryptedBlob.arrayBuffer());
-    const plainBytes = await this.openEnvelope(
+    const bytes = await this.openEnvelope(
       this.toBase64(encryptedBytes),
       encrypted_dek,
       masterKey,
     );
+    return URL.createObjectURL(new Blob([bytes]));
+  }
 
-    // return as object URL for use in Fabric / <img>
-    return URL.createObjectURL(new Blob([plainBytes]));
+  public async decryptImageWithSharingKey(
+    encryptedBlob: Blob,
+    sharingKey: string,
+  ): Promise<string> {
+    const encryptedBytes = new Uint8Array(await encryptedBlob.arrayBuffer());
+    const bytes = await this.openEnvelopeWithSharingKey(
+      this.toBase64(encryptedBytes),
+      sharingKey,
+    );
+    return URL.createObjectURL(new Blob([bytes]));
   }
 }

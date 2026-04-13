@@ -17,7 +17,10 @@ export interface FabricImageWithFile extends fabric.FabricImage {
   _customRawFile: File;
 }
 
-export const ComposeCanvas = forwardRef<CanvasTools>((_props, ref) => {
+export const ComposeCanvas = forwardRef<
+  CanvasTools,
+  { readOnly?: boolean; initialData?: any }
+>(({ readOnly = false, initialData = null }, ref) => {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fabricRef = useRef<fabric.Canvas | null>(null);
@@ -51,7 +54,7 @@ export const ComposeCanvas = forwardRef<CanvasTools>((_props, ref) => {
       canvas = new fabric.Canvas(canvasRef.current, {
         width: finalWidth,
         height: initialHeight,
-        selection: false,
+        selection: !readOnly,
         preserveObjectStacking: true,
         allowTouchScrolling: true,
       });
@@ -61,65 +64,76 @@ export const ComposeCanvas = forwardRef<CanvasTools>((_props, ref) => {
       const wrapperEl = canvas.getElement().parentElement;
       if (wrapperEl) wrapperEl.style.background = "transparent";
 
-      const textbox = new fabric.Textbox("Take a deep breath...", {
-        name: "main-textbox",
-        originX: "left",
-        originY: "top",
-        left: PAD,
-        top: PAD,
-        width: finalWidth - PAD * 2,
-        fontSize: 16,
-        fontWeight: 500,
-        fontFamily: "Playfair Display Variable",
-        fill: "#000",
-        lineHeight: 1.5,
-        editable: true,
-        hasControls: false,
-        hasBorders: false,
-        objectCaching: false,
-        splitByGrapheme: false,
-        lockMovementX: true,
-        lockMovementY: true,
-        lockScalingX: true,
-        lockScalingY: true,
-      });
-
-      textboxRef.current = textbox;
-      canvas.add(textbox);
-
-      textbox.on("changed", () => {
-        if (!canvas || !wrapperRef.current) return;
-        const neededHeight = textbox.top + textbox.height + PAD;
-        if (neededHeight > canvas.height) {
-          const newH = neededHeight + PAD;
-          canvas.setDimensions({ height: newH });
-          wrapperRef.current.style.height = `${newH}px`;
+      if (initialData) {
+        await canvas.loadFromJSON(initialData);
+        if (readOnly) {
+          canvas.getObjects().forEach((obj) => {
+            obj.selectable = false;
+            obj.evented = false;
+          });
         }
-      });
+        canvas.renderAll();
+      } else {
+        const textbox = new fabric.Textbox("Take a deep breath...", {
+          name: "main-textbox",
+          originX: "left",
+          originY: "top",
+          left: PAD,
+          top: PAD,
+          width: finalWidth - PAD * 2,
+          fontSize: 16,
+          fontWeight: 500,
+          fontFamily: "Playfair Display Variable",
+          fill: "#000",
+          lineHeight: 1.5,
+          editable: true,
+          hasControls: false,
+          hasBorders: false,
+          objectCaching: false,
+          splitByGrapheme: false,
+          lockMovementX: true,
+          lockMovementY: true,
+          lockScalingX: true,
+          lockScalingY: true,
+        });
 
-      setTimeout(() => {
-        if (!isMounted) return;
-        canvas?.setActiveObject(textbox);
-        textbox.enterEditing();
-        canvas?.renderAll();
+        textboxRef.current = textbox;
+        canvas.add(textbox);
 
-        const hiddenTextareas = document.querySelectorAll(
-          'textarea[data-fabric="textarea"]',
-        );
-        hiddenTextareas.forEach((ta) => {
-          if (!ta.getAttribute("aria-label")) {
-            ta.setAttribute("aria-label", "Canvas text input");
+        textbox.on("changed", () => {
+          if (!canvas || !wrapperRef.current) return;
+          const neededHeight = textbox.top + textbox.height + PAD;
+          if (neededHeight > canvas.height) {
+            const newH = neededHeight + PAD;
+            canvas.setDimensions({ height: newH });
+            wrapperRef.current.style.height = `${newH}px`;
           }
         });
-      }, 100);
 
-      canvas.on("mouse:down", (opt) => {
-        if (!opt.target || opt.target === textbox) {
+        setTimeout(() => {
+          if (!isMounted) return;
           canvas?.setActiveObject(textbox);
           textbox.enterEditing();
           canvas?.renderAll();
-        }
-      });
+
+          const hiddenTextareas = document.querySelectorAll(
+            'textarea[data-fabric="textarea"]',
+          );
+          hiddenTextareas.forEach((ta) => {
+            if (!ta.getAttribute("aria-label")) {
+              ta.setAttribute("aria-label", "Canvas text input");
+            }
+          });
+        }, 100);
+
+        canvas.on("mouse:down", (opt) => {
+          if (!opt.target || opt.target === textbox) {
+            canvas?.setActiveObject(textbox);
+            textbox.enterEditing();
+            canvas?.renderAll();
+          }
+        });
+      }
     };
 
     init();
@@ -130,7 +144,7 @@ export const ComposeCanvas = forwardRef<CanvasTools>((_props, ref) => {
       fabricRef.current = null;
       textboxRef.current = null;
     };
-  }, []);
+  }, [initialData, readOnly]);
 
   useImperativeHandle(ref, () => ({
     addImage: (url: string, file: File) => {

@@ -1,14 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
 import { HttpResponse, http } from "msw";
-import {
-  afterAll,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  vi,
-} from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mockUser } from "../../test/fixtures/user.fixture";
 import { server } from "../../test/mocks/server";
 import { useAuthStore } from "../store/useAuthStore";
@@ -39,14 +31,6 @@ vi.mock("../utils/keystore", () => ({
   clearMasterKey: vi.fn().mockResolvedValue(undefined),
 }));
 
-beforeAll(() => {
-  vi.stubEnv("API_URL", API_URL);
-});
-
-afterAll(() => {
-  vi.unstubAllEnvs();
-});
-
 beforeEach(() => {
   vi.clearAllMocks();
   useAuthStore.setState({
@@ -58,13 +42,13 @@ beforeEach(() => {
 });
 
 describe("isAuthenticated", () => {
-  it("should be false when access token is not present in the store", () => {
+  it("should be false when the access token is missing from the store", () => {
     const { result } = renderHook(() => useAuth());
 
     expect(result.current.isAuthenticated).toBe(false);
   });
 
-  it("should be true when access token is present in the store", () => {
+  it("should be true when the access token is present in the store", () => {
     useAuthStore.setState({
       accessToken: "token",
       user: mockUser,
@@ -77,7 +61,7 @@ describe("isAuthenticated", () => {
 });
 
 describe("login", () => {
-  it("should derive the master key using the provided password and email (salt)", async () => {
+  it("should derive the master key using the provided credentials", async () => {
     const { result } = renderHook(() => useAuth());
 
     await act(async () => {
@@ -100,7 +84,7 @@ describe("login", () => {
     expect(saveMasterKey).toHaveBeenCalledTimes(1);
   });
 
-  it("should set the auth store with the provided access token and user profile", async () => {
+  it("should update the store with the access token and user profile", async () => {
     const { result } = renderHook(() => useAuth());
 
     await act(async () => {
@@ -147,7 +131,7 @@ describe("logout", () => {
     expect(logoutCalled).toBe(true);
   });
 
-  it("should clear the master key from both the key store and IndexedDB", async () => {
+  it("should clear the master key from the store and IndexedDB", async () => {
     const { result } = renderHook(() => useAuth());
 
     await act(async () => {
@@ -158,7 +142,7 @@ describe("logout", () => {
     expect(clearMasterKey).toHaveBeenCalledTimes(1);
   });
 
-  it("should clear auth store (access token + user) and master key even if API fails", async () => {
+  it("should clear the auth store even if the API call fails", async () => {
     server.use(
       http.post(
         `${API_URL}/api/auth/logout/`,
@@ -200,7 +184,7 @@ describe("initialize", () => {
     expect(useAuthStore.getState().isInitializing).toBe(false);
   });
 
-  it("should call /refresh restore master key from IndexedDB when session not in memory", async () => {
+  it("should call /refresh and restore the master key when the session is empty", async () => {
     const { result } = renderHook(() => useAuth());
 
     await act(async () => {
@@ -213,7 +197,7 @@ describe("initialize", () => {
     expect(useKeyStore.getState().masterKey).not.toBeNull();
   });
 
-  it("should clear auth + key store when refresh fails", async () => {
+  it("should clear both stores if the refresh attempt fails", async () => {
     server.use(
       http.post(
         `${API_URL}/api/auth/refresh/`,

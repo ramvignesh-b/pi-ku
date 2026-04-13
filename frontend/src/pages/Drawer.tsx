@@ -102,6 +102,11 @@ export default function Drawer() {
                   timestamp={letter.updated_at}
                 />
               ))}
+              {sent.length === 0 && (
+                <p className="text-center text-base-content/20 mt-4">
+                  This drawer remains silent
+                </p>
+              )}
             </DrawerSection>
             <DrawerSection
               id="vault"

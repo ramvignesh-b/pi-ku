@@ -17,17 +17,7 @@ import { endpoints } from "../config/endpoints";
 import { PATHS } from "../config/routes";
 import { useKeyStore } from "../store/useKeyStore";
 import { CryptoUtils } from "../utils/crypto";
-
-// convert blob url to file
-async function blobUrlToFile(
-  blobUrl: string,
-  fileName: string,
-  mimeType?: string,
-): Promise<File> {
-  const response = await fetch(blobUrl);
-  const blob = await response.blob();
-  return new File([blob], fileName, { type: mimeType ?? blob.type });
-}
+import { decryptCanvasImages, encryptCanvasImages } from "../utils/letterLogic";
 
 export default function Editor() {
   const navigate = useNavigate();
@@ -37,6 +27,7 @@ export default function Editor() {
   const [isInitialLoading, setIsInitialLoading] = useState(false);
   const [isSealing, setIsSealing] = useState(false);
   const [isSaveSuccess, setIsSaveSuccess] = useState(false);
+  const [shareLink, setShareLink] = useState<string | null>(null);
 
   const [recipient, setRecipient] = useState("");
   const { masterKey } = useKeyStore();
@@ -50,13 +41,13 @@ export default function Editor() {
 
     const loadExistingLetter = async () => {
       setIsInitialLoading(true);
-      const cryptoUtils = new CryptoUtils();
+      const crypto = new CryptoUtils();
       try {
         const res = await api.get(`${endpoints.LETTERS}${public_id}/`);
         const letterData = res.data;
 
-        // metadata for recipient
-        const metadata = await cryptoUtils.decryptMetadata(
+        // Decrypt the metadata (for the recipient field)
+        const metadata = await crypto.decryptMetadata(
           {
             encrypted_content: letterData.encrypted_metadata,
             encrypted_dek: letterData.encrypted_dek,
@@ -65,8 +56,8 @@ export default function Editor() {
         );
         setRecipient(metadata.recipient || "");
 
-        // decrypt canvas data
-        const decryptedJsonStr = await cryptoUtils.decryptLetter(
+        // Decrypt the main canvas JSON
+        const decryptedJsonStr = await crypto.decryptLetter(
           {
             encrypted_content: letterData.encrypted_content,
             encrypted_dek: letterData.encrypted_dek,
@@ -75,45 +66,16 @@ export default function Editor() {
         );
         const canvasData = JSON.parse(decryptedJsonStr);
 
-        // traverse through canvas images and replace encrypted image with decrypted image
-        if (canvasData.objects) {
-          for (const obj of canvasData.objects) {
-            if (obj.type === "Image" && typeof obj.src === "string") {
-              const filename = obj.src;
-              const remoteImage = letterData.images.find(
-                (img: any) => img.file_name === filename,
-              );
+        // Batch decrypt images within the canvas
+        await decryptCanvasImages(
+          canvasData,
+          letterData.images,
+          letterData.encrypted_dek,
+          masterKey,
+          true, // restore raw files for the editor
+        );
 
-              if (remoteImage) {
-                try {
-                  // fetch encrypted image blob using authenticated API
-                  const imageRes = await api.get(remoteImage.file, {
-                    responseType: "blob",
-                  });
-                  const encryptedBlob = imageRes.data;
-
-                  // decrypt image blob
-                  const blobUrl = await cryptoUtils.decryptImage(
-                    encryptedBlob,
-                    letterData.encrypted_dek,
-                    masterKey,
-                  );
-                  obj.src = blobUrl;
-                  obj._customRawFile = await blobUrlToFile(blobUrl, filename);
-                  console.log("Decrypted image object:", obj);
-                } catch (imgErr) {
-                  console.error(
-                    "Failed to decrypt image object:",
-                    filename,
-                    imgErr,
-                  );
-                }
-              }
-            }
-          }
-        }
-
-        // load updated data into canvas
+        // Load data into the Fabric canvas
         requestAnimationFrame(() => {
           canvasRef.current?.loadData(canvasData);
         });
@@ -129,7 +91,7 @@ export default function Editor() {
 
   // --------------------------------------------------------------------------------------
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]; // pick one file at a time
+    const file = e.target.files?.[0];
     if (file) {
       const url = URL.createObjectURL(file);
       canvasRef.current?.addImage(url, file);
@@ -138,85 +100,77 @@ export default function Editor() {
 
   const handleSave = async (status: "SEALED" | "DRAFT"): Promise<void> => {
     if (!public_id && !letterIdRef.current) {
-      // if no uuid slug, then generate a new one and update params
       letterIdRef.current = crypto.randomUUID();
       navigate(PATHS.write(letterIdRef.current), { replace: true });
     } else if (public_id) {
       letterIdRef.current = public_id;
     }
 
-    if (isSealing) return;
+    if (isSealing || !masterKey) return;
     setIsSealing(true);
+
     const cryptoUtils = new CryptoUtils();
     await cryptoUtils.initialize();
 
-    const images = canvasRef.current?.getImages() || [];
-    const imageEncMap = new Map<string, string>();
-    const encImageFilesMap = new Map<string, Blob>();
-
-    if (!masterKey) {
-      throw new Error("Master key is not initialized");
-    }
-
-    for (const image of images) {
-      if (image.src.endsWith(".bin")) continue;
-      try {
-        const encrypted_image = await cryptoUtils.encryptImage(
-          image.file,
-          masterKey,
-        );
-        imageEncMap.set(image.src, encrypted_image.filename);
-        encImageFilesMap.set(
-          encrypted_image.filename,
-          encrypted_image.encryptedBlob,
-        );
-      } catch (err) {
-        console.error("Failed to re-encrypt image:", err);
-      }
-    }
-
-    // replace image src with encrypted image filename
-    const canvasData = canvasRef.current?.getData();
-    if (canvasData?.objects) {
-      canvasData.objects = canvasData.objects.map((obj: any) => {
-        if (obj.type === "Image" && imageEncMap.has(obj.src)) {
-          return { ...obj, src: imageEncMap.get(obj.src) };
-        }
-        return obj;
-      });
-    }
-
-    const encrypted_letter = await cryptoUtils.encryptLetter(
-      JSON.stringify(canvasData),
-      masterKey,
-    );
-
-    const encrypted_metadata = await cryptoUtils.encryptMetadata(
-      { recipient, tags: [] },
-      masterKey,
-    );
-
-    const formData = new FormData();
-    formData.append("public_id", letterIdRef.current);
-    formData.append("type", "KEPT");
-    formData.append("status", status);
-    formData.append("encrypted_content", encrypted_letter.encrypted_content);
-    formData.append("encrypted_dek", encrypted_letter.encrypted_dek);
-    formData.append("encrypted_metadata", encrypted_metadata.encrypted_content);
-    encImageFilesMap.forEach((image, filename) => {
-      formData.append("image_files", image, filename);
-    });
-
     try {
+      const canvasData = canvasRef.current?.getData();
+      const canvasImages = canvasRef.current?.getImages() || [];
+
+      // Secure any new images first
+      const encImageFilesMap = await encryptCanvasImages(
+        canvasData,
+        canvasImages,
+        masterKey,
+      );
+
+      // Encrypt the updated canvas JSON
+      const encrypted_letter = await cryptoUtils.encryptLetter(
+        JSON.stringify(canvasData),
+        masterKey,
+      );
+
+      const encrypted_metadata = await cryptoUtils.encryptMetadata(
+        { recipient, tags: [] },
+        masterKey,
+      );
+
+      const formData = new FormData();
+      formData.append("public_id", letterIdRef.current);
+      formData.append("type", "KEPT");
+      formData.append("status", status);
+      formData.append("encrypted_content", encrypted_letter.encrypted_content);
+      formData.append("encrypted_dek", encrypted_letter.encrypted_dek);
+      formData.append(
+        "encrypted_metadata",
+        encrypted_metadata.encrypted_content,
+      );
+
+      encImageFilesMap.forEach((blob, filename) => {
+        formData.append("image_files", blob, filename);
+      });
+
       await api.put(`${endpoints.LETTERS}${letterIdRef.current}/`, formData);
       setIsSaveSuccess(true);
-      setTimeout(() => {
-        setIsSaveSuccess(false);
-      }, 5000);
+
+      if (status === "SEALED" && encrypted_letter.sharingKey) {
+        const link = `${window.location.origin}${PATHS.read(letterIdRef.current)}#${encrypted_letter.sharingKey}`;
+        setShareLink(link);
+      }
+
+      setTimeout(() => setIsSaveSuccess(false), 5000);
     } catch (error) {
-      console.error("Error sealing letter:", error);
+      console.error("Save failed:", error);
     } finally {
       setIsSealing(false);
+    }
+  };
+
+  const copyToClipboard = async () => {
+    if (!shareLink) return;
+    try {
+      await navigator.clipboard.writeText(shareLink);
+    } catch (err) {
+      console.error("Failed to copy:", err);
     }
   };
 
@@ -236,7 +190,53 @@ export default function Editor() {
           </div>
         </div>
       )}
-      {isSaveSuccess && (
+      {/* Sharing Modal */}
+      {shareLink && (
+        <div className="modal modal-open modal-bottom sm:modal-middle bg-base-100/20 backdrop-blur-md z-[100]">
+          <div className="modal-box bg-base-100 border border-base-content/5 shadow-2xl relative">
+            <button
+              type="button"
+              className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+              onClick={() => setShareLink(null)}
+            >
+              ✕
+            </button>
+            <div className="flex flex-col items-center text-center gap-6 py-4">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+                <LockIcon size={32} weight="fill" className="text-primary" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="font-serif text-3xl">Sealed & Ready</h3>
+                <p className="text-base-content/60 text-sm max-w-xs">
+                  This letter is now encrypted. Share this secret link with your
+                  recipient.
+                </p>
+              </div>
+
+              <div className="w-full flex items-center gap-2 bg-base-300 p-2 rounded-xl group relative">
+                <input
+                  readOnly
+                  value={shareLink}
+                  className="flex-1 bg-transparent text-xs font-mono px-2 overflow-hidden text-ellipsis whitespace-nowrap outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={copyToClipboard}
+                  className="btn btn-primary btn-sm rounded-lg"
+                >
+                  Copy
+                </button>
+              </div>
+
+              <p className="text-[10px] uppercase tracking-widest text-base-content/30">
+                Zero-Knowledge: The key is in the link, not our servers.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isSaveSuccess && !shareLink && (
         <div
           className="modal modal-open bg-base-100 backdrop-blur-md transition-all duration-2000 ease-in-out
         animate-fade-in opacity-80"

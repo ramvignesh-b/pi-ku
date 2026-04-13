@@ -10,6 +10,7 @@ import Editor from "./pages/Editor";
 // Pages
 import Home from "./pages/Home";
 import Login from "./pages/Login";
+import Reader from "./pages/Reader";
 import Register from "./pages/Register";
 import VerifyEmail from "./pages/VerifyEmail";
 
@@ -79,6 +80,7 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+          <Route path={ROUTES.READ} element={<Reader />} />
           <Route path="*" element={<Navigate to={ROUTES.HOME} replace />} />
         </Routes>
       </main>

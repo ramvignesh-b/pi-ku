@@ -116,4 +116,41 @@ describe("encryptImage / decryptImage", () => {
     expect(result.filename).not.toMatch(/photo|jpg/);
     expect(encryptedText).not.toContain("image-data");
   });
+
+  it("should support decryption using a sharing key (guest access)", async () => {
+    const rawData = new TextEncoder().encode("image-data");
+    const file = new File([rawData], "photo.jpg", { type: "image/jpeg" });
+
+    const result = await utils.encryptImage(file, masterKey);
+    const encryptedLetter = await utils.encryptLetter("test", masterKey);
+    const sharingKey = encryptedLetter.sharingKey;
+
+    const blobUrl = await utils.decryptImageWithSharingKey(
+      result.encryptedBlob,
+      sharingKey,
+    );
+
+    expect(blobUrl).toContain("blob:");
+    URL.revokeObjectURL(blobUrl); // cleanup
+  });
+});
+
+describe("Sharing Key Decryption (TDD)", () => {
+  let masterKey: CryptoKey;
+  beforeEach(async () => {
+    masterKey = await CryptoUtils.deriveMasterKey("pass", "salt");
+  });
+
+  it("should decrypt a letter using ONLY the sharing key", async () => {
+    const letterContent = "hello, guest";
+
+    const encryptedLetter = await utils.encryptLetter(letterContent, masterKey);
+    const sharingKey = encryptedLetter.sharingKey;
+    const decryptedLetter = await utils.decryptLetterWithSharingKey(
+      encryptedLetter.encrypted_content,
+      sharingKey,
+    );
+
+    expect(decryptedLetter).toBe(letterContent);
+  });
 });
