@@ -92,9 +92,24 @@ describe("letterLogic image helpers", () => {
   describe("decryptCanvasImages", () => {
     it("should decrypt images and replace src with blob URL", async () => {
       const canvasData = {
+        version: "5.3.0",
         objects: [
-          { type: "Image", src: "photo.png.bin" },
-          { type: "Textbox", text: "hello" },
+          {
+            type: "Image",
+            src: "photo.png.bin",
+            top: 0,
+            left: 0,
+            width: 100,
+            height: 100,
+          },
+          {
+            type: "Textbox",
+            text: "hello",
+            top: 0,
+            left: 0,
+            width: 100,
+            height: 100,
+          },
         ],
       };
       const remoteImages = [
@@ -128,8 +143,17 @@ describe("letterLogic image helpers", () => {
 
     it("should include raw file when includeRawFile is true", async () => {
       const canvasData = {
+        version: "5.3.0",
         objects: [
-          { type: "Image", src: "photo.png.bin", _customRawFile: null },
+          {
+            type: "Image",
+            src: "photo.png.bin",
+            _customRawFile: null,
+            top: 0,
+            left: 0,
+            width: 100,
+            height: 100,
+          },
         ],
       };
       const remoteImages = [

@@ -3,12 +3,17 @@ import { useEffect, useRef, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import { api } from "../api/apiClient";
 import {
+  type CanvasJSON,
   type CanvasTools,
   ComposeCanvas,
 } from "../components/ui/ComposeCanvas";
 import { endpoints } from "../config/endpoints";
 import { CryptoUtils } from "../utils/crypto";
 import { decryptCanvasImagesWithSharingKey } from "../utils/letterLogic";
+
+interface LetterMetadata {
+  recipient?: string;
+}
 
 export default function Reader() {
   const { public_id } = useParams();
@@ -19,8 +24,9 @@ export default function Reader() {
 
   const [isDecrypting, setIsDecrypting] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [metadata, setMetadata] = useState<any>(null);
-  const [decryptedCanvasData, setDecryptedCanvasData] = useState<any>(null);
+  const [metadata, setMetadata] = useState<LetterMetadata | null>(null);
+  const [decryptedCanvasData, setDecryptedCanvasData] =
+    useState<CanvasJSON | null>(null);
 
   useEffect(() => {
     if (!sharingKey) {
@@ -41,13 +47,13 @@ export default function Reader() {
             encrypted_metadata,
             sharingKey,
           );
-        setMetadata(decryptedMetadata);
+        setMetadata(decryptedMetadata as LetterMetadata);
 
         const decryptedContent = await cryptoUtils.decryptLetterWithSharingKey(
           encrypted_content,
           sharingKey,
         );
-        const json = JSON.parse(decryptedContent);
+        const json = JSON.parse(decryptedContent) as CanvasJSON;
 
         if (images && images.length > 0) {
           await decryptCanvasImagesWithSharingKey(
@@ -59,8 +65,9 @@ export default function Reader() {
         }
 
         setDecryptedCanvasData(json);
-      } catch (err: any) {
-        setError(`Failed to load letter: ${err.message || "Unknown error"}`);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Unknown error";
+        setError(`Failed to load letter: ${message}`);
       } finally {
         setIsDecrypting(false);
       }

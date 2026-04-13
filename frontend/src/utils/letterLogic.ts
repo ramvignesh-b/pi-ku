@@ -1,4 +1,8 @@
 import { api } from "../api/apiClient";
+import type {
+  CanvasJSON,
+  FabricImageJSON,
+} from "../components/ui/ComposeCanvas";
 import type { CryptoUtils } from "./crypto";
 import { blobUrlToFile } from "./fileUtils";
 
@@ -8,8 +12,8 @@ export interface CanvasImageRef {
 }
 
 export async function decryptCanvasImages(
-  canvasData: any,
-  remoteImages: any[],
+  canvasData: CanvasJSON,
+  remoteImages: { file_name: string; file: string }[],
   encrypted_dek: string,
   masterKey: CryptoKey,
   cryptoUtils: CryptoUtils,
@@ -23,9 +27,9 @@ export async function decryptCanvasImages(
 
   for (const obj of canvasData.objects) {
     if (obj.type !== "Image") continue;
-
-    const originalFilename = obj.src;
-    const remoteUrl = imageMap.get(originalFilename);
+    const imgObj = obj as FabricImageJSON;
+    const originalSrc = imgObj.src;
+    const remoteUrl = imageMap.get(originalSrc);
     if (!remoteUrl) continue;
 
     const res = await api.get(remoteUrl, { responseType: "blob" });
@@ -35,17 +39,17 @@ export async function decryptCanvasImages(
       masterKey,
     );
 
-    obj.src = blobUrl;
+    imgObj.src = blobUrl;
 
     if (includeRawFile) {
-      obj._customRawFile = await blobUrlToFile(blobUrl, originalFilename);
+      imgObj._customRawFile = await blobUrlToFile(blobUrl, originalSrc);
     }
   }
 }
 
 export async function decryptCanvasImagesWithSharingKey(
-  canvasData: any,
-  remoteImages: any[],
+  canvasData: CanvasJSON,
+  remoteImages: { file_name: string; file: string }[],
   sharingKey: string,
   cryptoUtils: CryptoUtils,
 ) {
@@ -58,11 +62,12 @@ export async function decryptCanvasImagesWithSharingKey(
   for (const obj of canvasData.objects) {
     if (obj.type !== "Image") continue;
 
-    const remoteUrl = imageMap.get(obj.src);
+    const imgObj = obj as FabricImageJSON;
+    const remoteUrl = imageMap.get(imgObj.src);
     if (!remoteUrl) continue;
 
     const res = await api.get(remoteUrl, { responseType: "blob" });
-    obj.src = await cryptoUtils.decryptImageWithSharingKey(
+    imgObj.src = await cryptoUtils.decryptImageWithSharingKey(
       res.data,
       sharingKey,
     );
@@ -70,7 +75,7 @@ export async function decryptCanvasImagesWithSharingKey(
 }
 
 export async function encryptCanvasImages(
-  canvasData: any,
+  canvasData: CanvasJSON,
   canvasImages: CanvasImageRef[],
   masterKey: CryptoKey,
   cryptoUtils: CryptoUtils,
@@ -81,21 +86,24 @@ export async function encryptCanvasImages(
   for (const img of canvasImages) {
     if (img.src.endsWith(".bin")) continue;
     if (!img.file) continue;
-
-    try {
-      const { filename, encryptedBlob } = await cryptoUtils.encryptImage(
-        img.file,
-        masterKey,
-      );
-      filenameMapping.set(img.src, filename);
-      encryptedFiles.set(filename, encryptedBlob);
-    } catch (_err) {}
+    const { filename, encryptedBlob } = await cryptoUtils.encryptImage(
+      img.file,
+      masterKey,
+    );
+    filenameMapping.set(img.src, filename);
+    encryptedFiles.set(filename, encryptedBlob);
   }
 
   if (canvasData?.objects) {
-    canvasData.objects = canvasData.objects.map((obj: any) => {
-      if (obj.type === "Image" && filenameMapping.has(obj.src)) {
-        return { ...obj, src: filenameMapping.get(obj.src) };
+    canvasData.objects = canvasData.objects.map((obj) => {
+      if (obj.type === "Image") {
+        const imgObj = obj as FabricImageJSON;
+        if (filenameMapping.has(imgObj.src)) {
+          return {
+            ...imgObj,
+            src: filenameMapping.get(imgObj.src) as string,
+          };
+        }
       }
       return obj;
     });
