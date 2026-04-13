@@ -104,7 +104,6 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": ("rest_framework_simplejwt.authentication.JWTAuthentication",),
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
 }
-
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
     # "ACCESS_TOKEN_LIFETIME": timedelta(seconds=10),  # lazy testing
@@ -114,8 +113,8 @@ SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ("Bearer",),
     "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
     "AUTH_COOKIE": "refresh_token",
-    "AUTH_COOKIE_DOMAIN": f".{env('FRONTEND_DOMAIN')}",
-    "AUTH_COOKIE_SECURE": True,
+    "AUTH_COOKIE_DOMAIN": None,
+    "AUTH_COOKIE_SECURE": not DEBUG,
     "AUTH_COOKIE_HTTPONLY": True,
     "AUTH_COOKIE_SAMESITE": "Lax",  # Allow cross-site for links from email. Otherwise we'd use strict
 }
