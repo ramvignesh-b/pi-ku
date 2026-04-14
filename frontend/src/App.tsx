@@ -14,10 +14,14 @@ import Reader from "./pages/Reader";
 import Register from "./pages/Register";
 import VerifyEmail from "./pages/VerifyEmail";
 
+let authInitialized = false;
+
 export default function App() {
   const { initialize, isInitializing } = useAuth();
 
   useEffect(() => {
+    if (authInitialized) return;
+    authInitialized = true;
     initialize();
   }, [initialize]);
 
