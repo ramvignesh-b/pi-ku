@@ -97,6 +97,28 @@ class LetterAPITest(APITestCase):
         self.assertEqual(Letter.objects.get().encrypted_metadata, "enc_meta==")
         self.assertEqual(Letter.objects.get().encrypted_dek, "enc_dek==")
 
+    def test_sealed_letters_cannot_be_updated(self):
+        """Test API returns 400 when trying to update an already sealed letter."""
+        letter = Letter.objects.create(
+            user=self.user,
+            type="KEPT",
+            status="SEALED",
+            public_id="4281edcc-5459-4ff2-bb5e-669fb44e0757",
+            encrypted_content="enc_xyz==",
+            encrypted_metadata="enc_meta==",
+            encrypted_dek="enc_dek==",
+        )
+        payload = {
+            "public_id": letter.public_id,
+            "type": "KEPT",
+            "encrypted_content": "enc_abc==",
+            "encrypted_metadata": "enc_meta==",
+            "encrypted_dek": "enc_dek==",
+        }
+        response = self.client.put(self.url + letter.public_id + "/", payload)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data, {"error": "Sealed letters cannot be modified."})
+
     def test_encrypted_dek_is_required_when_storing_encrypted_content_and_metadata(self):
         """encrypted_dek is required when encrypted_content and encrypted_metadata are present"""
         payload = {"type": "KEPT", "encrypted_content": "enc_xyz==", "encrypted_metadata": "enc_meta=="}
@@ -131,11 +153,15 @@ class LetterAPITest(APITestCase):
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Letter.objects.count(), 1)
         self.assertEqual(LetterImage.objects.count(), 2)
+        from django.core.files.storage import default_storage
+
+        self.assertTrue(default_storage.exists("encrypted-images/enc_img1.bin"))
+        self.assertTrue(default_storage.exists("encrypted-images/enc_img2.bin"))
 
     def test_cleanup_images_when_letter_is_updated(self):
         letter = Letter.objects.create(user=self.user, type="KEPT", status="DRAFT")
-        LetterImage.objects.create(letter=letter, file_name="old1.bin", file=ContentFile(b"data", name="del.bin"))
-        LetterImage.objects.create(letter=letter, file_name="old2.bin", file=ContentFile(b"data", name="del.bin"))
+        LetterImage.objects.create(letter=letter, file_name="old1.bin", file=ContentFile(b"data", name="old1.bin"))
+        LetterImage.objects.create(letter=letter, file_name="old2.bin", file=ContentFile(b"data", name="old2.bin"))
 
         response = self.client.put(
             f"/api/letters/{letter.public_id}/",
@@ -148,8 +174,14 @@ class LetterAPITest(APITestCase):
             format="multipart",
         )
 
-        self.assertEqual(response.status_code, 200)
+        from django.core.files.storage import default_storage
+
+        # Verify that the old files are cleared from storage
+        self.assertTrue(LetterImage.objects.filter(file_name="new.bin").exists())
         self.assertEqual(LetterImage.objects.count(), 1)
+        self.assertFalse(default_storage.exists("encrypted-images/old1.bin"))
+        self.assertFalse(default_storage.exists("encrypted-images/old2.bin"))
+        self.assertEqual(response.status_code, 200)
 
 
 class LetterImageModelTest(TestCase):
