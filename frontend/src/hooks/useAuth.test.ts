@@ -29,7 +29,7 @@ beforeEach(() => {
   });
 
   vi.mocked(loadMasterKey).mockResolvedValue(mockMasterKey);
-  vi.mocked(saveMasterKey).mockResolvedValue(undefined);
+  vi.mocked(saveMasterKey).mockResolvedValue("masterKey");
   vi.mocked(clearMasterKey).mockResolvedValue(undefined);
 
   useAuthStore.setState({
@@ -59,12 +59,16 @@ describe("isAuthenticated", () => {
   });
 });
 
-describe("login", () => {
+describe("setAuthStore", () => {
   it("should persist the provided master key to IndexedDB", async () => {
     const { result } = renderHook(() => useAuth());
 
     await act(async () => {
-      await result.current.login("access-token", mockUser, mockMasterKey);
+      await result.current.setAuthStore(
+        "access-token",
+        mockUser,
+        mockMasterKey,
+      );
     });
 
     expect(saveMasterKey).toHaveBeenCalledWith(mockMasterKey);
@@ -74,7 +78,11 @@ describe("login", () => {
     const { result } = renderHook(() => useAuth());
 
     await act(async () => {
-      await result.current.login("my-access-token", mockUser, mockMasterKey);
+      await result.current.setAuthStore(
+        "my-access-token",
+        mockUser,
+        mockMasterKey,
+      );
     });
 
     expect(useAuthStore.getState().accessToken).toBe("my-access-token");
@@ -85,7 +93,7 @@ describe("login", () => {
     const { result } = renderHook(() => useAuth());
 
     await act(async () => {
-      await result.current.login("token", mockUser, mockMasterKey);
+      await result.current.setAuthStore("token", mockUser, mockMasterKey);
     });
 
     expect(useKeyStore.getState().masterKey).not.toBeNull();
