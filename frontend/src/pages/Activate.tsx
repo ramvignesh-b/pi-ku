@@ -62,12 +62,16 @@ export default function Activate() {
             <br />
             Your identity is now verified and ready for timeless letters.
           </p>
+          <div className="divider opacity-10"></div>
+
           <button
             type="button"
             className="btn btn-primary w-full shadow-lg"
-            onClick={() => navigate(ROUTES.DRAWER)}
+            onClick={() =>
+              navigate(ROUTES.LOGIN, { state: { firstTime: true } })
+            }
           >
-            Open Drawer
+            Start Writing
           </button>
         </div>
       )}
