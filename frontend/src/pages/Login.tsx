@@ -57,7 +57,7 @@ export default function Login() {
       });
 
       // store the auth related data
-      setAuthStore(authData.access, userData, masterKey);
+      await setAuthStore(authData.access, userData, masterKey);
 
       navigate(ROUTES.DRAWER);
     } catch (err) {

@@ -273,6 +273,7 @@ export default function Editor() {
                 type="button"
                 className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
                 onClick={() => setShareLink(null)}
+                aria-label="Close"
               >
                 <XCircleIcon size={18} weight="bold" />
               </button>
