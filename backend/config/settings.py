@@ -19,9 +19,12 @@ import environ
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Load environment variables
 env = environ.Env()
-# find .env in root
-environ.Env.read_env(os.path.join(BASE_DIR.parent, ".env"))
+# Allow overriding the .env file path (useful for E2E testing/CI)
+env_file = os.environ.get("PIKU_ENV_FILE", os.path.join(BASE_DIR.parent, ".env"))
+if os.path.exists(env_file):
+    environ.Env.read_env(env_file)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
