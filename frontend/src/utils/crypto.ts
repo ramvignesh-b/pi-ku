@@ -65,34 +65,54 @@ export class CryptoUtils {
   };
 
   /**
-   * Derives a Master Key from a password + email (salt).
-   * Same credentials = same key.
+   * Derives a Key Bundle (MasterKey + AuthHash) from a password + email.
+   * Absolute zero knowledge!!
    */
-  public static async deriveMasterKey(
+  public static async deriveKeyBundle(
     password: string,
     email: string,
-  ): Promise<CryptoKey> {
+  ): Promise<{ masterKey: CryptoKey; authHash: string }> {
     const enc = new TextEncoder();
+    const salt = enc.encode(email.toLowerCase());
+
     const baseKey = await crypto.subtle.importKey(
       "raw",
       enc.encode(password),
       "PBKDF2",
       false,
-      ["deriveKey"],
+      ["deriveBits", "deriveKey"],
     );
 
-    return crypto.subtle.deriveKey(
+    const masterSeed = await crypto.subtle.deriveBits(
       {
         name: "PBKDF2",
-        salt: enc.encode(email.toLowerCase()),
+        salt,
         iterations: CryptoUtils.PBKDF2_ITERATIONS,
         hash: "SHA-256",
       },
       baseKey,
+      512, // 512 bits to split
+    );
+
+    // first 256 bits for MasterKey, last 256 bits for AuthHash
+    const masterKeyBytes = masterSeed.slice(0, 32);
+    const authHashBytes = masterSeed.slice(32, 64);
+
+    // Create the MasterKey for client-side encryption
+    const masterKey = await crypto.subtle.importKey(
+      "raw",
+      masterKeyBytes,
       CryptoUtils.AES_GCM,
       false,
       ["encrypt", "decrypt", "wrapKey", "unwrapKey"],
     );
+
+    // Create the hex AuthHash for server-side verification
+    const authHash = Array.from(new Uint8Array(authHashBytes))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+
+    return { masterKey, authHash };
   }
 
   // Internal helper to encrypt data and wrap the key

@@ -4,7 +4,6 @@ import { endpoints } from "../config/endpoints";
 import type { UserProfile } from "../store/useAuthStore";
 import { useAuthStore } from "../store/useAuthStore";
 import { useKeyStore } from "../store/useKeyStore";
-import { CryptoUtils } from "../utils/crypto";
 import {
   clearMasterKey,
   loadMasterKey,
@@ -18,16 +17,12 @@ export const useAuth = () => {
 
   const isAuthenticated = !!accessToken;
 
-  // called after successful login — derive & save master key
-  const login = async (
+  // called after successful login — save master key
+  const setAuthStore = async (
     access: string,
     profile: UserProfile,
-    password: string,
+    masterKey: CryptoKey,
   ) => {
-    const masterKey = await CryptoUtils.deriveMasterKey(
-      password,
-      profile.email,
-    );
     await saveMasterKey(masterKey);
     setMasterKey(masterKey);
     setAuth(access, profile);
@@ -76,7 +71,7 @@ export const useAuth = () => {
     isAuthenticated,
     user,
     isInitializing,
-    login,
+    setAuthStore,
     logout,
     initialize,
   };

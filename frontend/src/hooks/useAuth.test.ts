@@ -1,6 +1,7 @@
 import { act, renderHook } from "@testing-library/react";
 import { HttpResponse, http } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { mockMasterKey } from "../../test/fixtures/auth.fixture";
 import { mockUser } from "../../test/fixtures/user.fixture";
 import { server } from "../../test/mocks/server";
 import { useAuthStore } from "../store/useAuthStore";
@@ -13,26 +14,24 @@ import {
 } from "../utils/keystore";
 import { useAuth } from "./useAuth";
 
+vi.mock("../utils/crypto");
+vi.mock("../utils/keystore");
+
 const API_URL = "http://piku-server";
-
-vi.mock("../utils/crypto", () => ({
-  CryptoUtils: {
-    deriveMasterKey: vi
-      .fn()
-      .mockResolvedValue({ type: "secret" } as unknown as CryptoKey),
-  },
-}));
-
-vi.mock("../utils/keystore", () => ({
-  saveMasterKey: vi.fn().mockResolvedValue(undefined),
-  loadMasterKey: vi
-    .fn()
-    .mockResolvedValue({ type: "secret" } as unknown as CryptoKey),
-  clearMasterKey: vi.fn().mockResolvedValue(undefined),
-}));
 
 beforeEach(() => {
   vi.clearAllMocks();
+
+  // hack to set up mock implementations using fixtures
+  vi.mocked(CryptoUtils.deriveKeyBundle).mockResolvedValue({
+    masterKey: mockMasterKey,
+    authHash: "mock-auth-hash",
+  });
+
+  vi.mocked(loadMasterKey).mockResolvedValue(mockMasterKey);
+  vi.mocked(saveMasterKey).mockResolvedValue(undefined);
+  vi.mocked(clearMasterKey).mockResolvedValue(undefined);
+
   useAuthStore.setState({
     accessToken: null,
     user: null,
@@ -61,34 +60,21 @@ describe("isAuthenticated", () => {
 });
 
 describe("login", () => {
-  it("should derive the master key using the provided credentials", async () => {
+  it("should persist the provided master key to IndexedDB", async () => {
     const { result } = renderHook(() => useAuth());
 
     await act(async () => {
-      await result.current.login("access-token", mockUser, "test-password");
+      await result.current.login("access-token", mockUser, mockMasterKey);
     });
 
-    expect(CryptoUtils.deriveMasterKey).toHaveBeenCalledWith(
-      "test-password",
-      mockUser.email,
-    );
-  });
-
-  it("should persist the derived master key to IndexedDB", async () => {
-    const { result } = renderHook(() => useAuth());
-
-    await act(async () => {
-      await result.current.login("access-token", mockUser, "my-password");
-    });
-
-    expect(saveMasterKey).toHaveBeenCalledTimes(1);
+    expect(saveMasterKey).toHaveBeenCalledWith(mockMasterKey);
   });
 
   it("should update the store with the access token and user profile", async () => {
     const { result } = renderHook(() => useAuth());
 
     await act(async () => {
-      await result.current.login("my-access-token", mockUser, "my-password");
+      await result.current.login("my-access-token", mockUser, mockMasterKey);
     });
 
     expect(useAuthStore.getState().accessToken).toBe("my-access-token");
@@ -99,7 +85,7 @@ describe("login", () => {
     const { result } = renderHook(() => useAuth());
 
     await act(async () => {
-      await result.current.login("token", mockUser, "my-password");
+      await result.current.login("token", mockUser, mockMasterKey);
     });
 
     expect(useKeyStore.getState().masterKey).not.toBeNull();

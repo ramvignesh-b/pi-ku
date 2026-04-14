@@ -3,43 +3,65 @@ import { CryptoUtils } from "./crypto";
 
 let utils: CryptoUtils;
 
-describe("deriveMasterKey", () => {
+describe("deriveKeyBundle", () => {
   beforeEach(async () => {
     utils = new CryptoUtils();
     await utils.initialize();
   });
 
-  it("should generate a valid CryptoKey instance", async () => {
-    const key = await CryptoUtils.deriveMasterKey("password", "test@test.com");
+  it("should generate a valid CryptoKey and a 64-char hex authHash", async () => {
+    const { masterKey, authHash } = await CryptoUtils.deriveKeyBundle(
+      "password",
+      "test@test.com",
+    );
 
-    expect(key.type).toBe("secret");
-    expect(key).toBeInstanceOf(CryptoKey);
+    expect(masterKey.type).toBe("secret");
+    expect(masterKey).toBeInstanceOf(CryptoKey);
+    expect(authHash).toHaveLength(64); // SHA-256 hex
+    expect(typeof authHash).toBe("string");
   });
 
-  it("should produce identical keys for identical credentials (deterministic)", async () => {
-    const keyA = await CryptoUtils.deriveMasterKey("password", "user@me.com");
-    const keyB = await CryptoUtils.deriveMasterKey("password", "USER@me.com");
-    const secret = "shared-secret";
+  it("should produce identical bundles for identical credentials (deterministic)", async () => {
+    const bundleA = await CryptoUtils.deriveKeyBundle(
+      "password",
+      "user@me.com",
+    );
+    const bundleB = await CryptoUtils.deriveKeyBundle(
+      "password",
+      "user@me.com",
+    );
 
-    const encryptedContent = await utils.encryptLetter(secret, keyA);
-    const decryptedContent = await utils.decryptLetter(encryptedContent, keyB);
+    expect(bundleA.authHash).toBe(bundleB.authHash);
+
+    const secret = "shared-secret";
+    const encryptedContent = await utils.encryptLetter(
+      secret,
+      bundleA.masterKey,
+    );
+    const decryptedContent = await utils.decryptLetter(
+      encryptedContent,
+      bundleB.masterKey,
+    );
 
     expect(decryptedContent).toBe(secret);
   });
 
-  it("should produce different keys for different users", async () => {
-    const keyA = await CryptoUtils.deriveMasterKey(
+  it("should produce different keys and hashes for different users", async () => {
+    const bundleA = await CryptoUtils.deriveKeyBundle(
       "password",
       "test1@gmail.com",
     );
-    const keyB = await CryptoUtils.deriveMasterKey(
+    const bundleB = await CryptoUtils.deriveKeyBundle(
       "password",
       "test2@gmail.com",
     );
 
-    const encrypted = await utils.encryptLetter("secret", keyA);
+    expect(bundleA.authHash).not.toBe(bundleB.authHash);
 
-    await expect(utils.decryptLetter(encrypted, keyB)).rejects.toThrow();
+    const encrypted = await utils.encryptLetter("secret", bundleA.masterKey);
+    await expect(
+      utils.decryptLetter(encrypted, bundleB.masterKey),
+    ).rejects.toThrow();
   });
 });
 
@@ -47,7 +69,11 @@ describe("encryptLetter / decryptLetter", () => {
   let masterKey: CryptoKey;
 
   beforeEach(async () => {
-    masterKey = await CryptoUtils.deriveMasterKey("password", "test@test.com");
+    const bundle = await CryptoUtils.deriveKeyBundle(
+      "password",
+      "test@test.com",
+    );
+    masterKey = bundle.masterKey;
   });
 
   it("should restore the original plaintext after a roundtrip", async () => {
@@ -80,7 +106,11 @@ describe("encryptLetter / decryptLetter", () => {
 describe("encryptMetadata / decryptMetadata", () => {
   let masterKey: CryptoKey;
   beforeEach(async () => {
-    masterKey = await CryptoUtils.deriveMasterKey("password", "test@test.com");
+    const bundle = await CryptoUtils.deriveKeyBundle(
+      "password",
+      "test@test.com",
+    );
+    masterKey = bundle.masterKey;
   });
 
   it("should successfully encrypt and decrypt object content", async () => {
@@ -100,7 +130,11 @@ describe("encryptMetadata / decryptMetadata", () => {
 describe("encryptImage / decryptImage", () => {
   let masterKey: CryptoKey;
   beforeEach(async () => {
-    masterKey = await CryptoUtils.deriveMasterKey("password", "test@test.com");
+    const bundle = await CryptoUtils.deriveKeyBundle(
+      "password",
+      "test@test.com",
+    );
+    masterKey = bundle.masterKey;
   });
 
   it("should transform a File into an encrypted .bin Blob", async () => {
@@ -138,7 +172,8 @@ describe("encryptImage / decryptImage", () => {
 describe("Sharing Key Decryption (TDD)", () => {
   let masterKey: CryptoKey;
   beforeEach(async () => {
-    masterKey = await CryptoUtils.deriveMasterKey("pass", "salt");
+    const bundle = await CryptoUtils.deriveKeyBundle("password", "salt");
+    masterKey = bundle.masterKey;
   });
 
   it("should decrypt a letter using ONLY the sharing key", async () => {

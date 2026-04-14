@@ -10,6 +10,7 @@ import FormField from "../components/ui/FormField";
 import { endpoints } from "../config/endpoints";
 import { ROUTES } from "../config/routes";
 import { useAuth } from "../hooks/useAuth";
+import { CryptoUtils } from "../utils/crypto";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email"),
@@ -22,7 +23,7 @@ export default function Login() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
-  const { login } = useAuth();
+  const { setAuthStore } = useAuth();
 
   const {
     register,
@@ -36,13 +37,24 @@ export default function Login() {
     setIsLoading(true);
     setApiError(null);
     try {
-      const { data: authData } = await publicApi.post(endpoints.LOGIN, data);
+      // client side key derivation for 0 knowledge
+      const { masterKey, authHash } = await CryptoUtils.deriveKeyBundle(
+        data.password,
+        data.email,
+      );
+
+      // send just the authHash as the password to the server
+      const { data: authData } = await publicApi.post(endpoints.LOGIN, {
+        email: data.email,
+        password: authHash,
+      });
 
       const { data: userData } = await api.get(endpoints.ME, {
         headers: { Authorization: `Bearer ${authData.access}` },
       });
 
-      login(authData.access, userData, data.password);
+      // store the auth related data
+      setAuthStore(authData.access, userData, masterKey);
 
       navigate(ROUTES.DRAWER);
     } catch (err) {

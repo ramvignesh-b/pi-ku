@@ -8,22 +8,23 @@ afterEach(async () => {
 });
 
 async function makeMasterKey() {
-  return CryptoUtils.deriveMasterKey("test-password", "test@example.com");
+  return await CryptoUtils.deriveKeyBundle("test-password", "test@example.com");
 }
 
 describe("keystore", () => {
   it("should save and load a CryptoKey successfully", async () => {
     const key = await makeMasterKey();
 
-    await saveMasterKey(key);
+    await saveMasterKey(key.masterKey);
     const keyfromMemory = await loadMasterKey();
 
     expect(keyfromMemory).toBeInstanceOf(CryptoKey);
-    expect(keyfromMemory).toEqual(key);
+    expect(keyfromMemory).toEqual(key.masterKey);
   });
 
   it("should remove the stored key from memory", async () => {
-    await saveMasterKey(await makeMasterKey());
+    const masterKey = await makeMasterKey();
+    await saveMasterKey(masterKey.masterKey);
     await clearMasterKey();
 
     const keyfromMemory = await loadMasterKey();

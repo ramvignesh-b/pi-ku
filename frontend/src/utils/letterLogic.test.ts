@@ -23,10 +23,11 @@ describe("letterLogic image helpers", () => {
   let crypto: CryptoUtils;
 
   beforeEach(async () => {
-    masterKey = await CryptoUtils.deriveMasterKey(
+    const keyBundle = await CryptoUtils.deriveKeyBundle(
       "password123",
       "test@example.com",
     );
+    masterKey = keyBundle.masterKey;
     crypto = new CryptoUtils();
     await crypto.initialize();
     vi.clearAllMocks();

@@ -10,6 +10,7 @@ import Logo from "../components/Logo";
 import FormField from "../components/ui/FormField";
 import { endpoints } from "../config/endpoints";
 import { ROUTES } from "../config/routes";
+import { CryptoUtils } from "../utils/crypto";
 
 // validation logic
 const registerSchema = z
@@ -43,10 +44,16 @@ export default function Register() {
     setIsLoading(true);
     setApiError(null);
     try {
+      // We generate the key bundle here to get the authHash (password) for the server.
+      const { authHash } = await CryptoUtils.deriveKeyBundle(
+        data.password,
+        data.email,
+      );
+
       await publicApi.post(endpoints.REGISTER, {
         full_name: data.full_name,
         email: data.email,
-        password: data.password,
+        password: authHash,
       });
       navigate(ROUTES.VERIFY_EMAIL);
     } catch (err) {
