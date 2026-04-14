@@ -36,8 +36,22 @@ describe("letterLogic image helpers", () => {
     it("should not encrypt images whose src already ends with .bin", async () => {
       const canvasData = {
         objects: [
-          { type: "Image", src: "already-encrypted.png.bin" },
-          { type: "Textbox", text: "hello" },
+          {
+            type: "Image",
+            src: "already-encrypted.png.bin",
+            top: 0,
+            left: 0,
+            width: 100,
+            height: 100,
+          },
+          {
+            type: "Textbox",
+            text: "hello",
+            top: 0,
+            left: 0,
+            width: 100,
+            height: 100,
+          },
         ],
       };
 
@@ -58,7 +72,16 @@ describe("letterLogic image helpers", () => {
     it("should encrypt new blob-backed images and return encrypted uploads", async () => {
       const file = new File(["img"], "photo.png", { type: "image/png" });
       const canvasData = {
-        objects: [{ type: "Image", src: "blob:http://localhost/test-image" }],
+        objects: [
+          {
+            type: "Image",
+            src: "blob:http://localhost/test-image",
+            top: 0,
+            left: 0,
+            width: 100,
+            height: 100,
+          },
+        ],
       };
       const canvasImages = [
         {
@@ -92,7 +115,6 @@ describe("letterLogic image helpers", () => {
   describe("decryptCanvasImages", () => {
     it("should decrypt images and replace src with blob URL", async () => {
       const canvasData = {
-        version: "5.3.0",
         objects: [
           {
             type: "Image",
@@ -143,7 +165,6 @@ describe("letterLogic image helpers", () => {
 
     it("should include raw file when includeRawFile is true", async () => {
       const canvasData = {
-        version: "5.3.0",
         objects: [
           {
             type: "Image",
@@ -188,7 +209,16 @@ describe("letterLogic image helpers", () => {
   describe("decryptCanvasImagesWithSharingKey", () => {
     it("should decrypt images using sharing key", async () => {
       const canvasData = {
-        objects: [{ type: "Image", src: "photo.png.bin" }],
+        objects: [
+          {
+            type: "Image",
+            src: "photo.png.bin",
+            top: 0,
+            left: 0,
+            width: 100,
+            height: 100,
+          },
+        ],
       };
       const remoteImages = [
         { file_name: "photo.png.bin", file: "https://remote/photo.png.bin" },

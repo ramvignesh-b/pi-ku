@@ -213,7 +213,7 @@ export class CryptoUtils {
   }
 
   public async encryptMetadata(
-    metadata: Record<string, unknown>,
+    metadata: Record<string, any>,
     masterKey: CryptoKey,
   ): Promise<EncryptedLetter> {
     const { encryptedContent, encrypted_dek, sharingKey } =
@@ -227,7 +227,7 @@ export class CryptoUtils {
   public async decryptMetadata(
     encrypted_metadata: EncryptedLetter,
     masterKey: CryptoKey,
-  ): Promise<Record<string, unknown>> {
+  ): Promise<Record<string, any>> {
     const bytes = await this.openEnvelope(
       encrypted_metadata.encrypted_content,
       encrypted_metadata.encrypted_dek,
@@ -239,7 +239,7 @@ export class CryptoUtils {
   public async decryptMetadataWithSharingKey(
     encrypted_content: string,
     sharingKey: string,
-  ): Promise<Record<string, unknown>> {
+  ): Promise<Record<string, any>> {
     const bytes = await this.openEnvelopeWithSharingKey(
       encrypted_content,
       sharingKey,

@@ -27,7 +27,6 @@ export interface FabricImageJSON extends FabricObjectJSON {
 }
 
 export interface CanvasJSON {
-  version: string;
   objects: (FabricObjectJSON | FabricImageJSON)[];
   canvasWidth?: number;
   canvasHeight?: number;
@@ -266,7 +265,7 @@ export const ComposeCanvas = forwardRef<
       });
     },
     getData: () => {
-      if (!fabricRef.current) return { version: "", objects: [] };
+      if (!fabricRef.current) return { objects: [] };
       const json = fabricRef.current.toJSON() as CanvasJSON;
       json.canvasWidth = BASE_WIDTH;
       json.canvasHeight =

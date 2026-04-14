@@ -109,7 +109,7 @@ export default function Editor() {
     await cryptoUtils.initialize();
 
     try {
-      const canvasData = canvasRef.current?.getData();
+      const canvasData = canvasRef.current?.getData() || { objects: [] };
       const canvasImages = canvasRef.current?.getImages() || [];
 
       const encImageFilesMap = await encryptCanvasImages(
