@@ -89,10 +89,10 @@ export VITE_API_URL="http://localhost:$E2E_BACKEND_PORT"
 
 if [ "$CI" = "true" ]; then
     echo "[TEST] Running Playwright Tests (CI)..."
-    (cd frontend && bun run test:e2e --project=chromium)
+    (cd frontend && bun run test:e2e --project=chromium "$@")
 else
     echo "[TEST] Running Playwright Tests in Distrobox..."
-    (cd frontend && distrobox-enter --name ubuntu-24.04 -- env VITE_API_URL=$VITE_API_URL bun run test:e2e --project=chromium)
+    (cd frontend && distrobox-enter --name ubuntu-24.04 -- env VITE_API_URL=$VITE_API_URL bun run test:e2e --project=chromium "$@")
 fi
 
 echo "[SUCCESS] E2E Tests Completed."
