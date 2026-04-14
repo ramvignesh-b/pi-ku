@@ -265,7 +265,7 @@ export default function Editor() {
               placeholder="Someone dear..."
               value={recipient}
               onChange={(e) => setRecipient(e.target.value)}
-              className="bg-transparent border-none outline-none text-4xl font-serif text-base-content placeholder:text-base-content/10 w-full"
+              className="bg-transparent border-none outline-none text-2xl md:text-3xl lg:text-4xl font-serif text-base-content placeholder:text-base-content/10 w-full"
             />
           </div>
           <DateDisplay />

@@ -8,6 +8,7 @@ import {
 } from "react";
 
 const PAD = 36;
+const BASE_WIDTH = 680;
 
 export interface FabricObjectJSON {
   type: string;
@@ -28,6 +29,8 @@ export interface FabricImageJSON extends FabricObjectJSON {
 export interface CanvasJSON {
   version: string;
   objects: (FabricObjectJSON | FabricImageJSON)[];
+  canvasWidth?: number;
+  canvasHeight?: number;
 }
 
 export type CanvasTools = {
@@ -59,15 +62,15 @@ const waitForLayout = (wrapper: HTMLDivElement): Promise<number> => {
 /**
  * Creates the primary text box for the letter.
  */
-const createMainTextbox = (width: number): fabric.Textbox => {
+const createMainTextbox = (): fabric.Textbox => {
   return new fabric.Textbox("Take a deep breath...", {
     name: "main-textbox",
     originX: "left",
     originY: "top",
     left: PAD,
     top: PAD,
-    width: width - PAD * 2,
-    fontSize: 16,
+    width: BASE_WIDTH - PAD * 2,
+    fontSize: 18,
     fontWeight: 500,
     fontFamily: "Playfair Display Variable",
     fill: "#000",
@@ -108,11 +111,14 @@ const handleResize = (
   wrapper: HTMLDivElement | null,
 ) => {
   if (!wrapper) return;
-  const neededHeight = textbox.top + textbox.height + PAD;
-  if (neededHeight > fCanvas.height) {
-    const newH = neededHeight + PAD;
-    fCanvas.setDimensions({ height: newH });
-    wrapper.style.height = `${newH}px`;
+  const scale = fCanvas.viewportTransform?.[0] || 1;
+  const neededLogicalHeight = textbox.top + textbox.height + PAD;
+  const currentLogicalHeight = fCanvas.height / scale;
+
+  if (neededLogicalHeight > currentLogicalHeight) {
+    const newPhysicalHeight = (neededLogicalHeight + PAD) * scale;
+    fCanvas.setDimensions({ height: newPhysicalHeight });
+    wrapper.style.height = `${newPhysicalHeight}px`;
   }
 };
 
@@ -178,8 +184,12 @@ export const ComposeCanvas = forwardRef<
     async (
       canvas: fabric.Canvas,
       data: CanvasJSON | null,
-      width: number,
+      containerWidth: number,
     ): Promise<fabric.Textbox | null> => {
+      // Always establish the scale relative to BASE_WIDTH
+      const scale = containerWidth / BASE_WIDTH;
+      canvas.setViewportTransform([scale, 0, 0, scale, 0, 0]);
+
       if (data) {
         await canvas.loadFromJSON(data);
         if (readOnly) {
@@ -190,7 +200,7 @@ export const ComposeCanvas = forwardRef<
         }
         return null;
       }
-      const textbox = createMainTextbox(width);
+      const textbox = createMainTextbox();
       canvas.add(textbox);
       return textbox;
     },
@@ -221,6 +231,7 @@ export const ComposeCanvas = forwardRef<
       fabricRef.current = canvas;
 
       const textbox = await loadContent(canvas, initialData, finalWidth);
+
       if (textbox) {
         textboxRef.current = textbox;
         setupTextboxInteractions(canvas, textbox);
@@ -256,7 +267,12 @@ export const ComposeCanvas = forwardRef<
     },
     getData: () => {
       if (!fabricRef.current) return { version: "", objects: [] };
-      return fabricRef.current.toJSON() as CanvasJSON;
+      const json = fabricRef.current.toJSON() as CanvasJSON;
+      json.canvasWidth = BASE_WIDTH;
+      json.canvasHeight =
+        fabricRef.current.getHeight() /
+        (fabricRef.current.viewportTransform?.[3] || 1);
+      return json;
     },
     getJsonData: () => {
       if (!fabricRef.current) return "";
@@ -273,11 +289,10 @@ export const ComposeCanvas = forwardRef<
       }));
     },
     loadData: async (data: CanvasJSON) => {
-      if (!fabricRef.current) return;
-      await fabricRef.current.loadFromJSON(data);
-      const textboxes = fabricRef.current.getObjects("Textbox");
-      if (textboxes.length > 0) {
-        const textbox = textboxes[0] as fabric.Textbox;
+      if (!(fabricRef.current && wrapperRef.current)) return;
+      const width = wrapperRef.current.clientWidth;
+      const textbox = await loadContent(fabricRef.current, data, width);
+      if (textbox) {
         textboxRef.current = textbox;
         setupTextboxInteractions(fabricRef.current, textbox);
       }
