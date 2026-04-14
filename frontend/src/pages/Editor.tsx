@@ -1,9 +1,12 @@
 import {
+  ClockIcon,
   DownloadSimpleIcon,
   ImageIcon,
   LockIcon,
   SpinnerGapIcon,
   TrayIcon,
+  XCircleIcon,
+  XIcon,
 } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -13,11 +16,19 @@ import {
   ComposeCanvas,
 } from "../components/ui/ComposeCanvas";
 import DateDisplay from "../components/ui/DateDisplay";
+import { Navbar } from "../components/ui/Navbar";
 import { endpoints } from "../config/endpoints";
 import { PATHS } from "../config/routes";
 import { useKeyStore } from "../store/useKeyStore";
 import { CryptoUtils } from "../utils/crypto";
+import { formatRelativeDate } from "../utils/dateFormat";
 import { decryptCanvasImages, encryptCanvasImages } from "../utils/letterLogic";
+
+type SaveOverlay = "idle" | "saving" | "saved" | "error";
+
+const OVERLAY_FADE_MS = 250;
+const SAVED_VISIBLE_MS = 1400;
+const ERROR_VISIBLE_MS = 2400;
 
 export default function Editor() {
   const navigate = useNavigate();
@@ -25,9 +36,13 @@ export default function Editor() {
   const letterIdRef = useRef<string>(public_id ?? "");
 
   const [isInitialLoading, setIsInitialLoading] = useState(false);
-  const [isSealing, setIsSealing] = useState(false);
-  const [isSaveSuccess, setIsSaveSuccess] = useState(false);
   const [shareLink, setShareLink] = useState<string | null>(null);
+  const [lastSaved, setLastSaved] = useState<string | null>(null);
+  const [isSaveDatePulsing, setIsSaveDatePulsing] = useState(false);
+  const [lastSavedPulseTick, setLastSavedPulseTick] = useState(0);
+
+  const [saveOverlay, setSaveOverlay] = useState<SaveOverlay>("idle");
+  const [showSaveOverlay, setShowSaveOverlay] = useState(false);
 
   const [recipient, setRecipient] = useState("");
   const { masterKey } = useKeyStore();
@@ -45,6 +60,8 @@ export default function Editor() {
       try {
         const res = await api.get(`${endpoints.LETTERS}${public_id}/`);
         const letterData = res.data;
+
+        setLastSaved(formatRelativeDate(new Date(letterData.updated_at)));
 
         const metadata = await cryptoUtils.decryptMetadata(
           {
@@ -85,7 +102,42 @@ export default function Editor() {
     loadExistingLetter();
   }, [public_id, masterKey]);
 
-  // --------------------------------------------------------------------------------------
+  useEffect(() => {
+    if (lastSavedPulseTick === 0) return;
+
+    setIsSaveDatePulsing(true);
+
+    const timer = setTimeout(() => {
+      setIsSaveDatePulsing(false);
+    }, 10000);
+
+    return () => clearTimeout(timer);
+  }, [lastSavedPulseTick]);
+
+  useEffect(() => {
+    if (saveOverlay === "idle" || saveOverlay === "saving") return;
+
+    const visibleTimer = setTimeout(
+      () => {
+        setShowSaveOverlay(false);
+      },
+      saveOverlay === "saved" ? SAVED_VISIBLE_MS : ERROR_VISIBLE_MS,
+    );
+
+    const unmountTimer = setTimeout(
+      () => {
+        setSaveOverlay("idle");
+      },
+      (saveOverlay === "saved" ? SAVED_VISIBLE_MS : ERROR_VISIBLE_MS) +
+        OVERLAY_FADE_MS,
+    );
+
+    return () => {
+      clearTimeout(visibleTimer);
+      clearTimeout(unmountTimer);
+    };
+  }, [saveOverlay]);
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -102,8 +154,10 @@ export default function Editor() {
       letterIdRef.current = public_id;
     }
 
-    if (isSealing || !masterKey) return;
-    setIsSealing(true);
+    if (saveOverlay === "saving" || !masterKey) return;
+
+    setSaveOverlay("saving");
+    setShowSaveOverlay(true);
 
     const cryptoUtils = new CryptoUtils();
     await cryptoUtils.initialize();
@@ -145,178 +199,243 @@ export default function Editor() {
       });
 
       await api.put(`${endpoints.LETTERS}${letterIdRef.current}/`, formData);
-      setIsSaveSuccess(true);
+
+      setLastSaved(formatRelativeDate(new Date()));
+      setLastSavedPulseTick((prev) => prev + 1);
 
       if (status === "SEALED" && encrypted_letter.sharingKey) {
-        const link = `${window.location.origin}${PATHS.read(letterIdRef.current)}#${encrypted_letter.sharingKey}`;
+        const link = `${window.location.origin}${PATHS.read(
+          letterIdRef.current,
+        )}#${encrypted_letter.sharingKey}`;
         setShareLink(link);
+        setShowSaveOverlay(false);
+        setTimeout(() => setSaveOverlay("idle"), OVERLAY_FADE_MS);
+      } else {
+        setSaveOverlay("saved");
+        setShowSaveOverlay(true);
       }
-
-      setTimeout(() => setIsSaveSuccess(false), 5000);
     } catch (_error) {
-    } finally {
-      setIsSealing(false);
+      setSaveOverlay("error");
+      setShowSaveOverlay(true);
     }
   };
 
   const copyToClipboard = async () => {
     if (!shareLink) return;
-    try {
-      await navigator.clipboard.writeText(shareLink);
-    } catch (_err) {}
+    await navigator.clipboard.writeText(shareLink);
   };
 
   return (
-    <section className="flex-1 overflow-y-auto scrollbar-hide px-2 py-12 bg-base-300 relative">
-      {isInitialLoading && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-base-300/80 backdrop-blur-sm">
-          <div className="flex flex-col items-center gap-4">
-            <SpinnerGapIcon
-              size={48}
+    <>
+      <Navbar
+        child={
+          <div
+            className={`flex items-center gap-2 ${
+              isSaveDatePulsing ? "animate-pulse" : ""
+            }`}
+          >
+            <ClockIcon
+              size={16}
               weight="bold"
-              className="animate-spin text-primary"
+              className="text-neutral-content/30"
             />
-            <p className="text-[10px] uppercase tracking-[0.4em] font-bold text-base-content/40">
-              Opening your draft...
+            <p className="text-sm text-neutral-content/30 flex-col justify-end leading-none text-right">
+              <span className="text-[10px] uppercase tracking-widest font-bold">
+                Last Save
+              </span>
+              <br />
+              <span className="italic">{lastSaved}</span>
             </p>
           </div>
-        </div>
-      )}
+        }
+      />
 
-      {shareLink && (
-        <div className="modal modal-open modal-bottom sm:modal-middle bg-base-100/20 backdrop-blur-md z-[100]">
-          <div className="modal-box bg-base-100 border border-base-content/5 shadow-2xl relative">
-            <button
-              type="button"
-              className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
-              onClick={() => setShareLink(null)}
-            >
-              ✕
-            </button>
-            <div className="flex flex-col items-center text-center gap-6 py-4">
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
-                <LockIcon size={32} weight="fill" className="text-primary" />
-              </div>
-              <div className="space-y-2">
-                <h3 className="font-serif text-3xl">Sealed & Ready</h3>
-                <p className="text-base-content/60 text-sm max-w-xs">
-                  This letter is now encrypted. Share this secret link with your
-                  recipient.
-                </p>
-              </div>
-
-              <div className="w-full flex items-center gap-2 bg-base-300 p-2 rounded-xl group relative">
-                <input
-                  readOnly
-                  value={shareLink}
-                  className="flex-1 bg-transparent text-xs font-mono px-2 overflow-hidden text-ellipsis whitespace-nowrap outline-none"
-                />
-                <button
-                  type="button"
-                  onClick={copyToClipboard}
-                  className="btn btn-primary btn-sm rounded-lg"
-                >
-                  Copy
-                </button>
-              </div>
-
-              <p className="text-[10px] uppercase tracking-widest text-base-content/30">
-                Zero-Knowledge: The key is in the link, not our servers.
+      <section className="flex-1 overflow-y-auto scrollbar-hide px-2 pt-32 pb-12 bg-base-300 relative">
+        {isInitialLoading && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-base-300/80 backdrop-blur-sm">
+            <div className="flex flex-col items-center gap-4">
+              <SpinnerGapIcon
+                size={48}
+                weight="bold"
+                className="animate-spin text-primary"
+              />
+              <p className="text-[10px] uppercase tracking-[0.4em] font-bold text-base-content/40">
+                Opening your draft...
               </p>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {isSaveSuccess && !shareLink && (
-        <div className="modal modal-open bg-base-100 backdrop-blur-md transition-all duration-2000 ease-in-out animate-fade-in opacity-80">
-          <div className="alert alert-success opacity-90">
-            <DownloadSimpleIcon size={18} weight="bold" />
-            <h3 className="font-bold text-lg text-success-content">
-              Your letter is saved!
-            </h3>
+        {shareLink && (
+          <div className="modal modal-open modal-bottom sm:modal-middle bg-base-100/20 backdrop-blur-md z-100">
+            <div className="modal-box bg-base-100 border border-base-content/5 shadow-2xl relative">
+              <button
+                type="button"
+                className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+                onClick={() => setShareLink(null)}
+              >
+                <XCircleIcon size={18} weight="bold" />
+              </button>
+              <div className="flex flex-col items-center text-center gap-6 py-4">
+                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+                  <LockIcon size={32} weight="fill" className="text-primary" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="font-serif text-3xl">Sealed & Ready</h3>
+                  <p className="text-base-content/60 text-sm max-w-xs">
+                    This letter is now encrypted. Share this secret link with
+                    your recipient.
+                  </p>
+                </div>
+
+                <div className="w-full flex items-center gap-2 bg-base-300 p-2 rounded-xl group relative">
+                  <input
+                    readOnly
+                    value={shareLink}
+                    className="flex-1 bg-transparent text-xs font-mono px-2 overflow-hidden text-ellipsis whitespace-nowrap outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={copyToClipboard}
+                    className="btn btn-primary btn-sm rounded-lg"
+                  >
+                    Copy
+                  </button>
+                </div>
+
+                <p className="text-[10px] uppercase tracking-widest text-base-content/30">
+                  Zero-Knowledge: The key is in the link, not our servers.
+                </p>
+              </div>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {isSealing && (
-        <div className="modal modal-open bg-base-100 backdrop-blur-md transition-all duration-2000 ease-in-out animate-fade-in opacity-80">
-          <div className="alert alert-neutral">
-            <SpinnerGapIcon size={18} weight="bold" className="animate-spin" />
-            <h3 className="font-bold text-neutral-content text-lg animate-pulse">
-              Securing your letter...
-            </h3>
+        {saveOverlay !== "idle" && !shareLink && (
+          <div
+            className={`modal modal-open bg-base-100/20 backdrop-blur-md transition-opacity duration-300 ${
+              showSaveOverlay ? "opacity-100" : "opacity-0"
+            }`}
+          >
+            <div className="modal-box p-0 bg-transparent shadow-none transition-all duration-300">
+              {saveOverlay === "saving" && (
+                <div
+                  role="alert"
+                  className={`alert text-center alert-neutral shadow-lg transition-all ease-in-out duration-2000 ${
+                    showSaveOverlay
+                      ? "opacity-100 scale-100 translate-y-0"
+                      : "opacity-0 scale-95 translate-y-1"
+                  }`}
+                >
+                  <SpinnerGapIcon
+                    size={18}
+                    weight="bold"
+                    className="animate-spin"
+                  />
+                  <span className="font-bold">Securing your letter...</span>
+                </div>
+              )}
+
+              {saveOverlay === "saved" && (
+                <div
+                  role="alert"
+                  className={`alert alert-success shadow-lg transition-all ease-in-out duration-2000 ${
+                    showSaveOverlay
+                      ? "opacity-100 scale-100 translate-y-0"
+                      : "opacity-0 scale-95 translate-y-1"
+                  }`}
+                >
+                  <DownloadSimpleIcon size={18} weight="bold" />
+                  <span className="font-bold">Your letter is saved!</span>
+                </div>
+              )}
+
+              {saveOverlay === "error" && (
+                <div
+                  role="alert"
+                  className={`alert alert-error shadow-lg transition-all duration-300 ${
+                    showSaveOverlay
+                      ? "opacity-100 scale-100 translate-y-0"
+                      : "opacity-0 scale-95 translate-y-1"
+                  }`}
+                >
+                  <XIcon size={18} weight="bold" />
+                  <span className="font-bold">Failed to save letter</span>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      <div className="max-w-180 mx-auto px-1 md:px-0">
-        <div className="flex justify-between items-end mb-16 border-b border-base-content/5 pb-8 px-0">
-          <div className="flex flex-col gap-2 flex-1">
-            <label
-              htmlFor="recipient"
-              className="text-[10px] uppercase tracking-[0.4em] text-secondary-content font-bold"
-            >
-              Recipient
-            </label>
-            <input
-              id="recipient"
-              type="text"
-              placeholder="Someone dear..."
-              value={recipient}
-              onChange={(e) => setRecipient(e.target.value)}
-              className="bg-transparent border-none outline-none text-2xl md:text-3xl lg:text-4xl font-serif text-base-content placeholder:text-base-content/10 w-full"
-            />
-          </div>
-          <DateDisplay />
-        </div>
-
-        <div
-          id="writer-toolbar"
-          className="flex items-center justify-between mb-8 h-14 bg-base-100/50 backdrop-blur-md rounded-full border border-base-content/5 px-6"
-        >
-          <div className="flex gap-4">
-            <button
-              type="button"
-              className="btn btn-ghost btn-sm"
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <ImageIcon size={18} weight="bold" />
-            </button>
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleImageUpload}
-              accept="image/*"
-              className="hidden"
-            />
+        <div className="max-w-180 mx-auto px-1 md:px-0">
+          <div className="flex justify-between items-end mb-16 border-b border-base-content/5 pb-8 px-0">
+            <div className="flex flex-col gap-2 flex-1">
+              <label
+                htmlFor="recipient"
+                className="text-[10px] uppercase tracking-[0.4em] text-secondary-content font-bold"
+              >
+                Recipient
+              </label>
+              <input
+                id="recipient"
+                type="text"
+                placeholder="Someone dear..."
+                value={recipient}
+                onChange={(e) => setRecipient(e.target.value)}
+                className="bg-transparent border-none outline-none text-2xl md:text-3xl lg:text-4xl font-serif text-base-content placeholder:text-base-content/10 w-full"
+              />
+            </div>
+            <DateDisplay />
           </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              className="btn btn-ghost btn-sm text-[10px] tracking-[0.2em] uppercase font-bold text-base-content/60 hover:text-base-content"
-              title="Store in your private drawer"
-              onClick={() => handleSave("DRAFT")}
-            >
-              <TrayIcon size={18} weight="bold" />
-              <span className="hidden md:inline">Store</span>
-            </button>
+          <div
+            id="writer-toolbar"
+            className="flex items-center justify-between mb-8 h-14 bg-base-100/50 backdrop-blur-md rounded-full border border-base-content/5 px-6"
+          >
+            <div className="flex gap-4">
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <ImageIcon size={18} weight="bold" />
+              </button>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleImageUpload}
+                accept="image/*"
+                className="hidden"
+              />
+            </div>
 
-            <div className="w-px h-4 bg-base-content/10 mx-2" />
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm text-[10px] tracking-[0.2em] uppercase font-bold text-base-content/60 hover:text-base-content"
+                title="Store in your private drawer"
+                onClick={() => handleSave("DRAFT")}
+              >
+                <TrayIcon size={18} weight="bold" />
+                <span className="hidden md:inline">Store</span>
+              </button>
 
-            <button
-              type="button"
-              className="btn btn-primary btn-sm rounded-full px-6"
-              onClick={() => handleSave("SEALED")}
-            >
-              <LockIcon size={14} weight="fill" className="mr-1" />
-              Seal
-            </button>
+              <div className="w-px h-4 bg-base-content/10 mx-2" />
+
+              <button
+                type="button"
+                className="btn btn-primary btn-sm rounded-full px-6"
+                onClick={() => handleSave("SEALED")}
+              >
+                <LockIcon size={14} weight="fill" className="mr-1" />
+                Seal
+              </button>
+            </div>
           </div>
+
+          <ComposeCanvas ref={canvasRef} />
         </div>
-        <ComposeCanvas ref={canvasRef} />
-      </div>
-    </section>
+      </section>
+    </>
   );
 }
