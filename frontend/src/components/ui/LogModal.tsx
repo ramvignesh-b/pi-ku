@@ -5,15 +5,17 @@ interface LogModalContent {
   message: string;
   log: string;
   onClose: () => void;
+  isOpen: boolean;
 }
 
 export const LogModal = ({
+  isOpen,
   message,
   log,
   onClose,
   status,
 }: LogModalContent) => {
-  return status === "RESET" ? (
+  return status === "RESET" || !isOpen ? (
     <div></div>
   ) : (
     <div className="modal modal-open modal-bottom sm:modal-middle bg-base-100/20 backdrop-blur-md z-100">

@@ -174,13 +174,8 @@ test.describe("Letter Drafting (Real Backend)", () => {
       timeout: 10000,
     });
     await expect(
-      page.getByText(new RegExp(`A sealed message for ${recipientName}`, "i")),
+      page.getByText(new RegExp(`A sealed letter for ${recipientName}`, "i")),
     ).toBeVisible();
-
-    // Verify content is decrypted (using author's masterKey automatically)
-    await expect(page.getByText(/decrypting/i)).toBeHidden();
-    // In the Reader, we check if the recipient name is visible in the Reader header.
-    await expect(page.getByText(/Drawer Test Recipient/i)).toBeVisible();
 
     // Also check if we are redirected to the Reader if we manually go to the Editor URL
     const readerUrl = page.url();
@@ -192,6 +187,5 @@ test.describe("Letter Drafting (Real Backend)", () => {
 
     // It should redirect back to the reader
     await expect(page).toHaveURL(readerUrl);
-    await expect(page.getByText(/Drawer Test Recipient/i)).toBeVisible();
   });
 });

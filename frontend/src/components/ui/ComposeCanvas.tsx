@@ -110,6 +110,8 @@ const initializeCanvas = (
     selection: !readOnly,
     preserveObjectStacking: true,
     allowTouchScrolling: true,
+    enableRetinaScaling: true,
+    objectCaching: false,
   });
 
   const wrapperEl = canvas.getElement().parentElement;
@@ -279,6 +281,7 @@ export const ComposeCanvas = forwardRef<
       textbox.lockScalingX = true;
       textbox.lockScalingY = true;
       textbox.lockRotation = true;
+      textbox.objectCaching = false;
 
       logicalSizeRef.current.height = measureLogicalContentHeight(
         canvas,

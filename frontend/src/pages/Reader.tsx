@@ -1,12 +1,13 @@
-import { CrossIcon } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import { api } from "../api/apiClient";
+import Logo from "../components/Logo";
 import {
   type CanvasJSON,
   type CanvasTools,
   ComposeCanvas,
 } from "../components/ui/ComposeCanvas";
+import { LogModal } from "../components/ui/LogModal";
 import { endpoints } from "../config/endpoints";
 import { useKeyStore } from "../store/useKeyStore";
 import { CryptoUtils } from "../utils/crypto";
@@ -114,7 +115,6 @@ export default function Reader() {
             log: err instanceof Error ? err.message : "Unknown error",
           });
         }
-
         setDecryptedCanvasData(canvasData);
       } catch (err) {
         const message = err instanceof Error ? err.message : "Unknown error";
@@ -135,9 +135,16 @@ export default function Reader() {
 
   if (isDecrypting) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-base-200">
-        <div className="text-center space-y-4">
-          <p className="text-base-content/60">Decrypting...</p>
+      <div className="min-h-screen flex items-center justify-center bg-base-100 font-serif">
+        <div className="fixed inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.4)_100%)] pointer-events-none z-0" />
+        <div className="text-center space-y-6 z-10">
+          <Logo />
+          <div className="flex flex-col items-center gap-2">
+            <span className="loading loading-ring loading-md text-primary/40"></span>
+            <p className="text-[10px] uppercase tracking-[0.4em] text-base-content/20 animate-pulse">
+              Breaking the seal...
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -145,15 +152,23 @@ export default function Reader() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-base-200 px-6">
-        <div className="max-w-md w-full bg-base-100 shadow-xl rounded-2xl p-8 text-center space-y-4">
-          <p className="text-error font-medium">{error}</p>
+      <div className="min-h-screen flex items-center justify-center bg-base-100 px-6 font-serif">
+        <div className="fixed inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.4)_100%)] pointer-events-none z-0" />
+        <div className="max-w-md w-full glass-card p-12 text-center space-y-6 z-10 animate-in fade-in zoom-in-95 duration-700">
+          <div className="space-y-2">
+            <h2 className="text-error font-display text-xl">
+              Something went wrong
+            </h2>
+            <p className="text-base-content/60 text-sm leading-relaxed">
+              {error}
+            </p>
+          </div>
           <button
             type="button"
-            className="btn btn-primary"
+            className="btn btn-ghost btn-sm text-xs uppercase tracking-widest hover:text-primary transition-colors"
             onClick={() => (window.location.href = "/")}
           >
-            Back to Home
+            Return Home
           </button>
         </div>
       </div>
@@ -161,40 +176,64 @@ export default function Reader() {
   }
 
   return (
-    <section className="min-h-screen w-full bg-base-200 px-4 py-8">
-      {warning && (
-        <div className="alert alert-warning">
-          <div className="flex-1">
-            <p>{warning.message}</p>
-            <p className="text-xs opacity-70">{warning.log}</p>
-          </div>
-        </div>
-      )}
-      <div className="max-w-4xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
+    <section className="min-h-screen w-full bg-base-100 px-4 py-8 md:py-16 font-serif relative overflow-hidden">
+      {/* Background Ambience */}
+      <div className="fixed inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.5)_100%)] pointer-events-none z-0" />
+
+      <LogModal
+        isOpen={!!warning}
+        onClose={() => setWarning(null)}
+        message={warning?.message}
+        log={warning?.log}
+        status="WARN"
+      />
+
+      <div className="max-w-4xl mx-auto space-y-8 relative z-10">
+        {/* Floating Header */}
+        <div className="glass-card px-6 py-4 flex items-center justify-between animate-in fade-in slide-in-from-top-6 duration-1000">
+          <div className="flex items-center gap-4">
+            <Logo />
+            <div className="h-4 w-px bg-base-content/10 hidden sm:block" />
             {metadata?.recipient && (
-              <p className="text-base-content/60">
-                A sealed message for{" "}
-                <span className="font-semibold">
-                  {metadata.recipient || "Anonymous"}
+              <p className="text-[11px] uppercase tracking-[0.2em] text-base-content/40 hidden sm:block">
+                A sealed letter for{" "}
+                <span className="text-base-content/60 font-semibold">
+                  {metadata.recipient}
                 </span>
               </p>
             )}
           </div>
           <button
             type="button"
-            className="btn btn-ghost btn-sm"
+            className="btn btn-ghost btn-circle btn-sm hover:rotate-90 transition-transform duration-500"
             onClick={() => (window.location.href = "/")}
-          >
-            <CrossIcon size={18} />
-          </button>
+            aria-label="Close"
+          ></button>
         </div>
 
-        <div className="bg-paper rounded-sm shadow-primary-content overflow-hidden">
-          <ComposeCanvas ref={canvasRef} readOnly />
+        {/* The Letter */}
+        <div className="relative group perspective-1000">
+          <div className="absolute inset-0 bg-primary/5 blur-3xl rounded-full scale-75 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none" />
+
+          <div className="bg-paper shadow-warm rounded-sm overflow-hidden animate-in fade-in zoom-in-95 slide-in-from-bottom-8 duration-1000 delay-300 fill-mode-backwards rotate-[-0.3deg] hover:rotate-0 transition-transform">
+            <div className="p-1 md:p-2 bg-base-content/5 opacity-10 pointer-events-none absolute inset-0 z-10" />
+            <ComposeCanvas ref={canvasRef} readOnly />
+          </div>
+
+          {metadata?.recipient && (
+            <p className="text-center sm:hidden text-[10px] uppercase tracking-[0.3em] text-base-content/20 mt-8">
+              For {metadata.recipient}
+            </p>
+          )}
         </div>
       </div>
+
+      {/* Atmospheric Footer */}
+      <footer className="mt-16 text-center z-10 opacity-10 pointer-events-none">
+        <p className="text-[9px] uppercase tracking-[0.5em]">
+          Read. Remember. Release.
+        </p>
+      </footer>
     </section>
   );
 }
