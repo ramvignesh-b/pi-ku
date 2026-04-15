@@ -183,8 +183,8 @@ export default function Reader() {
       <LogModal
         isOpen={!!warning}
         onClose={() => setWarning(null)}
-        message={warning?.message}
-        log={warning?.log}
+        message={warning?.message || ""}
+        log={warning?.log || ""}
         status="WARN"
       />
 
