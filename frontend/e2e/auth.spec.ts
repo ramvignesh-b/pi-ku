@@ -13,9 +13,6 @@ test.describe("Authentication Flow (Real Backend)", () => {
   }) => {
     // Perform full auth cycle using helper
     await AuthHelper.registerAndLogin(page, email, fullName, password);
-
-    // 5. Verify Zero-Knowledge Artifacts in IndexedDB
-    console.log(">>--- Verifying MasterKey in IndexedDB...");
     const masterKeyExists = await page.evaluate(async () => {
       return new Promise((resolve) => {
         const request = indexedDB.open("piku-keys");
@@ -36,6 +33,5 @@ test.describe("Authentication Flow (Real Backend)", () => {
     });
 
     expect(masterKeyExists).toBe(true);
-    console.log(">>--- E2E Flow Completed Successfully! ✅ ---<<");
   });
 });

@@ -1,5 +1,15 @@
 import { expect, type Page } from "@playwright/test";
+import pino from "pino";
 import { MailpitHelper } from "./mailpit";
+
+const logger = pino({
+  transport: {
+    target: "pino-pretty",
+    options: {
+      colorize: true,
+    },
+  },
+});
 
 /**
  * Completes the full registration -> activation -> login cycle.
@@ -11,7 +21,7 @@ export async function registerAndLogin(
   password: string,
 ) {
   // 1. Registration
-  console.log(`[Auth] Registering user: ${email}`);
+  logger.info(`[Auth] Registering user: ${email}`);
   await page.goto("/onboard");
   await page.getByLabel(/full name/i).fill(fullName);
   await page.getByLabel("Email", { exact: true }).fill(email);
@@ -22,7 +32,7 @@ export async function registerAndLogin(
   await expect(page).toHaveURL(/\/verify-email/);
 
   // 2. Activation via Mailpit
-  console.log(`[Auth] Polling Mailpit for activation email...`);
+  logger.info(`[Auth] Polling Mailpit for activation email...`);
   const activationLink = await MailpitHelper.getActivationLink(email);
   await page.goto(activationLink);
 
@@ -30,7 +40,7 @@ export async function registerAndLogin(
   await page.getByRole("button", { name: /start writing/i }).click();
 
   // 3. Login
-  console.log(`[Auth] Logging in...`);
+  logger.info(`[Auth] Logging in...`);
   await expect(page).toHaveURL(/\/login/);
 
   const welcomeButton = page.getByRole("button", { name: /i understand/i });
@@ -43,7 +53,7 @@ export async function registerAndLogin(
   await page.getByRole("button", { name: /sign in/i }).click();
 
   await expect(page).toHaveURL(/\/drawer/);
-  console.log(`[Auth] Successfully authenticated ${email}`);
+  logger.info(`[Auth] Successfully authenticated ${email}`);
 }
 
 // Maintain backward compatibility if needed, or update callers
