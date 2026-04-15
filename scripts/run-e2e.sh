@@ -70,11 +70,11 @@ export PIKU_ENV_FILE="$ENV_FILE"
 (cd backend && uv run manage.py migrate --noinput)
 
 echo "[BACKEND] Starting server on port $E2E_BACKEND_PORT..."
-(cd backend && uv run manage.py runserver $E2E_BACKEND_PORT) > /tmp/piku_e2e_backend.log 2>&1 &
+(cd backend && uv run manage.py runserver_plus --cert-file ../certs/localhost.pem --key-file ../certs/localhost-key.pem $E2E_BACKEND_PORT) > /tmp/piku_e2e_backend.log 2>&1 &
 BACKEND_PID=$!
 
 echo "[BACKEND] Waiting for server to respond..."
-until curl -s http://localhost:$E2E_BACKEND_PORT > /dev/null; do
+until curl -sk https://localhost:$E2E_BACKEND_PORT > /dev/null; do
     sleep 1
     if ! kill -0 $BACKEND_PID 2>/dev/null; then
         echo "[ERROR] Backend failed to start. Logs:"
@@ -85,14 +85,14 @@ done
 echo "[BACKEND] Server is ready."
 
 # 3. Run Playwright
-export VITE_API_URL="http://localhost:$E2E_BACKEND_PORT"
+export VITE_API_URL="https://localhost:$E2E_BACKEND_PORT"
 
 if [ "$CI" = "true" ]; then
     echo "[TEST] Running Playwright Tests (CI)..."
-    (cd frontend && bun run test:e2e --project=chromium "$@")
+    (cd frontend && bun run test:e2e "$@")
 else
     echo "[TEST] Running Playwright Tests in Distrobox..."
-    (cd frontend && distrobox-enter --name ubuntu-24.04 -- env VITE_API_URL=$VITE_API_URL bun run test:e2e --project=chromium "$@")
+    (cd frontend && distrobox-enter --name ubuntu-24.04 -- env VITE_API_URL=$VITE_API_URL bun run test:e2e "$@")
 fi
 
 echo "[SUCCESS] E2E Tests Completed."

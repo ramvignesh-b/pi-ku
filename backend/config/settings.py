@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.staticfiles",
+    "django_extensions",
     "rest_framework",
     "corsheaders",
     "users",
@@ -106,7 +107,7 @@ NOTE: COOKIE_SAMESITE:  Lax is used to allow cross-site redirection, like links 
 AUTH_COOKIE = {
     "NAME": "refresh_token",
     "DOMAIN": None,
-    "SECURE": not DEBUG,
+    "SECURE": True,
     "HTTPONLY": True,
     "SAMESITE": "Lax",
 }

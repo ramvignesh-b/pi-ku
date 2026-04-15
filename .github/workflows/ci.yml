@@ -82,25 +82,44 @@ jobs:
           - 1025:1025
     steps:
       - uses: actions/checkout@v4
+
+      - name: Setup SSL using mkcert
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mkcert libnss3-tools
+          mkdir -p certs
+          mkcert -install
+          mkcert localhost -cert-file certs/localhost.pem -key-file certs/localhost-key.pem [IP_ADDRESS]
+
       - name: Install uv
         uses: astral-sh/setup-uv@v5
         with:
           version: "latest"
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+
       - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
       - name: Install Frontend dependencies
         run: cd frontend && bun install
+
       - name: Install Playwright Browsers
         run: cd frontend && bun x playwright install --with-deps
+
       - name: Create .env.e2e
         run: cp .env.e2e.example .env.e2e
+
       - name: Run E2E Script
         run: ./scripts/run-e2e.sh
         env:
           CI: "true"
+
       - name: Upload Playwright Report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
           path: frontend/playwright-report/
-          retention-days: 30
+          retention-days: 10

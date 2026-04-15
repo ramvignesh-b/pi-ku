@@ -9,3 +9,6 @@ dist/
 
 # IDE
 .vscode/
+
+# Certificates
+certs/*.pem

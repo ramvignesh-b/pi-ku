@@ -33,6 +33,10 @@ export default defineConfig({
     trace: "on-first-retry",
     /* Capture screenshot on failure */
     screenshot: "only-on-failure",
+    /* Capture video on failure */
+    video: "retain-on-failure",
+    /* Ignore HTTPS errors */
+    ignoreHTTPSErrors: true,
   },
 
   /* Configure projects for major browsers */
@@ -52,5 +56,6 @@ export default defineConfig({
     command: "bun run dev",
     url: process.env.FRONTEND_URL,
     reuseExistingServer: !process.env.CI,
+    ignoreHTTPSErrors: true,
   },
 });
