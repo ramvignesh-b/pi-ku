@@ -9,13 +9,18 @@ import {
   XIcon,
 } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import {
+  type NavigateFunction,
+  useNavigate,
+  useParams,
+} from "react-router-dom";
 import { api } from "../api/apiClient";
 import {
   type CanvasTools,
   ComposeCanvas,
 } from "../components/ui/ComposeCanvas";
 import DateDisplay from "../components/ui/DateDisplay";
+import { LogModal } from "../components/ui/LogModal";
 import { Navbar } from "../components/ui/Navbar";
 import { endpoints } from "../config/endpoints";
 import { PATHS } from "../config/routes";
@@ -32,12 +37,23 @@ const ERROR_VISIBLE_MS = 2400;
 
 export default function Editor() {
   const navigate = useNavigate();
+  const navigateRef = useRef<NavigateFunction>(navigate);
+  navigateRef.current = navigate;
+
   const { public_id } = useParams();
   const letterIdRef = useRef<string>(public_id ?? "");
+  const justSavedRef = useRef<boolean>(false);
+
+  const [decryptionStatus, setDecryptionStatus] = useState<{
+    status: "SUCCESS" | "WARN" | "ERROR" | "RESET";
+    message: string;
+    log: string;
+  }>({ status: "RESET", message: "", log: "" });
 
   const [isInitialLoading, setIsInitialLoading] = useState(false);
   const [shareLink, setShareLink] = useState<string | null>(null);
   const [lastSaved, setLastSaved] = useState<string | null>(null);
+  const [status, setStatus] = useState<"DRAFT" | "SEALED">("DRAFT");
   const [isSaveDatePulsing, setIsSaveDatePulsing] = useState(false);
   const [lastSavedPulseTick, setLastSavedPulseTick] = useState(0);
 
@@ -52,6 +68,10 @@ export default function Editor() {
 
   useEffect(() => {
     if (!(public_id && masterKey)) return;
+    if (justSavedRef.current) {
+      justSavedRef.current = false;
+      return;
+    }
 
     const loadExistingLetter = async () => {
       setIsInitialLoading(true);
@@ -62,6 +82,16 @@ export default function Editor() {
         const letterData = res.data;
 
         setLastSaved(formatRelativeDate(new Date(letterData.updated_at)));
+        setStatus(letterData.status);
+
+        if (letterData.status === "SEALED") {
+          navigateRef.current(PATHS.read(public_id), { replace: true });
+          return;
+        }
+
+        if (!letterData.encrypted_dek) {
+          return;
+        }
 
         const metadata = await cryptoUtils.decryptMetadata(
           {
@@ -81,7 +111,7 @@ export default function Editor() {
         );
         const canvasData = JSON.parse(decryptedJsonStr);
 
-        await decryptCanvasImages(
+        const { isDecryptionPartialFailure, error } = await decryptCanvasImages(
           canvasData,
           letterData.images ?? [],
           letterData.encrypted_dek,
@@ -90,10 +120,26 @@ export default function Editor() {
           true,
         );
 
-        requestAnimationFrame(() => {
-          canvasRef.current?.loadData(canvasData);
-        });
+        if (isDecryptionPartialFailure) {
+          setDecryptionStatus({
+            status: "WARN",
+            message:
+              "Failed to decrypt some elements. Please check the render.",
+            log: error,
+          });
+        }
+
+        console.log(canvasData);
+
+        if (canvasRef.current) {
+          await canvasRef.current.loadData(canvasData);
+        }
       } catch (_err) {
+        setDecryptionStatus({
+          status: "ERROR",
+          message: "Failed to decrypt letter. Please try again later.",
+          log: _err instanceof Error ? _err.message : "Unknown error",
+        });
       } finally {
         setIsInitialLoading(false);
       }
@@ -147,11 +193,9 @@ export default function Editor() {
   };
 
   const handleSave = async (status: "SEALED" | "DRAFT"): Promise<void> => {
-    if (!(public_id || letterIdRef.current)) {
-      letterIdRef.current = crypto.randomUUID();
-      navigate(PATHS.write(letterIdRef.current), { replace: true });
-    } else if (public_id) {
-      letterIdRef.current = public_id;
+    let targetId = public_id || letterIdRef.current;
+    if (!targetId) {
+      targetId = crypto.randomUUID();
     }
 
     if (saveOverlay === "saving" || !masterKey) return;
@@ -184,7 +228,7 @@ export default function Editor() {
       );
 
       const formData = new FormData();
-      formData.append("public_id", letterIdRef.current);
+      formData.append("public_id", targetId);
       formData.append("type", "KEPT");
       formData.append("status", status);
       formData.append("encrypted_content", encrypted_letter.encrypted_content);
@@ -198,14 +242,21 @@ export default function Editor() {
         formData.append("image_files", blob, filename);
       });
 
-      await api.put(`${endpoints.LETTERS}${letterIdRef.current}/`, formData);
+      await api.put(`${endpoints.LETTERS}${targetId}/`, formData);
+      justSavedRef.current = true;
+
+      if (!public_id) {
+        letterIdRef.current = targetId;
+        navigate(PATHS.write(targetId), { replace: true });
+      }
 
       setLastSaved(formatRelativeDate(new Date()));
+      setStatus(status);
       setLastSavedPulseTick((prev) => prev + 1);
 
       if (status === "SEALED" && encrypted_letter.sharingKey) {
         const link = `${window.location.origin}${PATHS.read(
-          letterIdRef.current,
+          targetId,
         )}#${encrypted_letter.sharingKey}`;
         setShareLink(link);
         setShowSaveOverlay(false);
@@ -251,6 +302,15 @@ export default function Editor() {
       />
 
       <section className="flex-1 overflow-y-auto scrollbar-hide px-2 pt-32 pb-12 bg-base-300 relative">
+        <LogModal
+          status={decryptionStatus.status}
+          message={decryptionStatus.message}
+          log={decryptionStatus.log}
+          onClose={() =>
+            setDecryptionStatus({ status: "RESET", message: "", log: "" })
+          }
+        />
+
         {isInitialLoading && (
           <div className="absolute inset-0 z-50 flex items-center justify-center bg-base-300/80 backdrop-blur-sm">
             <div className="flex flex-col items-center gap-4">
@@ -382,59 +442,71 @@ export default function Editor() {
                 type="text"
                 placeholder="Someone dear..."
                 value={recipient}
+                disabled={status === "SEALED"}
                 onChange={(e) => setRecipient(e.target.value)}
-                className="bg-transparent border-none outline-none text-2xl md:text-3xl lg:text-4xl font-serif text-base-content placeholder:text-base-content/10 w-full"
+                className="bg-transparent border-none outline-none text-2xl md:text-3xl lg:text-4xl font-serif text-base-content placeholder:text-base-content/10 w-full disabled:opacity-50"
               />
             </div>
             <DateDisplay />
           </div>
 
-          <div
-            id="writer-toolbar"
-            className="flex items-center justify-between mb-8 h-14 bg-base-100/50 backdrop-blur-md rounded-full border border-base-content/5 px-6"
-          >
-            <div className="flex gap-4">
-              <button
-                type="button"
-                className="btn btn-ghost btn-sm"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <ImageIcon size={18} weight="bold" />
-              </button>
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleImageUpload}
-                accept="image/*"
-                className="hidden"
-              />
+          {status === "DRAFT" ? (
+            <div
+              id="writer-toolbar"
+              className="flex items-center justify-between mb-8 h-14 bg-base-100/50 backdrop-blur-md rounded-full border border-base-content/5 px-6"
+            >
+              <div className="flex gap-4">
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <ImageIcon size={18} weight="bold" />
+                </button>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleImageUpload}
+                  accept="image/*"
+                  className="hidden"
+                />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm text-[10px] tracking-[0.2em] uppercase font-bold text-base-content/60 hover:text-base-content"
+                  title="Store in your private drawer"
+                  onClick={() => handleSave("DRAFT")}
+                >
+                  <TrayIcon size={18} weight="bold" />
+                  <span className="hidden md:inline">Store</span>
+                </button>
+
+                <div className="w-px h-4 bg-base-content/10 mx-2" />
+
+                <button
+                  type="button"
+                  className="btn btn-primary btn-sm rounded-full px-6"
+                  onClick={() => handleSave("SEALED")}
+                >
+                  <LockIcon size={14} weight="fill" className="mr-1" />
+                  Seal
+                </button>
+              </div>
             </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                className="btn btn-ghost btn-sm text-[10px] tracking-[0.2em] uppercase font-bold text-base-content/60 hover:text-base-content"
-                title="Store in your private drawer"
-                onClick={() => handleSave("DRAFT")}
-              >
-                <TrayIcon size={18} weight="bold" />
-                <span className="hidden md:inline">Store</span>
-              </button>
-
-              <div className="w-px h-4 bg-base-content/10 mx-2" />
-
-              <button
-                type="button"
-                className="btn btn-primary btn-sm rounded-full px-6"
-                onClick={() => handleSave("SEALED")}
-              >
-                <LockIcon size={14} weight="fill" className="mr-1" />
-                Seal
-              </button>
+          ) : (
+            <div className="flex items-center justify-center mb-8 h-14">
+              <div className="badge badge-outline border-primary/20 bg-primary/5 text-primary gap-2 p-4 rounded-full">
+                <LockIcon size={14} weight="fill" />
+                <span className="text-[10px] uppercase tracking-widest font-bold">
+                  Sealed & View Only
+                </span>
+              </div>
             </div>
-          </div>
+          )}
 
-          <ComposeCanvas ref={canvasRef} />
+          <ComposeCanvas ref={canvasRef} readOnly={status === "SEALED"} />
         </div>
       </section>
     </>

@@ -18,33 +18,47 @@ export async function decryptCanvasImages(
   masterKey: CryptoKey,
   cryptoUtils: CryptoUtils,
   includeRawFile = false,
-) {
-  if (!canvasData?.objects) return;
+): Promise<{ isDecryptionPartialFailure: boolean; error: string }> {
+  if (!canvasData?.objects)
+    return { isDecryptionPartialFailure: false, error: "" };
+  let isDecryptionPartialFailure = false;
+  let error = "";
 
   const imageMap = new Map(
     remoteImages.map((img) => [img.file_name, img.file]),
   );
 
-  for (const obj of canvasData.objects) {
-    if (obj.type !== "Image") continue;
+  const decryptionPromises = canvasData.objects.map(async (obj, index) => {
+    if (obj.type !== "Image") return;
     const imgObj = obj as FabricImageJSON;
-    const originalSrc = imgObj.src;
-    const remoteUrl = imageMap.get(originalSrc);
-    if (!remoteUrl) continue;
+    const remoteUrl = imageMap.get(imgObj.src);
+    if (!remoteUrl) return;
 
-    const res = await api.get(remoteUrl, { responseType: "blob" });
-    const blobUrl = await cryptoUtils.decryptImage(
-      res.data,
-      encrypted_dek,
-      masterKey,
-    );
+    try {
+      const res = await api.get(remoteUrl, { responseType: "blob" });
+      const originalSrc = imgObj.src;
 
-    imgObj.src = blobUrl;
+      const blobUrl = await cryptoUtils.decryptImage(
+        res.data,
+        encrypted_dek,
+        masterKey,
+      );
 
-    if (includeRawFile) {
-      imgObj._customRawFile = await blobUrlToFile(blobUrl, originalSrc);
+      imgObj.src = blobUrl;
+
+      if (includeRawFile) {
+        imgObj._customRawFile = await blobUrlToFile(blobUrl, originalSrc);
+      }
+    } catch (_error) {
+      delete canvasData.objects[index];
+      isDecryptionPartialFailure = true;
+      error = _error instanceof Error ? _error.message : "Unknown error";
     }
-  }
+  });
+
+  await Promise.all(decryptionPromises);
+  canvasData.objects = canvasData.objects.filter(Boolean);
+  return { isDecryptionPartialFailure, error };
 }
 
 export async function decryptCanvasImagesWithSharingKey(
@@ -59,19 +73,25 @@ export async function decryptCanvasImagesWithSharingKey(
     remoteImages.map((img) => [img.file_name, img.file]),
   );
 
-  for (const obj of canvasData.objects) {
-    if (obj.type !== "Image") continue;
+  const decryptionPromises = canvasData.objects.map(async (obj) => {
+    if (obj.type !== "Image") return;
 
     const imgObj = obj as FabricImageJSON;
     const remoteUrl = imageMap.get(imgObj.src);
-    if (!remoteUrl) continue;
+    if (!remoteUrl) return;
 
-    const res = await api.get(remoteUrl, { responseType: "blob" });
-    imgObj.src = await cryptoUtils.decryptImageWithSharingKey(
-      res.data,
-      sharingKey,
-    );
-  }
+    try {
+      const res = await api.get(remoteUrl, { responseType: "blob" });
+      imgObj.src = await cryptoUtils.decryptImageWithSharingKey(
+        res.data,
+        sharingKey,
+      );
+    } catch (_error) {
+      // Keep original or handle failure
+    }
+  });
+
+  await Promise.all(decryptionPromises);
 }
 
 export async function encryptCanvasImages(

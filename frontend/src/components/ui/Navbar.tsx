@@ -12,6 +12,7 @@ export const Navbar = ({ child }: { child?: React.ReactNode }) => {
           type="button"
           onClick={() => navigate(ROUTES.DRAWER)}
           className="group flex items-center gap-2 px-0 hover:bg-transparent cursor-pointer"
+          aria-label="Open Drawer"
         >
           <div className="p-1.5 rounded-full bg-base-content/5 transition-colors group-hover:bg-primary/10">
             <ArrowArcLeftIcon
