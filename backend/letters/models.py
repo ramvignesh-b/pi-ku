@@ -31,7 +31,9 @@ class Letter(models.Model):
     encrypted_dek = models.TextField(null=True, blank=True)
 
     def clean(self):
-        # custom validation
+        """
+        Performs custom validation logic for Letter status and type relations.
+        """
         super().clean()
         if self.type == Letter.Type.VAULT and self.status == Letter.Status.SEALED and not self.unlock_at:
             raise ValidationError("A sealed VAULT letter must have an unlock_date.")
@@ -41,6 +43,11 @@ class Letter(models.Model):
 
 
 class LetterImage(models.Model):
+    """
+    Creates one to many relationship between Letter and Image.
+    Stores the uploaded images to server directory after inserting into the DB.
+    """
+
     public_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     letter = models.ForeignKey(Letter, on_delete=models.CASCADE, related_name="images")
     file_name = models.CharField(max_length=255)

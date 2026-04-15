@@ -74,7 +74,7 @@ class RefreshTokenView(TokenRefreshView):
     permission_classes = (permissions.AllowAny,)
 
     def post(self, request, *args, **kwargs):
-        refresh_token = request.COOKIES.get(settings.SIMPLE_JWT["AUTH_COOKIE"])
+        refresh_token = request.COOKIES.get(settings.AUTH_COOKIE["NAME"])
         if not refresh_token:
             return Response({"detail": "Refresh token not found"}, status=status.HTTP_401_UNAUTHORIZED)
         request.data["refresh"] = refresh_token
@@ -92,9 +92,9 @@ class LogoutView(generics.GenericAPIView):
         response = Response({"detail": "Successfully logged out"}, status=status.HTTP_200_OK)
         # Clear the secure cookie
         response.delete_cookie(
-            key=settings.SIMPLE_JWT["AUTH_COOKIE"],
-            domain=settings.SIMPLE_JWT.get("AUTH_COOKIE_DOMAIN"),
-            samesite=settings.SIMPLE_JWT.get("AUTH_COOKIE_SAMESITE"),
+            key=settings.AUTH_COOKIE["NAME"],
+            domain=settings.AUTH_COOKIE.get("DOMAIN"),
+            samesite=settings.AUTH_COOKIE.get("SAMESITE"),
             path="/",
         )
         return response

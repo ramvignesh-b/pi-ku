@@ -27,12 +27,12 @@ def set_response_cookies(response, refresh_token):
     if "refresh" in _response.data:
         del _response.data["refresh"]  # remove refresh token from response body
     _response.set_cookie(
-        key=settings.SIMPLE_JWT["AUTH_COOKIE"],
+        key=settings.AUTH_COOKIE["NAME"],
         value=refresh_token,
         max_age=settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"].total_seconds(),
-        httponly=settings.SIMPLE_JWT["AUTH_COOKIE_HTTPONLY"],
-        secure=settings.SIMPLE_JWT["AUTH_COOKIE_SECURE"],
-        samesite=settings.SIMPLE_JWT["AUTH_COOKIE_SAMESITE"],
-        domain=settings.SIMPLE_JWT["AUTH_COOKIE_DOMAIN"],
+        httponly=settings.AUTH_COOKIE["HTTPONLY"],
+        secure=settings.AUTH_COOKIE["SECURE"],
+        samesite=settings.AUTH_COOKIE["SAMESITE"],
+        domain=settings.AUTH_COOKIE["DOMAIN"],
     )
     return _response

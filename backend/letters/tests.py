@@ -15,7 +15,9 @@ class LetterModelTest(TestCase):
         self.user = User.objects.create_user(email="test@pi-ku.app", password="password1234", full_name="Test User")
 
     def test_create_letter_draft(self):
-        """create a basic Letter model with required fields"""
+        """
+        Test the Letter model is created with required fields and auto timestamps.
+        """
         letter = Letter.objects.create(user=self.user, type="KEPT", status="DRAFT")
 
         self.assertEqual(letter.user, self.user)
@@ -28,20 +30,24 @@ class LetterModelTest(TestCase):
         self.assertIsNone(letter.sealed_at)
         self.assertIsNone(letter.opened_at)
         self.assertIsNone(letter.burned_at)
-        # Verify timestamps are auto-added
         self.assertIsNotNone(letter.created_at)
         self.assertIsNotNone(letter.updated_at)
 
     def test_vault_requires_unlock_date_when_sealed(self):
-        """a sealed VAULT letter must have an unlock_date"""
+        """
+        Test that a sealed VAULT letter cannot be created without an unlock_date
+        """
         from django.core.exceptions import ValidationError
 
         letter = Letter(
             user=self.user,
             type=Letter.Type.VAULT,
             status=Letter.Status.SEALED,
-            encrypted_content="enc_v1...",
+            encrypted_content="enc_content==",
+            encrypted_metadata="enc_meta==",
+            encrypted_dek="enc_dek==",
         )
+
         with self.assertRaises(ValidationError):
             letter.full_clean()
 
@@ -53,7 +59,9 @@ class LetterAPITest(APITestCase):
         self.url = "/api/letters/"
 
     def test_create_draft_letter_api(self):
-        """Test API can successfully create a basic draft letter."""
+        """
+        Test that the API can successfully create a basic draft letter.
+        """
         payload = {
             "public_id": "4281edcc-5459-4ff2-bb5e-669fb44e0757",
             "type": "KEPT",
@@ -63,6 +71,7 @@ class LetterAPITest(APITestCase):
         }
 
         response = self.client.put(self.url + payload["public_id"] + "/", payload)
+
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Letter.objects.count(), 1)
         self.assertEqual(Letter.objects.get().status, "DRAFT")
@@ -70,7 +79,9 @@ class LetterAPITest(APITestCase):
         self.assertEqual(Letter.objects.get().user, self.user)
 
     def test_update_draft_letter_with_public_id(self):
-        """Test API can successfully update an existing letter with new values."""
+        """
+        Test API can successfully update an existing letter with new values.
+        """
         letter = Letter.objects.create(
             user=self.user,
             type="KEPT",
@@ -87,7 +98,9 @@ class LetterAPITest(APITestCase):
             "encrypted_metadata": "enc_meta==",
             "encrypted_dek": "enc_dek==",
         }
+
         response = self.client.put(self.url + letter.public_id + "/", payload)
+
         self.assertEqual(response.status_code, 200)
         self.assertEqual(Letter.objects.count(), 1)
         self.assertEqual(Letter.objects.get().status, "DRAFT")
@@ -98,7 +111,9 @@ class LetterAPITest(APITestCase):
         self.assertEqual(Letter.objects.get().encrypted_dek, "enc_dek==")
 
     def test_sealed_letters_cannot_be_updated(self):
-        """Test API returns 400 when trying to update an already sealed letter."""
+        """
+        Test that the API returns 400 when a user tries to update an already sealed letter.
+        """
         letter = Letter.objects.create(
             user=self.user,
             type="KEPT",
@@ -115,14 +130,20 @@ class LetterAPITest(APITestCase):
             "encrypted_metadata": "enc_meta==",
             "encrypted_dek": "enc_dek==",
         }
+
         response = self.client.put(self.url + letter.public_id + "/", payload)
+
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.data, {"error": "Sealed letters cannot be modified."})
 
     def test_encrypted_dek_is_required_when_storing_encrypted_content_and_metadata(self):
-        """encrypted_dek is required when encrypted_content and encrypted_metadata are present"""
+        """
+        Test that encrypted_dek is required when encrypted_content and encrypted_metadata are added to the letter.
+        """
         payload = {"type": "KEPT", "encrypted_content": "enc_xyz==", "encrypted_metadata": "enc_meta=="}
+
         response = self.client.post(self.url, payload)
+
         self.assertEqual(response.status_code, 400)
         self.assertEqual(Letter.objects.count(), 0)
         self.assertEqual(
@@ -131,13 +152,14 @@ class LetterAPITest(APITestCase):
         )
 
     def test_create_letter_with_images_api(self):
-        """Test API can create a letter and attach encrypted images in one request"""
+        """
+        Test that the API can create a letter and attach encrypted images in one request.
+        """
         from django.core.files.uploadedfile import SimpleUploadedFile
 
-        # Simulate local encryption files
+        # Simulate local files upload
         image1 = SimpleUploadedFile("enc_img1.bin", b"encrypted_bytes_1", content_type="application/octet-stream")
         image2 = SimpleUploadedFile("enc_img2.bin", b"encrypted_bytes_2", content_type="application/octet-stream")
-
         payload = {
             "public_id": "4281edcc-5459-4ff2-bb5e-669fb44e0757",
             "type": "SENT",
@@ -159,6 +181,9 @@ class LetterAPITest(APITestCase):
         self.assertTrue(default_storage.exists("encrypted-images/enc_img2.bin"))
 
     def test_cleanup_images_when_letter_is_updated(self):
+        """
+        Test that the old images are cleaned up when a letter is updated with new images.
+        """
         letter = Letter.objects.create(user=self.user, type="KEPT", status="DRAFT")
         LetterImage.objects.create(letter=letter, file_name="old1.bin", file=ContentFile(b"data", name="old1.bin"))
         LetterImage.objects.create(letter=letter, file_name="old2.bin", file=ContentFile(b"data", name="old2.bin"))
@@ -176,7 +201,7 @@ class LetterAPITest(APITestCase):
 
         from django.core.files.storage import default_storage
 
-        # Verify that the old files are cleared from storage
+        # Verify that the old files are cleared from storage directory as well
         self.assertTrue(LetterImage.objects.filter(file_name="new.bin").exists())
         self.assertEqual(LetterImage.objects.count(), 1)
         self.assertFalse(default_storage.exists("encrypted-images/old1.bin"))
@@ -190,20 +215,27 @@ class LetterImageModelTest(TestCase):
         self.letter = Letter.objects.create(user=self.user, type="KEPT", status="DRAFT")
 
     def test_create_letter_image(self):
-        """Test images can be associated with a letter (many to 1)"""
+        """
+        Test that images can be associated with a letter (many to 1).
+        """
         image_content = ContentFile(b"fake-encrypted-data", name="test_image.bin")
+
         letter_image = LetterImage.objects.create(
             letter=self.letter, file_name="encrypted_image.enc", file=image_content
         )
+
         self.assertEqual(letter_image.letter, self.letter)
         self.assertTrue(letter_image.file.name.startswith("encrypted-images/"))
         self.assertIsNotNone(letter_image.public_id)
 
     def test_letter_cascade_deletes_images(self):
-        """TTest when a letter is deleted, its encrypted images are also removed"""
+        """
+        TTest that when a letter is deleted, its encrypted images are also removed.
+        """
         LetterImage.objects.create(
             letter=self.letter, file_name="will_be_deleted.jpg", file=ContentFile(b"data", name="del.bin")
         )
+
         self.assertEqual(LetterImage.objects.count(), 1)
         self.letter.delete()
         self.assertEqual(LetterImage.objects.count(), 0)

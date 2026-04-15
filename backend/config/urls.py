@@ -17,14 +17,13 @@ Including another URLconf
 
 from django.conf import settings
 from django.conf.urls.static import static
-from django.contrib import admin
 from django.urls import include, path
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
-    path("api/auth/", include("users.urls")),  # user related operations
-    path("api/letters/", include("letters.urls")),  # letter related operations
+    path("api/auth/", include("users.urls")),
+    path("api/letters/", include("letters.urls")),
 ]
 
+# HACK: allow django directory to serve media files. In prod, ideally we use different storage backends (s3).
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

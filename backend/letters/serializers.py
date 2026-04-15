@@ -1,8 +1,6 @@
 from rest_framework import serializers
 
-from letters.models import LetterImage
-
-from .models import Letter
+from letters.models import Letter, LetterImage
 
 
 class LetterImageSerializer(serializers.ModelSerializer):
@@ -16,6 +14,10 @@ class LetterSerializer(serializers.ModelSerializer):
     images = LetterImageSerializer(many=True, read_only=True)
 
     class Meta:
+        """
+        Specifies the public_id as editable field for the client to generate.
+        """
+
         model = Letter
         fields = [
             "public_id",
@@ -29,10 +31,13 @@ class LetterSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
             "images",
-        ]  # user to be fetched from request
+        ]
         read_only_fields = ["created_at", "updated_at"]
 
     def validate(self, data):
+        """
+        Validates the requirmnt of DEK when encrypted content and metadata are stored.
+        """
         if (data.get("encrypted_content") or data.get("encrypted_metadata")) and not data.get("encrypted_dek"):
             raise serializers.ValidationError(
                 "encrypted_dek is required when encrypted_content and encrypted_metadata are present"

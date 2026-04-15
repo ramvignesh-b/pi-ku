@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.urls import reverse
@@ -21,30 +20,35 @@ class AuthTests(APITestCase):
         self.logout_url = reverse("logout")
 
     def test_login_sets_secure_cookie(self):
+        """
+        Tests if the Login API can generate access token and set secure cookie for refresh token.
+        """
         data = {"email": self.user.email, "password": self.password}
+        cookie_name = "refresh_token"
+
         response = self.client.post(self.login_url, data)
-        cookie_name = settings.SIMPLE_JWT["AUTH_COOKIE"]
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("access", response.data)
         self.assertNotIn("refresh", response.data)
         self.assertIn(cookie_name, response.cookies)
-        # verify the cookie has a value
         self.assertTrue(response.cookies[cookie_name].value)
+        self.assertTrue(response.cookies[cookie_name].httponly)
+        self.assertEqual(response.cookies[cookie_name]["samesite"], "Lax")
 
 
 class ActivationTests(APITestCase):
     def test_user_activation(self):
-        # initial user state
-        user = User.objects.create_user(email="inactive@test.com", password="password1234", is_active=False)
-        # generate activation link
+        """
+        Tests if the Activation API can activate an inactive user.
+        """
+        user = User.objects.create_user(email="inactiveuser@test.com", password="password1234", is_active=False)
         uidb64 = urlsafe_base64_encode(force_bytes(user.public_id))
         token = default_token_generator.make_token(user)
-        # call activation url
         activation_url = reverse("activate", kwargs={"uidb64": uidb64, "token": token})
+
         response = self.client.get(activation_url)
+        user.refresh_from_db()
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # check user is activated
-        user.refresh_from_db()
         self.assertTrue(user.is_active)
