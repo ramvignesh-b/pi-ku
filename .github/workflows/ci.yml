@@ -18,7 +18,7 @@ jobs:
           sudo apt-get install -y mkcert libnss3-tools
           mkdir -p certs
           mkcert -install
-          mkcert localhost 127.0.0.1 ::1 -cert-file certs/localhost.pem -key-file certs/localhost-key.pem
+          mkcert -cert-file certs/localhost.pem -key-file certs/localhost-key.pem localhost 127.0.0.1 ::1
 
   frontend:
     name: Frontend CI
