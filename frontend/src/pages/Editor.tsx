@@ -309,6 +309,7 @@ export default function Editor() {
           onClose={() =>
             setDecryptionStatus({ status: "RESET", message: "", log: "" })
           }
+          isOpen={decryptionStatus.status !== "RESET"}
         />
 
         {isInitialLoading && (
