@@ -401,6 +401,8 @@ export const ComposeCanvas = forwardRef<
         fabricRef.current?.add(img);
         fabricRef.current?.setActiveObject(img);
 
+        if (!fabricRef.current) return;
+
         logicalSizeRef.current.height = measureLogicalContentHeight(
           fabricRef.current,
           logicalSizeRef.current.height,

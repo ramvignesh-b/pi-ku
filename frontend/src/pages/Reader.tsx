@@ -69,7 +69,8 @@ export default function Reader() {
             )
           : await cryptoUtils.decryptMetadata(
               { encrypted_content: encrypted_metadata, encrypted_dek },
-              masterKey,
+              // biome-ignore lint/style/noNonNullAssertion: masterKey is guaranteed to be non-null here as isDecryptionKeyAvailable is true
+              masterKey!,
             );
         setMetadata(decryptedMetadata as LetterMetadata);
 
@@ -81,7 +82,8 @@ export default function Reader() {
             )
           : await cryptoUtils.decryptLetter(
               { encrypted_content, encrypted_dek },
-              masterKey,
+              // biome-ignore lint/style/noNonNullAssertion: masterKey is guaranteed to be non-null here as isDecryptionKeyAvailable is true
+              masterKey!,
             );
 
         const canvasData: CanvasJSON = JSON.parse(decryptedContent);
@@ -100,7 +102,8 @@ export default function Reader() {
                   canvasData,
                   images,
                   encrypted_dek,
-                  masterKey,
+                  // biome-ignore lint/style/noNonNullAssertion: masterKey is guaranteed to be non-null here as isDecryptionKeyAvailable is true
+                  masterKey!,
                   cryptoUtils,
                 );
           }
@@ -108,7 +111,7 @@ export default function Reader() {
           setWarning({
             message:
               "Failed to decrypt elements. Images might not render in the letter as intended.",
-            log: err,
+            log: err instanceof Error ? err.message : "Unknown error",
           });
         }
 
