@@ -13,12 +13,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Setup SSL using mkcert
+        id: certs
         run: |
           sudo apt-get update
           sudo apt-get install -y mkcert libnss3-tools
           mkdir -p certs
           mkcert -install
           mkcert -cert-file certs/localhost.pem -key-file certs/localhost-key.pem localhost 127.0.0.1 ::1
+          echo "cert_path=certs/localhost.pem" >> $GITHUB_OUTPUT
+          echo "key_path=certs/localhost-key.pem" >> $GITHUB_OUTPUT
+
+      - name: Cache certificates
+        uses: actions/cache@v4
+        with:
+            path: certs
+            key: ${{ runner.os }}-certs-${{ github.sha }}
+            restore-keys: |
+              certs/localhost.pem
+              certs/localhost-key.pem
+
 
   frontend:
     name: Frontend CI
@@ -29,8 +42,19 @@ jobs:
         working-directory: ./frontend
     steps:
       - uses: actions/checkout@v4
+
+      - name: Restore certificates
+        uses: actions/cache@v4
+        with:
+          path: certs
+          key: ${{ runner.os }}-certs-${{ github.sha }}
+          restore-keys: |
+            certs/localhost.pem
+            certs/localhost-key.pem
+
       - name: Create .env from example
         run: cp ../.env.example ../.env
+
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
@@ -98,6 +122,14 @@ jobs:
           - 1025:1025
     steps:
       - uses: actions/checkout@v4
+      - name: Restore certificates
+        uses: actions/cache@v4
+        with:
+          path: certs
+          key: ${{ runner.os }}-certs-${{ github.sha }}
+          restore-keys: |
+            certs/localhost.pem
+            certs/localhost-key.pem
 
       - name: Install uv
         uses: astral-sh/setup-uv@v5
@@ -109,21 +141,16 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
-
       - name: Install Frontend dependencies
         run: cd frontend && bun install
-
       - name: Install Playwright Browsers
         run: cd frontend && bun x playwright install --with-deps
-
       - name: Create .env.e2e
         run: cp .env.e2e.example .env.e2e
-
       - name: Run E2E Script
         run: ./scripts/run-e2e.sh
         env:
           CI: "true"
-
       - name: Upload Playwright Report
         if: always()
         uses: actions/upload-artifact@v4
