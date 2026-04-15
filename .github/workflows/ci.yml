@@ -7,70 +7,62 @@ on:
     branches: [ main ]
 
 jobs:
-  certs:
-    name: Certificates
+  setup-environment:
+    name: Generate Certificates
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
-      - name: Setup SSL using mkcert
-        id: certs
+      - name: Generate SSL Certificates
         run: |
-          sudo apt-get update
-          sudo apt-get install -y mkcert libnss3-tools
+          sudo apt-get update && sudo apt-get install -y mkcert libnss3-tools
           mkdir -p certs
           mkcert -install
           mkcert -cert-file certs/localhost.pem -key-file certs/localhost-key.pem localhost 127.0.0.1 ::1
-          echo "cert_path=certs/localhost.pem" >> $GITHUB_OUTPUT
-          echo "key_path=certs/localhost-key.pem" >> $GITHUB_OUTPUT
 
       - name: Cache certificates
-        uses: actions/cache@v4
+        uses: actions/cache/save@v4
         with:
-            path: certs
-            key: ${{ runner.os }}-certs-${{ github.sha }}
-            restore-keys: |
-              certs/localhost.pem
-              certs/localhost-key.pem
+          path: certs
+          key: ${{ runner.os }}-certs-${{ github.sha }}
 
 
   frontend:
     name: Frontend CI
     runs-on: ubuntu-latest
-    needs: certs
+    needs: setup-environment
     defaults:
       run:
         working-directory: ./frontend
     steps:
       - uses: actions/checkout@v4
-
-      - name: Restore certificates
-        uses: actions/cache@v4
-        with:
-          path: certs
-          key: ${{ runner.os }}-certs-${{ github.sha }}
-          restore-keys: |
-            certs/localhost.pem
-            certs/localhost-key.pem
-
-      - name: Create .env from example
-        run: cp ../.env.example ../.env
-
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
+
+      - name: Restore certificates
+        uses: actions/cache/restore@v4
+        with:
+          path: certs
+          key: certs-${{ github.sha }}
+
       - name: Install dependencies
         run: bun install --frozen-lockfile
-      - name: Code Quality (Biome)
-        run: bun run check
+
+      - name: Code Quality
+        run: |
+          cp ../.env.example ../.env
+          bun run check
+
       - name: Type Check & Build
         run: bun run build
-      - name: Run Unit Tests
+
+      - name: Unit Tests
         run: bun run test
 
   backend:
     name: Backend CI
     runs-on: ubuntu-latest
-    needs: certs
     defaults:
       run:
         working-directory: ./backend
@@ -83,28 +75,29 @@ jobs:
           POSTGRES_PASSWORD: password123
         ports:
           - 5432:5432
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5 # wait till up before starting (integrating) django app
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
     steps:
       - uses: actions/checkout@v4
-      - name: Create .env from example
-        run: cp ../.env.example ../.env
       - name: Install uv
         uses: astral-sh/setup-uv@v5
         with:
-          version: "latest"
           enable-cache: true
           cache-dependency-glob: backend/uv.lock
-      - name: Install dependencies
-        run: uv sync
-      - name: Lint (Ruff)
-        run: uv run ruff check
-      - name: Run Tests
-        run: uv run python manage.py test
+
+      - name: Setup Environment
+        run: |
+          cp ../.env.example ../.env
+          uv sync
+
+      - name: Lint & Test
+        run: |
+          uv run ruff check
+          uv run python manage.py test
 
   e2e:
     name: E2E Tests
     runs-on: ubuntu-latest
-    needs: certs
+    needs: [frontend, backend, setup-environment]
     services:
       postgres:
         image: postgres:16-alpine
@@ -122,35 +115,33 @@ jobs:
           - 1025:1025
     steps:
       - uses: actions/checkout@v4
-      - name: Restore certificates
-        uses: actions/cache@v4
+
+      - name: Restore Certificates
+        uses: actions/cache/restore@v4
         with:
           path: certs
-          key: ${{ runner.os }}-certs-${{ github.sha }}
-          restore-keys: |
-            certs/localhost.pem
-            certs/localhost-key.pem
+          key: certs-${{ github.sha }}
 
-      - name: Install uv
+      - name: Setup Tools
         uses: astral-sh/setup-uv@v5
-        with:
-          version: "latest"
-          enable-cache: true
-          cache-dependency-glob: backend/uv.lock
 
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
-      - name: Install Frontend dependencies
-        run: cd frontend && bun install
-      - name: Install Playwright Browsers
-        run: cd frontend && bun x playwright install --with-deps
-      - name: Create .env.e2e
-        run: cp .env.e2e.example .env.e2e
-      - name: Run E2E Script
-        run: ./scripts/run-e2e.sh
+
+      - name: Install Dependencies
+        run: |
+          cd frontend && bun install
+          cd frontend && bun x playwright install --with-deps
+
+      - name: Run E2E
+        run: |
+          cp .env.e2e.example .env.e2e
+          chmod +x ./scripts/run-e2e.sh
+          ./scripts/run-e2e.sh
         env:
           CI: "true"
+
       - name: Upload Playwright Report
         if: always()
         uses: actions/upload-artifact@v4
