@@ -11,7 +11,7 @@ import { useLetters } from "../hooks/useLetters";
 export default function Drawer() {
   const { user, logout, unlock } = useAuth();
 
-  const [openSection, setOpenSection] = useState<string | null>();
+  const [openSection, setOpenSection] = useState<string | null>(null);
   const navigate = useNavigate();
   const { drafts, kept, sent, vault, loading, isAuthRequired } = useLetters();
 

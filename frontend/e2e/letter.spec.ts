@@ -1,5 +1,15 @@
 import { expect, test } from "@playwright/test";
+import pino from "pino";
 import { AuthHelper } from "./utils/auth";
+
+const logger = pino({
+  transport: {
+    target: "pino-pretty",
+    options: {
+      colorize: true,
+    },
+  },
+});
 
 test.describe("Letter Drafting (Real Backend)", () => {
   const password = "Password123!";
@@ -11,10 +21,10 @@ test.describe("Letter Drafting (Real Backend)", () => {
 
     await AuthHelper.registerAndLogin(page, email, name, password);
 
-    console.log(">> [Draft] Navigating to Editor via UI...");
+    logger.info(">> [Draft] Navigating to Editor via UI...");
     await page.getByRole("button", { name: /write something/i }).click();
 
-    console.log(`>> [Draft] Current URL after click: ${page.url()}`);
+    logger.info(`>> [Draft] Current URL after click: ${page.url()}`);
 
     // Wait for the recipient input to be present in the DOM
     const recipientInput = page.locator("#recipient");
@@ -23,15 +33,19 @@ test.describe("Letter Drafting (Real Backend)", () => {
     const recipientName = "Dear Friend";
     await recipientInput.fill(recipientName);
 
-    // Type into the Fabric.js canvas
-    console.log(">> [Draft] Typing into canvas...");
+    // Initial load: verify textarea value (populated by Fabric when focused)
     const canvasInput = page.getByLabel("Canvas text input");
-    await canvasInput.waitFor({ state: "visible" });
+    await canvasInput.waitFor({ state: "attached" });
     await canvasInput.focus();
-    await canvasInput.fill("This is a secret draft created by E2E testing.");
+    await expect(canvasInput).toHaveValue(/Take a deep breath/i);
 
-    // Store as draft
-    console.log(">> [Draft] Clicking Store...");
+    // Draft a letter
+    logger.info(">> [Draft] Typing content...");
+    await canvasInput.focus();
+    await page.keyboard.type("This is a secret draft");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("It should persist.");
+    logger.info(">> [Draft] Clicking Store...");
     await page.getByRole("button", { name: /store/i }).click();
 
     // Verify Success Modal/Alert
@@ -40,10 +54,10 @@ test.describe("Letter Drafting (Real Backend)", () => {
     // Verify URL updated with a UUID
     await expect(page).toHaveURL(/\/quill\/[0-9a-f-]{36}/);
     const savedUrl = page.url();
-    console.log(`>> [Draft] Saved URL: ${savedUrl}`);
+    logger.info(`>> [Draft] Saved URL: ${savedUrl}`);
 
     // Reload and verify persistence
-    console.log(">> [Draft] Reloading to verify persistence...");
+    logger.info(">> [Draft] Reloading to verify persistence...");
     await page.goto(savedUrl);
 
     // Wait for initial load overlay to disappear
@@ -53,7 +67,13 @@ test.describe("Letter Drafting (Real Backend)", () => {
     await expect(page.locator("#recipient")).toHaveValue(recipientName);
 
     // Check canvas content
-    await expect(canvasInput).toHaveValue(/This is a secret draft/);
+    // We wait for the content to appear in the textarea.
+    // toHaveValue will poll until it matches or timeouts.
+    await canvasInput.focus();
+    await expect(canvasInput).toHaveValue(/This is a secret draft/i, {
+      timeout: 10000,
+    });
+    await expect(canvasInput).toHaveValue(/It should persist/i);
   });
 
   test("should seal a letter and show sharing link", async ({ page }) => {
@@ -63,7 +83,7 @@ test.describe("Letter Drafting (Real Backend)", () => {
 
     await AuthHelper.registerAndLogin(page, email, name, password);
 
-    console.log(">> [Seal] Navigating to Editor via UI...");
+    logger.info(">> [Seal] Navigating to Editor via UI...");
     await page.getByRole("button", { name: /write something/i }).click();
 
     const recipientInput = page.locator("#recipient");
@@ -75,11 +95,11 @@ test.describe("Letter Drafting (Real Backend)", () => {
     await canvasInput.fill("This letter will be sealed and shared.");
 
     // Click Seal
-    console.log(">> [Seal] Clicking Seal...");
+    logger.info(">> [Seal] Clicking Seal...");
     await page.getByRole("button", { name: /seal/i }).click();
 
     // Verify "Sealed & Ready" modal
-    console.log(">> [Seal] Verifying sharing modal...");
+    logger.info(">> [Seal] Verifying sharing modal...");
     await expect(page.getByText(/sealed & ready/i)).toBeVisible();
 
     // Verify sharing link contains a hash (the key)
@@ -89,7 +109,7 @@ test.describe("Letter Drafting (Real Backend)", () => {
     expect(linkValue).toContain("/read/");
     expect(linkValue).toContain("#");
 
-    console.log(`>> [Seal] Sharing link generated: ${linkValue}`);
+    logger.info(`>> [Seal] Sharing link generated: ${linkValue}`);
 
     // Verify "Copy" button works
     await expect(page.getByRole("button", { name: /copy/i })).toBeVisible();
@@ -97,5 +117,81 @@ test.describe("Letter Drafting (Real Backend)", () => {
     // Close modal
     await page.getByRole("button", { name: /close/i }).click();
     await expect(page.getByText(/sealed & ready/i)).toBeHidden();
+  });
+
+  test("should allow author to access sealed letter from drawer without sharing key", async ({
+    page,
+  }) => {
+    const timestamp = Date.now() + Math.random();
+    const email = `drawer-${timestamp}@example.com`;
+    const name = `Drawer Author ${timestamp}`;
+    const recipientName = "Drawer Test Recipient";
+    const letterContent = "This is a sealed letter accessed via the drawer.";
+
+    await AuthHelper.registerAndLogin(page, email, name, password);
+
+    logger.info(">> [Drawer] Creating and sealing a letter...");
+    await page.getByRole("button", { name: /write something/i }).click();
+
+    const recipientInput = page.locator("#recipient");
+    await recipientInput.waitFor({ state: "visible" });
+    await recipientInput.fill(recipientName);
+
+    const canvasInput = page.getByLabel("Canvas text input");
+    await canvasInput.focus();
+    await canvasInput.fill(letterContent);
+
+    // Click Seal
+    await page.getByRole("button", { name: /seal/i }).click();
+    await expect(page.getByText(/sealed & ready/i)).toBeVisible();
+
+    // Close modal
+    await page.getByRole("button", { name: /close/i }).click();
+
+    // Navigate to Drawer - use ID or precise label
+    logger.info(">> [Drawer] Navigating to Drawer...");
+    await page.locator("button[aria-label='Open Drawer']").click();
+
+    // Open "Kept" section - search for the section with id='kept' and click its toggle button
+    logger.info(">> [Drawer] Opening Kept section...");
+    const keptSection = page.locator("#kept");
+    await keptSection.getByRole("button", { name: /kept/i }).click();
+
+    // Find the sealed letter in the drawer by recipient name and click it
+    logger.info(">> [Drawer] Clicking sealed letter in drawer...");
+    const sealedItem = page
+      .getByRole("button", { name: new RegExp(recipientName, "i") })
+      .first();
+    await sealedItem.click();
+
+    // Verify it opens the Reader without a hash
+    logger.info(">> [Drawer] Verifying Reader page...");
+    // Give it a bit more time for decryption
+    await expect(page).toHaveURL(/\/read\/[a-f0-9-]{36}$/, { timeout: 15000 }); // UUID without hash
+
+    // Check decrypted content in Reader
+    await expect(page.getByText(/decrypting/i)).toBeHidden({
+      timeout: 10000,
+    });
+    await expect(
+      page.getByText(new RegExp(`A sealed message for ${recipientName}`, "i")),
+    ).toBeVisible();
+
+    // Verify content is decrypted (using author's masterKey automatically)
+    await expect(page.getByText(/decrypting/i)).toBeHidden();
+    // In the Reader, we check if the recipient name is visible in the Reader header.
+    await expect(page.getByText(/Drawer Test Recipient/i)).toBeVisible();
+
+    // Also check if we are redirected to the Reader if we manually go to the Editor URL
+    const readerUrl = page.url();
+    const quillUrl = readerUrl.replace("/read/", "/quill/");
+    logger.info(
+      `>> [Drawer] Navigating to Editor URL (expecting redirect): ${quillUrl}`,
+    );
+    await page.goto(quillUrl);
+
+    // It should redirect back to the reader
+    await expect(page).toHaveURL(readerUrl);
+    await expect(page.getByText(/Drawer Test Recipient/i)).toBeVisible();
   });
 });

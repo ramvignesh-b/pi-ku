@@ -8,8 +8,12 @@ import {
   ComposeCanvas,
 } from "../components/ui/ComposeCanvas";
 import { endpoints } from "../config/endpoints";
+import { useKeyStore } from "../store/useKeyStore";
 import { CryptoUtils } from "../utils/crypto";
-import { decryptCanvasImagesWithSharingKey } from "../utils/letterLogic";
+import {
+  decryptCanvasImages,
+  decryptCanvasImagesWithSharingKey,
+} from "../utils/letterLogic";
 
 interface LetterMetadata {
   recipient?: string;
@@ -24,13 +28,21 @@ export default function Reader() {
 
   const [isDecrypting, setIsDecrypting] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [warning, setWarning] = useState<{
+    message: string;
+    log: string;
+  } | null>(null);
   const [metadata, setMetadata] = useState<LetterMetadata | null>(null);
   const [decryptedCanvasData, setDecryptedCanvasData] =
     useState<CanvasJSON | null>(null);
 
+  const { masterKey } = useKeyStore();
+
   useEffect(() => {
-    if (!sharingKey) {
-      setError("No sharing key provided. Please check the link.");
+    if (!(sharingKey || masterKey)) {
+      setError(
+        "No sharing key provided. Please check the link or log in if you are the author.",
+      );
       setIsDecrypting(false);
       return;
     }
@@ -38,33 +50,69 @@ export default function Reader() {
     const loadAndDecrypt = async () => {
       try {
         const response = await api.get(`${endpoints.LETTERS}${public_id}/`);
-        const { encrypted_content, encrypted_metadata, images } = response.data;
+        const { encrypted_content, encrypted_metadata, encrypted_dek, images } =
+          response.data;
 
         const cryptoUtils = new CryptoUtils();
+        const isShared = !!sharingKey;
 
-        const decryptedMetadata =
-          await cryptoUtils.decryptMetadataWithSharingKey(
-            encrypted_metadata,
-            sharingKey,
-          );
+        if (isShared && !encrypted_content) throw new Error("Content missing");
+        const isDecryptionKeyAvailable = encrypted_dek && masterKey;
+        if (!(isShared || isDecryptionKeyAvailable))
+          throw new Error("Auth required");
+
+        // Decrypt Metadata
+        const decryptedMetadata = isShared
+          ? await cryptoUtils.decryptMetadataWithSharingKey(
+              encrypted_metadata,
+              sharingKey,
+            )
+          : await cryptoUtils.decryptMetadata(
+              { encrypted_content: encrypted_metadata, encrypted_dek },
+              masterKey,
+            );
         setMetadata(decryptedMetadata as LetterMetadata);
 
-        const decryptedContent = await cryptoUtils.decryptLetterWithSharingKey(
-          encrypted_content,
-          sharingKey,
-        );
-        const json = JSON.parse(decryptedContent) as CanvasJSON;
+        // Decrypt Content
+        const decryptedContent = isShared
+          ? await cryptoUtils.decryptLetterWithSharingKey(
+              encrypted_content,
+              sharingKey,
+            )
+          : await cryptoUtils.decryptLetter(
+              { encrypted_content, encrypted_dek },
+              masterKey,
+            );
 
-        if (images && images.length > 0) {
-          await decryptCanvasImagesWithSharingKey(
-            json,
-            images,
-            sharingKey,
-            cryptoUtils,
-          );
+        const canvasData: CanvasJSON = JSON.parse(decryptedContent);
+
+        try {
+          // Decrypt Images
+          if (images?.length > 0) {
+            isShared
+              ? await decryptCanvasImagesWithSharingKey(
+                  canvasData,
+                  images,
+                  sharingKey,
+                  cryptoUtils,
+                )
+              : await decryptCanvasImages(
+                  canvasData,
+                  images,
+                  encrypted_dek,
+                  masterKey,
+                  cryptoUtils,
+                );
+          }
+        } catch (err) {
+          setWarning({
+            message:
+              "Failed to decrypt elements. Images might not render in the letter as intended.",
+            log: err,
+          });
         }
 
-        setDecryptedCanvasData(json);
+        setDecryptedCanvasData(canvasData);
       } catch (err) {
         const message = err instanceof Error ? err.message : "Unknown error";
         setError(`Failed to load letter: ${message}`);
@@ -74,7 +122,7 @@ export default function Reader() {
     };
 
     loadAndDecrypt();
-  }, [public_id, sharingKey]);
+  }, [public_id, sharingKey, masterKey]);
 
   useEffect(() => {
     if (!isDecrypting && decryptedCanvasData && canvasRef.current) {
@@ -111,6 +159,14 @@ export default function Reader() {
 
   return (
     <section className="min-h-screen w-full bg-base-200 px-4 py-8">
+      {warning && (
+        <div className="alert alert-warning">
+          <div className="flex-1">
+            <p>{warning.message}</p>
+            <p className="text-xs opacity-70">{warning.log}</p>
+          </div>
+        </div>
+      )}
       <div className="max-w-4xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <div>

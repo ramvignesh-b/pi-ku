@@ -24,7 +24,7 @@ export function DrawerSection({
         className={`overflow-hidden transition-all duration-1000 ease-in-out bg-neutral/10 ${
           isOpen
             ? "max-h-125 opacity-100 py-3 border-b border-base-content/5"
-            : "max-h-0 opacity-0"
+            : "max-h-0 opacity-0 pointer-events-none"
         }`}
       >
         {children}
