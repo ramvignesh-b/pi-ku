@@ -46,7 +46,8 @@ export default function Drawer() {
                 className="form-control w-full inline-flex"
                 onSubmit={async (e: React.SubmitEvent<HTMLFormElement>) => {
                   e.preventDefault();
-                  const password = e.target.password.value;
+                  const formData = new FormData(e.currentTarget);
+                  const password = formData.get("password") as string;
                   if (!password) return;
                   unlock(password);
                 }}

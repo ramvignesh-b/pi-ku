@@ -13,7 +13,9 @@ export const LogModal = ({
   onClose,
   status,
 }: LogModalContent) => {
-  status === "RESET" ? null : (
+  return status === "RESET" ? (
+    <div></div>
+  ) : (
     <div className="modal modal-open modal-bottom sm:modal-middle bg-base-100/20 backdrop-blur-md z-100">
       <div className="modal-box bg-transparent border-none shadow-none relative">
         <div
