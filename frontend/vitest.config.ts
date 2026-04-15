@@ -9,6 +9,7 @@ export default defineConfig({
     env: {
       VITE_API_URL: "http://piku-server",
     },
+    include: ["**/*.test.ts"],
     environment: "jsdom",
     globals: true,
     setupFiles: ["./test/setup.ts"],
@@ -16,7 +17,7 @@ export default defineConfig({
       provider: "v8",
       reporter: ["text", "html"],
       include: ["**/*.ts", "**/*.tsx"],
-      exclude: ["node_modules", "dist", "**/*.d.ts", "./test/**"],
+      exclude: ["node_modules", "dist", "**/*.d.ts", "./test/**", "./e2e/**"],
       thresholds: { lines: 80, functions: 80, branches: 80 },
     },
   },
