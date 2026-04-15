@@ -56,11 +56,15 @@ async function decryptLetters(
 export function useLetters() {
   const [letters, setLetters] = useState<ProcessedLetter[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isAuthRequired, setIsAuthRequired] = useState<boolean>(false);
   const { masterKey } = useKeyStore();
 
   useEffect(() => {
-    if (!masterKey) return;
-
+    if (!masterKey) {
+      setIsAuthRequired(true);
+      return;
+    }
+    setIsAuthRequired(false);
     setLoading(true);
     api
       .get(endpoints.LETTERS)
@@ -83,5 +87,6 @@ export function useLetters() {
     ...drawerItems,
     loading,
     refreshLetters: () => setLoading(true),
+    isAuthRequired,
   };
 }

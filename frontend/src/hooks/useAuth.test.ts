@@ -191,7 +191,7 @@ describe("initialize", () => {
     expect(useKeyStore.getState().masterKey).not.toBeNull();
   });
 
-  it("should clear both stores if the refresh attempt fails", async () => {
+  it("should preserve the master key even if the refresh attempt fails", async () => {
     server.use(
       http.post(
         `${API_URL}/api/auth/refresh/`,
@@ -206,6 +206,6 @@ describe("initialize", () => {
 
     expect(useAuthStore.getState().accessToken).toBeNull();
     expect(useAuthStore.getState().user).toBeNull();
-    expect(useKeyStore.getState().masterKey).toBeNull();
+    expect(useKeyStore.getState().masterKey).not.toBeNull();
   });
 });

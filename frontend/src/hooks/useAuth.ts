@@ -4,6 +4,7 @@ import { endpoints } from "../config/endpoints";
 import type { UserProfile } from "../store/useAuthStore";
 import { useAuthStore } from "../store/useAuthStore";
 import { useKeyStore } from "../store/useKeyStore";
+import { CryptoUtils } from "../utils/crypto";
 import {
   clearMasterKey,
   loadMasterKey,
@@ -40,8 +41,16 @@ export const useAuth = () => {
   };
 
   const initialize = useCallback(async () => {
-    const { accessToken, user, setAuth, clearAuth, setInitializing } =
+    const { accessToken, user, setAuth, setInitializing } =
       useAuthStore.getState();
+
+    // Restore master key from IndexedDB
+    try {
+      const masterKey = await loadMasterKey();
+      if (masterKey) setMasterKey(masterKey);
+    } catch {
+      console.error("Master key restoration failed");
+    }
 
     // If session in memory, don't trigger refresh/me again
     if (accessToken && user) {
@@ -50,22 +59,33 @@ export const useAuth = () => {
     }
 
     try {
-      // try refresh
+      // try session refresh
       const { data: refreshData } = await publicApi.post(endpoints.REFRESH);
       const { data: userData } = await api.get(endpoints.ME, {
         headers: { Authorization: `Bearer ${refreshData.access}` },
       });
       setAuth(refreshData.access, userData);
-
-      // restore master key from IndexedDB
-      const masterKey = await loadMasterKey();
-      if (masterKey) setMasterKey(masterKey);
     } catch {
-      clearAuth();
-      setMasterKey(null);
-      await clearMasterKey();
+      // grace for temporary network errors
+    } finally {
+      setInitializing(false);
     }
   }, [setMasterKey]);
+
+  const unlock = async (password: string) => {
+    if (!user) return;
+
+    try {
+      const { masterKey } = await CryptoUtils.deriveKeyBundle(
+        password,
+        user.email,
+      );
+      await saveMasterKey(masterKey);
+      setMasterKey(masterKey);
+    } catch {
+      console.error("Master key restoration failed");
+    }
+  };
 
   return {
     isAuthenticated,
@@ -74,5 +94,6 @@ export const useAuth = () => {
     setAuthStore,
     logout,
     initialize,
+    unlock,
   };
 };
