@@ -18,3 +18,9 @@ pre-commit:
       glob: "**/*.{js,ts,jsx,tsx}"
       run: bunx @biomejs/biome check --write --no-errors-on-unmatched {staged_files}
       stage_fixed: true
+
+    # Frontend: TypeScript
+    tsc:
+      root: "frontend/"
+      glob: "**/*.ts, **/*.tsx"
+      run: bunx tsc --noEmit --incremental --tsBuildInfoFile --ignoreConfig .tsbuildinfo {staged_files}
