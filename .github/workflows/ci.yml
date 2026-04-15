@@ -7,9 +7,23 @@ on:
     branches: [ main ]
 
 jobs:
+  certs:
+    name: Certificates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup SSL using mkcert
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mkcert libnss3-tools
+          mkdir -p certs
+          mkcert -install
+          mkcert localhost [IP_ADDRESS] ::1 -cert-file certs/localhost.pem -key-file certs/localhost-key.pem
+
   frontend:
     name: Frontend CI
     runs-on: ubuntu-latest
+    needs: certs
     defaults:
       run:
         working-directory: ./frontend
@@ -32,6 +46,7 @@ jobs:
   backend:
     name: Backend CI
     runs-on: ubuntu-latest
+    needs: certs
     defaults:
       run:
         working-directory: ./backend
@@ -65,6 +80,7 @@ jobs:
   e2e:
     name: E2E Tests
     runs-on: ubuntu-latest
+    needs: certs
     services:
       postgres:
         image: postgres:16-alpine
@@ -82,14 +98,6 @@ jobs:
           - 1025:1025
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup SSL using mkcert
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y mkcert libnss3-tools
-          mkdir -p certs
-          mkcert -install
-          mkcert localhost [IP_ADDRESS] ::1 -cert-file certs/localhost.pem -key-file certs/localhost-key.pem
 
       - name: Install uv
         uses: astral-sh/setup-uv@v5
