@@ -3,6 +3,15 @@ set -e
 
 # Use podman if available. Not everyone has it
 CONTAINER_BIN=$(command -v podman || command -v docker)
+if [ -z "$CONTAINER_BIN" ]; then
+    echo "Sorry, you need either podman or docker installed to run this script."
+    exit 1
+fi
+
+if [ "$CI" = "true" ]; then
+    CONTAINER_BIN=$(command -v docker)
+fi
+
 echo "Using $CONTAINER_BIN for container operations..."
 
 ENV_FILE="./.env.e2e"
