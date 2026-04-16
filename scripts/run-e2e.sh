@@ -26,10 +26,14 @@ cleanup() {
 trap cleanup EXIT
 
 echo "Starting Database and Mail server..."
-if [ "$CONTAINER_BIN" = "podman" ]; then
+COMPOSE_BIN="$(command -v docker-compose || true)"
+
+if echo "$CONTAINER_BIN" | grep -q "podman"; then
     podman compose -f "./docker-compose.e2e.yml" up -d
+elif [ -n "$COMPOSE_BIN" ]; then
+    "$COMPOSE_BIN" -f "./docker-compose.e2e.yml" up -d
 else
-    docker-compose -f "./docker-compose.e2e.yml" up -d
+    docker compose -f "./docker-compose.e2e.yml" up -d
 fi
 
 # postgress will take some time, so we wait, and no race condition. Also, no point in logging this output
