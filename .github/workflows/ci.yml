@@ -10,7 +10,8 @@ jobs:
   setup-environment:
     name: Generate Certificates
     runs-on: ubuntu-latest
-
+    outputs:
+      cache-key: ${{ steps.cert-key.outputs.key }}
     steps:
       - uses: actions/checkout@v4
       - name: Generate SSL Certificates
@@ -19,6 +20,11 @@ jobs:
           mkdir -p certs
           mkcert -install
           mkcert -cert-file certs/localhost.pem -key-file certs/localhost-key.pem localhost 127.0.0.1 ::1
+          echo "cert_path=certs/localhost.pem" >> $GITHUB_OUTPUT
+          echo "key_path=certs/localhost-key.pem" >> $GITHUB_OUTPUT
+
+      - id: cert-key
+        run: echo "key=${{ runner.os }}-certs-${{ github.sha }}" >> $GITHUB_OUTPUT
 
       - name: Cache certificates
         uses: actions/cache/save@v4
@@ -63,6 +69,7 @@ jobs:
   backend:
     name: Backend CI
     runs-on: ubuntu-latest
+    needs: setup-environment
     defaults:
       run:
         working-directory: ./backend
@@ -83,6 +90,12 @@ jobs:
         with:
           enable-cache: true
           cache-dependency-glob: backend/uv.lock
+
+      - name: Restore certificates
+        uses: actions/cache/restore@v4
+        with:
+          path: certs
+          key: ${{ runner.os }}-certs-${{ github.sha }}
 
       - name: Setup Environment
         run: |

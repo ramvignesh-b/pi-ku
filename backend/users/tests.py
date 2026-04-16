@@ -32,10 +32,10 @@ class AuthTests(APITestCase):
         self.assertIn("access", response.data)
         self.assertNotIn("refresh", response.data)
         self.assertIn(cookie_name, response.cookies)
-        self.assertTrue(response.cookies[cookie_name].value)
-        self.assertTrue(response.cookies[cookie_name].httponly)
-        self.assertTrue(response.cookies[cookie_name].secure)
-        self.assertEqual(response.cookies[cookie_name]["samesite"], "Lax")
+        self.assertIsNotNone(response.cookies[cookie_name].value)
+        self.assertTrue(response.cookies[cookie_name].get("httponly"))
+        self.assertTrue(response.cookies[cookie_name].get("secure"))
+        self.assertEqual(response.cookies[cookie_name].get("samesite"), "Lax")
 
 
 class ActivationTests(APITestCase):
