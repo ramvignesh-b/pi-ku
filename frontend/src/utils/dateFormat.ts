@@ -1,13 +1,13 @@
-const timeFormatter = new Intl.DateTimeFormat(undefined, {
+const timeFormatter = new Intl.DateTimeFormat("en-US", {
   timeStyle: "short",
 });
 
-const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
+const dateTimeFormatter = new Intl.DateTimeFormat("en-US", {
   dateStyle: "medium",
   timeStyle: "short",
 });
 
-const rtf = new Intl.RelativeTimeFormat(undefined, {
+const rtf = new Intl.RelativeTimeFormat("en-US", {
   numeric: "auto",
 });
 
