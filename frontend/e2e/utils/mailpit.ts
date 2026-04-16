@@ -7,7 +7,7 @@ export interface MailpitMessage {
   To: { Address: string }[];
 }
 
-const MAILPIT_API_URL = process.env.MAILPIT_API_URL;
+const MAILPIT_API_URL = `http://${process.env.EMAIL_HOST}:${process.env.EMAIL_API_PORT}/api/v1`;
 
 export const MailpitHelper = {
   getActivationLink: async (
@@ -18,7 +18,6 @@ export const MailpitHelper = {
     const requestContext = await request.newContext();
 
     while (Date.now() - startTime < timeout) {
-      // Search specifically for the recipient to reduce data transfer
       const response = await requestContext.get(`${MAILPIT_API_URL}/search`, {
         params: { query: `to:${email}`, limit: 1 },
       });

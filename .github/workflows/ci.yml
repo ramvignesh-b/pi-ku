@@ -7,34 +7,59 @@ on:
     branches: [ main ]
 
 jobs:
+  setup-environment:
+    name: Generate Certificates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate SSL Certificates
+        run: |
+          sudo apt-get update && sudo apt-get install -y mkcert libnss3-tools
+          mkdir -p certs
+          mkcert -install
+          mkcert -cert-file certs/localhost.pem -key-file certs/localhost-key.pem localhost 127.0.0.1 ::1
+
+      - name: Cache certificates
+        uses: actions/cache/save@v4
+        with:
+          path: certs
+          key: certs-${{ runner.os }}-${{ github.sha }}
+
   frontend:
     name: Frontend CI
     runs-on: ubuntu-latest
+    needs: setup-environment
     defaults:
       run:
         working-directory: ./frontend
     steps:
       - uses: actions/checkout@v4
-      - name: Create .env from example
-        run: cp ../.env.example ../.env
       - uses: oven-sh/setup-bun@v2
+
+      - name: Restore certificates
+        uses: actions/cache/restore@v4
         with:
-          bun-version: latest
+          path: certs
+          key: certs-${{ runner.os }}-${{ github.sha }}
+
       - name: Install dependencies
         run: bun install --frozen-lockfile
-      - name: Code Quality (Biome)
-        run: bun run check
+
+      - name: Code Quality
+        run: |
+          cp ../.env.example ../.env
+          bun run check
+
       - name: Type Check & Build
         run: bun run build
-      - name: Run Unit Tests
+
+      - name: Unit Tests
         run: bun run test
 
   backend:
     name: Backend CI
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./backend
+    needs: setup-environment
     services:
       postgres:
         image: postgres:16-alpine
@@ -44,63 +69,79 @@ jobs:
           POSTGRES_PASSWORD: password123
         ports:
           - 5432:5432
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5 # wait till up before starting (integrating) django app
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+    defaults:
+      run:
+        working-directory: ./backend
     steps:
       - uses: actions/checkout@v4
-      - name: Create .env from example
-        run: cp ../.env.example ../.env
       - name: Install uv
         uses: astral-sh/setup-uv@v5
         with:
-          version: "latest"
           enable-cache: true
-          cache-dependency-glob: backend/uv.lock
-      - name: Install dependencies
-        run: uv sync
-      - name: Lint (Ruff)
-        run: uv run ruff check
-      - name: Run Tests
-        run: uv run python manage.py test
+          cache-dependency-glob: "backend/uv.lock"
+
+      - name: Restore certificates
+        uses: actions/cache/restore@v4
+        with:
+          path: certs
+          key: certs-${{ runner.os }}-${{ github.sha }}
+
+      - name: Setup Environment
+        run: |
+          cp ../.env.example ../.env
+          uv sync
+
+      - name: Lint & Test
+        run: |
+          uv run ruff check
+          uv run python manage.py test
 
   e2e:
     name: E2E Tests
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_DB: piku_e2e
-          POSTGRES_USER: piku_test
-          POSTGRES_PASSWORD: piku_test
-        ports:
-          - 5433:5432
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-      mailpit:
-        image: axllent/mailpit:latest
-        ports:
-          - 8025:8025
-          - 1025:1025
+    needs: setup-environment
     steps:
       - uses: actions/checkout@v4
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
+
+      - name: Restore Certificates
+        uses: actions/cache/restore@v4
         with:
-          version: "latest"
+          path: certs
+          key: certs-${{ runner.os }}-${{ github.sha }}
+
+      - name: Setup Tools
+        uses: astral-sh/setup-uv@v5
+
       - uses: oven-sh/setup-bun@v2
-      - name: Install Frontend dependencies
-        run: cd frontend && bun install
-      - name: Install Playwright Browsers
-        run: cd frontend && bun x playwright install --with-deps
-      - name: Create .env.e2e
-        run: cp .env.e2e.example .env.e2e
-      - name: Run E2E Script
-        run: ./scripts/run-e2e.sh
+
+
+      - name: Cache Playwright
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('frontend/bun.lock') }}
+
+      - name: Install Dependencies
+        run: |
+          (cd frontend && bun install)
+          if [ "${{ steps.playwright-cache.outputs.cache-hit }}" != "true" ]; then
+            (cd frontend && bun x playwright install --with-deps)
+          fi
+
+      - name: Run E2E
+        run: |
+          cp .env.e2e.example .env.e2e
+          chmod +x ./scripts/run-e2e.sh
+          ./scripts/run-e2e.sh
         env:
           CI: "true"
+
       - name: Upload Playwright Report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
           path: frontend/playwright-report/
-          retention-days: 30
+          retention-days: 10

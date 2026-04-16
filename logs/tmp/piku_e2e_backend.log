@@ -1,0 +1,180 @@
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on https://127.0.0.1:8001
+[33mPress CTRL+C to quit[0m
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 411-535-418
+Unauthorized: /api/auth/refresh/
+127.0.0.1 - - [16/Apr/2026 18:45:15] "[31m[1mPOST /api/auth/refresh/ HTTP/1.1[0m" 401 -
+Unauthorized: /api/auth/refresh/
+127.0.0.1 - - [16/Apr/2026 18:45:15] "[31m[1mPOST /api/auth/refresh/ HTTP/1.1[0m" 401 -
+Unauthorized: /api/auth/refresh/
+127.0.0.1 - - [16/Apr/2026 18:45:15] "[31m[1mPOST /api/auth/refresh/ HTTP/1.1[0m" 401 -
+Unauthorized: /api/auth/refresh/
+127.0.0.1 - - [16/Apr/2026 18:45:16] "[31m[1mPOST /api/auth/refresh/ HTTP/1.1[0m" 401 -
+127.0.0.1 - - [16/Apr/2026 18:45:16] "OPTIONS /api/auth/register/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:16] "OPTIONS /api/auth/register/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:16] "OPTIONS /api/auth/register/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:16] "OPTIONS /api/auth/register/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:17] "[35m[1mPOST /api/auth/register/ HTTP/1.1[0m" 201 -
+127.0.0.1 - - [16/Apr/2026 18:45:17] "[35m[1mPOST /api/auth/register/ HTTP/1.1[0m" 201 -
+127.0.0.1 - - [16/Apr/2026 18:45:17] "[35m[1mPOST /api/auth/register/ HTTP/1.1[0m" 201 -
+127.0.0.1 - - [16/Apr/2026 18:45:17] "[35m[1mPOST /api/auth/register/ HTTP/1.1[0m" 201 -
+Unauthorized: /api/auth/refresh/
+127.0.0.1 - - [16/Apr/2026 18:45:19] "[31m[1mPOST /api/auth/refresh/ HTTP/1.1[0m" 401 -
+127.0.0.1 - - [16/Apr/2026 18:45:19] "GET /api/auth/activate/YmFlZTYyNTgtOTcxMi00ZjFmLWE1YTgtYzBiOGMwODdkY2Zi/d755fh-d81b8ac647be32c14f996ab09e783392/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:20] "OPTIONS /api/auth/login/ HTTP/1.1" 200 -
+Unauthorized: /api/auth/refresh/
+127.0.0.1 - - [16/Apr/2026 18:45:20] "[31m[1mPOST /api/auth/refresh/ HTTP/1.1[0m" 401 -
+127.0.0.1 - - [16/Apr/2026 18:45:20] "GET /api/auth/activate/YzJjM2NkOWUtZmIxYS00MGI2LWFiM2EtYTQwYmI5MDJjZGY2/d755fh-a2be30e77657af68697d0b7be375e5ab/ HTTP/1.1" 200 -
+Unauthorized: /api/auth/refresh/
+127.0.0.1 - - [16/Apr/2026 18:45:20] "[31m[1mPOST /api/auth/refresh/ HTTP/1.1[0m" 401 -
+127.0.0.1 - - [16/Apr/2026 18:45:20] "GET /api/auth/activate/Yzc1MDFhMTctY2EzOC00YTY0LTkyNmYtNWYyZjgzNDUyZGQ1/d755fh-677d8f6662cce0e74bb9a776663617a9/ HTTP/1.1" 200 -
+/var/home/atom/Documents/code/pi ku/backend/.venv/lib64/python3.14/site-packages/jwt/api_jwt.py:147: InsecureKeyLengthWarning: The HMAC key is 27 bytes long, which is below the minimum recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
+  return self._jws.encode(
+127.0.0.1 - - [16/Apr/2026 18:45:20] "POST /api/auth/login/ HTTP/1.1" 200 -
+Unauthorized: /api/auth/refresh/
+127.0.0.1 - - [16/Apr/2026 18:45:20] "[31m[1mPOST /api/auth/refresh/ HTTP/1.1[0m" 401 -
+127.0.0.1 - - [16/Apr/2026 18:45:20] "OPTIONS /api/auth/me/ HTTP/1.1" 200 -
+/var/home/atom/Documents/code/pi ku/backend/.venv/lib64/python3.14/site-packages/jwt/api_jwt.py:365: InsecureKeyLengthWarning: The HMAC key is 27 bytes long, which is below the minimum recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
+  decoded = self.decode_complete(
+127.0.0.1 - - [16/Apr/2026 18:45:21] "OPTIONS /api/auth/login/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:21] "GET /api/auth/me/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:21] "GET /api/auth/activate/YjI4MjczYWMtYWNlNC00OGRlLWJmZDItZmMyMTJiZjM2MDZl/d755fh-7728ee068008d7513a64dbe6282954f3/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:21] "OPTIONS /api/letters/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:21] "OPTIONS /api/letters/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:21] "GET /api/letters/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:21] "GET /api/letters/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:21] "OPTIONS /api/auth/login/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:21] "POST /api/auth/login/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:21] "OPTIONS /api/auth/me/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:22] "GET /api/auth/me/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:22] "OPTIONS /api/letters/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:22] "OPTIONS /api/letters/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:22] "GET /api/letters/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:22] "GET /api/letters/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:22] "OPTIONS /api/auth/login/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:22] "OPTIONS /api/letters/77cbf618-f4e2-4d33-87c2-60e5c93c9711/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:22] "[35m[1mPUT /api/letters/77cbf618-f4e2-4d33-87c2-60e5c93c9711/ HTTP/1.1[0m" 201 -
+127.0.0.1 - - [16/Apr/2026 18:45:22] "POST /api/auth/login/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:22] "OPTIONS /api/auth/me/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:22] "GET /api/auth/me/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:22] "OPTIONS /api/letters/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:22] "OPTIONS /api/letters/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:22] "GET /api/letters/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:22] "GET /api/letters/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:23] "POST /api/auth/login/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:23] "GET /api/letters/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:23] "OPTIONS /api/letters/e8f47036-6e57-41f5-b057-8ea712589a73/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:23] "OPTIONS /api/auth/me/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:23] "GET /api/letters/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:23] "GET /api/auth/me/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:23] "[35m[1mPUT /api/letters/e8f47036-6e57-41f5-b057-8ea712589a73/ HTTP/1.1[0m" 201 -
+127.0.0.1 - - [16/Apr/2026 18:45:23] "OPTIONS /api/letters/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:23] "OPTIONS /api/letters/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:23] "GET /api/letters/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:23] "GET /api/letters/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:24] "GET /api/letters/77cbf618-f4e2-4d33-87c2-60e5c93c9711/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:24] "GET /api/letters/77cbf618-f4e2-4d33-87c2-60e5c93c9711/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:24] "OPTIONS /api/letters/4e2af91a-1651-4bcd-85b5-c469ee4a73e3/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:24] "[35m[1mPUT /api/letters/4e2af91a-1651-4bcd-85b5-c469ee4a73e3/ HTTP/1.1[0m" 201 -
+127.0.0.1 - - [16/Apr/2026 18:45:26] "POST /api/auth/refresh/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:26] "GET /api/auth/me/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:26] "GET /api/letters/77cbf618-f4e2-4d33-87c2-60e5c93c9711/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:26] "POST /api/auth/refresh/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:26] "GET /api/letters/77cbf618-f4e2-4d33-87c2-60e5c93c9711/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:26] "GET /api/auth/me/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:26] "GET /api/letters/77cbf618-f4e2-4d33-87c2-60e5c93c9711/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:26] "GET /api/letters/4e2af91a-1651-4bcd-85b5-c469ee4a73e3/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:26] "GET /api/letters/77cbf618-f4e2-4d33-87c2-60e5c93c9711/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:26] "GET /api/letters/4e2af91a-1651-4bcd-85b5-c469ee4a73e3/ HTTP/1.1" 200 -
+Unauthorized: /api/auth/refresh/
+127.0.0.1 - - [16/Apr/2026 18:45:30] "[31m[1mPOST /api/auth/refresh/ HTTP/1.1[0m" 401 -
+Unauthorized: /api/auth/refresh/
+127.0.0.1 - - [16/Apr/2026 18:45:30] "[31m[1mPOST /api/auth/refresh/ HTTP/1.1[0m" 401 -
+127.0.0.1 - - [16/Apr/2026 18:45:31] "OPTIONS /api/auth/register/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:32] "OPTIONS /api/auth/register/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:32] "[35m[1mPOST /api/auth/register/ HTTP/1.1[0m" 201 -
+127.0.0.1 - - [16/Apr/2026 18:45:32] "[35m[1mPOST /api/auth/register/ HTTP/1.1[0m" 201 -
+Unauthorized: /api/auth/refresh/
+127.0.0.1 - - [16/Apr/2026 18:45:34] "[31m[1mPOST /api/auth/refresh/ HTTP/1.1[0m" 401 -
+127.0.0.1 - - [16/Apr/2026 18:45:35] "OPTIONS /api/auth/register/ HTTP/1.1" 200 -
+Unauthorized: /api/auth/refresh/
+127.0.0.1 - - [16/Apr/2026 18:45:35] "[31m[1mPOST /api/auth/refresh/ HTTP/1.1[0m" 401 -
+127.0.0.1 - - [16/Apr/2026 18:45:36] "[35m[1mPOST /api/auth/register/ HTTP/1.1[0m" 201 -
+127.0.0.1 - - [16/Apr/2026 18:45:36] "OPTIONS /api/auth/register/ HTTP/1.1" 200 -
+Unauthorized: /api/auth/refresh/
+127.0.0.1 - - [16/Apr/2026 18:45:36] "[31m[1mPOST /api/auth/refresh/ HTTP/1.1[0m" 401 -
+127.0.0.1 - - [16/Apr/2026 18:45:36] "GET /api/auth/activate/M2M0YzFiNTItMjE5Mi00Y2VmLWIwZmItMDlkNDg5NWE4NWU0/d755fw-9c2c43d45732c1cd5ccbef20d3dc4181/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:37] "OPTIONS /api/auth/login/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:37] "[35m[1mPOST /api/auth/register/ HTTP/1.1[0m" 201 -
+Unauthorized: /api/auth/refresh/
+127.0.0.1 - - [16/Apr/2026 18:45:37] "[31m[1mPOST /api/auth/refresh/ HTTP/1.1[0m" 401 -
+127.0.0.1 - - [16/Apr/2026 18:45:37] "GET /api/auth/activate/MjdiM2E1M2ItOTZlYS00Y2Y1LWFhMmQtZThjY2ZkNGQ5ZjQ1/d755fw-e60e3d0b66162c75962beea97a40b4c7/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:38] "POST /api/auth/login/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:38] "OPTIONS /api/auth/me/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:38] "GET /api/auth/me/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:38] "OPTIONS /api/letters/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:38] "OPTIONS /api/letters/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:38] "GET /api/letters/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:38] "GET /api/letters/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:38] "OPTIONS /api/auth/login/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:39] "POST /api/auth/login/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:39] "OPTIONS /api/auth/me/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:39] "GET /api/auth/me/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:39] "OPTIONS /api/letters/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:39] "OPTIONS /api/letters/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:39] "GET /api/letters/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:39] "GET /api/letters/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:40] "OPTIONS /api/letters/351f0e2c-e10f-4851-9836-bc387758dbad/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:40] "[35m[1mPUT /api/letters/351f0e2c-e10f-4851-9836-bc387758dbad/ HTTP/1.1[0m" 201 -
+Unauthorized: /api/auth/refresh/
+127.0.0.1 - - [16/Apr/2026 18:45:40] "[31m[1mPOST /api/auth/refresh/ HTTP/1.1[0m" 401 -
+127.0.0.1 - - [16/Apr/2026 18:45:40] "GET /api/auth/activate/MDkwNTg5MDctNjAzOS00NDgwLTlkYTktNmUxOWE5ZTBjODJh/d755g0-546e5f4ee3ed111de64f011ac8d02836/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:41] "OPTIONS /api/auth/login/ HTTP/1.1" 200 -
+Unauthorized: /api/auth/refresh/
+127.0.0.1 - - [16/Apr/2026 18:45:41] "[31m[1mPOST /api/auth/refresh/ HTTP/1.1[0m" 401 -
+127.0.0.1 - - [16/Apr/2026 18:45:41] "GET /api/auth/activate/MzAxODRjMWEtMTYxZC00ZTczLThlMWMtM2FmY2RmZDg2NThk/d755g1-2ae1dec8cbac57d223c0cd206a8741a8/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:42] "POST /api/auth/login/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:42] "OPTIONS /api/auth/me/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:42] "GET /api/auth/me/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:42] "OPTIONS /api/letters/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:42] "GET /api/letters/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:42] "GET /api/letters/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:42] "OPTIONS /api/auth/login/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:42] "OPTIONS /api/letters/5dec1a15-1d19-47de-b5a5-21bc1845f90a/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:42] "[35m[1mPUT /api/letters/5dec1a15-1d19-47de-b5a5-21bc1845f90a/ HTTP/1.1[0m" 201 -
+127.0.0.1 - - [16/Apr/2026 18:45:43] "POST /api/auth/login/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:43] "OPTIONS /api/auth/me/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:43] "GET /api/auth/me/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:43] "OPTIONS /api/letters/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:43] "OPTIONS /api/letters/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:43] "GET /api/letters/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:43] "GET /api/letters/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:43] "POST /api/auth/refresh/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:43] "GET /api/auth/me/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:43] "GET /api/letters/351f0e2c-e10f-4851-9836-bc387758dbad/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:43] "GET /api/letters/351f0e2c-e10f-4851-9836-bc387758dbad/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:46] "POST /api/auth/refresh/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:46] "POST /api/auth/refresh/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:46] "GET /api/auth/me/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:46] "GET /api/auth/me/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:46] "GET /api/letters/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:46] "GET /api/letters/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:46] "GET /api/letters/351f0e2c-e10f-4851-9836-bc387758dbad/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:46] "GET /api/letters/351f0e2c-e10f-4851-9836-bc387758dbad/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:47] "OPTIONS /api/letters/e95e2a4c-811a-45b1-9bbd-dafdb180a88f/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:47] "[35m[1mPUT /api/letters/e95e2a4c-811a-45b1-9bbd-dafdb180a88f/ HTTP/1.1[0m" 201 -
+127.0.0.1 - - [16/Apr/2026 18:45:47] "GET /api/letters/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:47] "GET /api/letters/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:49] "GET /api/letters/e95e2a4c-811a-45b1-9bbd-dafdb180a88f/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:49] "GET /api/letters/e95e2a4c-811a-45b1-9bbd-dafdb180a88f/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:51] "POST /api/auth/refresh/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:51] "GET /api/auth/me/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:51] "GET /api/letters/e95e2a4c-811a-45b1-9bbd-dafdb180a88f/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:51] "GET /api/letters/e95e2a4c-811a-45b1-9bbd-dafdb180a88f/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:51] "GET /api/letters/e95e2a4c-811a-45b1-9bbd-dafdb180a88f/ HTTP/1.1" 200 -
+127.0.0.1 - - [16/Apr/2026 18:45:51] "GET /api/letters/e95e2a4c-811a-45b1-9bbd-dafdb180a88f/ HTTP/1.1" 200 -
+Starting with SSL on 127.0.0.1:8001...
+/usr/lib64/python3.14/multiprocessing/resource_tracker.py:396: UserWarning: resource_tracker: There appear to be 1 leaked semaphore objects to clean up at shutdown: {'/mp-uf_ylwyc'}
+  warnings.warn(
