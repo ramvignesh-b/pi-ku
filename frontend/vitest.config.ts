@@ -8,6 +8,7 @@ export default defineConfig({
   test: {
     env: {
       VITE_API_URL: "http://piku-server",
+      TZ: "Asia/Kolkata",
     },
     include: ["**/*.test.ts"],
     environment: "jsdom",
