@@ -9,10 +9,10 @@ import { getBaseUrl } from "./utils/url-builder";
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, "../", "");
   const isSslEnabled = env.SSL_ENABLED === "true";
-  let ssl_certs: { key: Buffer; cert: Buffer };
+  let sslCerts: { key: Buffer; cert: Buffer } | undefined;
 
   if (isSslEnabled) {
-    ssl_certs = {
+    sslCerts = {
       key: fs.readFileSync(
         path.resolve(__dirname, "../certs/localhost-key.pem"),
       ),
@@ -35,7 +35,7 @@ export default defineConfig(({ mode }) => {
     server: {
       port: Number(env.FRONTEND_PORT),
       host: env.FRONTEND_DOMAIN,
-      https: isSslEnabled ? ssl_certs : undefined,
+      https: isSslEnabled ? sslCerts : undefined,
     },
   };
 });

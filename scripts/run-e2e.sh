@@ -3,6 +3,7 @@ set -e
 
 # Use podman if available. Not everyone has it
 CONTAINER_BIN=$(command -v podman || command -v docker)
+echo "Using $CONTAINER_BIN for container operations..."
 
 ENV_FILE="./.env.e2e"
 
@@ -24,8 +25,12 @@ cleanup() {
 }
 trap cleanup EXIT
 
-echo "Starting Database..."
-$CONTAINER_BIN compose -f "./docker-compose.e2e.yml" up -d
+echo "Starting Database and Mail server..."
+if [ "$CONTAINER_BIN" = "podman" ]; then
+    podman compose -f "./docker-compose.e2e.yml" up -d
+else
+    docker-compose -f "./docker-compose.e2e.yml" up -d
+fi
 
 # postgress will take some time, so we wait, and no race condition. Also, no point in logging this output
 until $CONTAINER_BIN exec "$DB_NAME" pg_isready -U "${DB_USER:-test}" >/dev/null 2>&1; do
