@@ -1,3 +1,5 @@
+from unittest.mock import _patch_dict
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.urls import reverse
@@ -19,9 +21,10 @@ class AuthTests(APITestCase):
         self.refresh_url = reverse("token_refresh")
         self.logout_url = reverse("logout")
 
+    @_patch_dict("config.settings.AUTH_COOKIE", {"SECURE": True})
     def test_login_sets_secure_cookie(self):
         """
-        Tests if the Login API can generate access token and set secure cookie for refresh token.
+        Tests if the Login API can generate access token and set secure cookie (when ssl is enabled) for refresh token.
         """
         data = {"email": self.user.email, "password": self.password}
         cookie_name = "refresh_token"

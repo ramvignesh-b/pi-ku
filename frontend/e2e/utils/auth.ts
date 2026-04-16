@@ -34,6 +34,7 @@ export async function registerAndLogin(
   // 2. Activation via Mailpit
   logger.info(`[Auth] Polling Mailpit for activation email...`);
   const activationLink = await MailpitHelper.getActivationLink(email);
+
   await page.goto(activationLink);
 
   await expect(page.getByText(/account activated/i)).toBeVisible();

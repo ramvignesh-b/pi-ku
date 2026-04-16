@@ -17,7 +17,7 @@ import { useAuth } from "./useAuth";
 vi.mock("../utils/crypto");
 vi.mock("../utils/keystore");
 
-const API_URL = "http://piku-server";
+const VITE_API_URL = "http://piku-server";
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -112,7 +112,7 @@ describe("logout", () => {
   it("should call the logout API endpoint", async () => {
     let logoutCalled = false;
     server.use(
-      http.post(`${API_URL}/api/auth/logout/`, () => {
+      http.post(`${VITE_API_URL}/api/auth/logout/`, () => {
         logoutCalled = true;
         return HttpResponse.json({});
       }),
@@ -139,7 +139,7 @@ describe("logout", () => {
   it("should clear the auth store even if the API call fails", async () => {
     server.use(
       http.post(
-        `${API_URL}/api/auth/logout/`,
+        `${VITE_API_URL}/api/auth/logout/`,
         () => new HttpResponse(null, { status: 500 }),
       ),
     );
@@ -163,7 +163,7 @@ describe("initialize", () => {
     });
     let refreshCalled = false;
     server.use(
-      http.post(`${API_URL}/api/auth/refresh/`, () => {
+      http.post(`${VITE_API_URL}/api/auth/refresh/`, () => {
         refreshCalled = true;
         return HttpResponse.json({ access: "new-token" });
       }),
@@ -194,7 +194,7 @@ describe("initialize", () => {
   it("should preserve the master key even if the refresh attempt fails", async () => {
     server.use(
       http.post(
-        `${API_URL}/api/auth/refresh/`,
+        `${VITE_API_URL}/api/auth/refresh/`,
         () => new HttpResponse(null, { status: 401 }),
       ),
     );

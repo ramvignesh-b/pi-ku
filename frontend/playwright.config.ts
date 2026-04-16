@@ -1,12 +1,20 @@
 import path from "node:path";
-import process from "node:process";
+import process, { env } from "node:process";
 import { defineConfig, devices } from "@playwright/test";
 import dotenv from "dotenv";
+import { getBaseUrl } from "./utils/url-builder";
 
 /**
  * Read environment variables from file.
  */
 dotenv.config({ path: path.resolve(process.cwd(), "../.env.e2e") });
+const baseUrl = getBaseUrl(
+  env.SSL_ENABLED === "true",
+  env.FRONTEND_DOMAIN,
+  env.FRONTEND_PORT,
+);
+
+console.log(baseUrl);
 export default defineConfig({
   timeout: 60000,
   expect: {
@@ -26,7 +34,7 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: process.env.FRONTEND_URL,
+    baseURL: baseUrl,
     /* Maximum time each action such as `click()` can take. Defaults to 0 (no limit). */
     actionTimeout: 20000,
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
@@ -53,8 +61,12 @@ export default defineConfig({
 
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: "bun run dev",
-    url: process.env.FRONTEND_URL,
+    command: "bun run dev -- --mode e2e",
+    url: getBaseUrl(
+      process.env.SSL_ENABLED === "true",
+      process.env.FRONTEND_DOMAIN,
+      process.env.FRONTEND_PORT,
+    ),
     reuseExistingServer: !process.env.CI,
     ignoreHTTPSErrors: true,
   },

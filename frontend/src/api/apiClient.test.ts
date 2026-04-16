@@ -13,7 +13,7 @@ import { server } from "../../test/mocks/server";
 import { useAuthStore } from "../store/useAuthStore";
 import { api } from "./apiClient";
 
-const API_URL = "http://piku-server";
+const VITE_API_URL = "http://piku-server";
 
 beforeEach(() => {
   useAuthStore.setState({
@@ -24,7 +24,7 @@ beforeEach(() => {
 });
 
 beforeAll(() => {
-  vi.stubEnv("API_URL", API_URL);
+  vi.stubEnv("VITE_API_URL", VITE_API_URL);
 });
 
 afterAll(() => {
@@ -37,7 +37,7 @@ describe("request interceptor", () => {
 
     let capturedAuthHeader = "";
     server.use(
-      http.get(`${API_URL}/api/auth/me/`, ({ request }) => {
+      http.get(`${VITE_API_URL}/api/auth/me/`, ({ request }) => {
         capturedAuthHeader = request.headers.get("Authorization") ?? "";
         return HttpResponse.json(mockUser);
       }),
@@ -51,7 +51,7 @@ describe("request interceptor", () => {
   it("should not send Authorization header when the store has no token", async () => {
     let capturedAuthHeader: string | null = "";
     server.use(
-      http.get(`${API_URL}/api/auth/me/`, ({ request }) => {
+      http.get(`${VITE_API_URL}/api/auth/me/`, ({ request }) => {
         capturedAuthHeader = request.headers.get("Authorization");
         return HttpResponse.json({});
       }),
@@ -70,14 +70,14 @@ describe("response interceptor", () => {
     let _refreshApiCallCount = 0;
 
     server.use(
-      http.get(`${API_URL}/api/auth/me/`, ({ request }) => {
+      http.get(`${VITE_API_URL}/api/auth/me/`, ({ request }) => {
         meApiCallCount++;
         if (request.headers.get("Authorization") === "Bearer expired-token") {
           return new HttpResponse(null, { status: 401 });
         }
         return HttpResponse.json(mockUser);
       }),
-      http.post(`${API_URL}/api/auth/refresh/`, () => {
+      http.post(`${VITE_API_URL}/api/auth/refresh/`, () => {
         _refreshApiCallCount++;
         return HttpResponse.json({ access: "refreshed-token" });
       }),
@@ -94,13 +94,13 @@ describe("response interceptor", () => {
     useAuthStore.getState().setAuth("expired-token", mockUser);
 
     server.use(
-      http.get(`${API_URL}/api/auth/me/`, ({ request }) => {
+      http.get(`${VITE_API_URL}/api/auth/me/`, ({ request }) => {
         if (request.headers.get("Authorization") === "Bearer expired-token") {
           return new HttpResponse(null, { status: 401 });
         }
         return HttpResponse.json(mockUser);
       }),
-      http.post(`${API_URL}/api/auth/refresh/`, () =>
+      http.post(`${VITE_API_URL}/api/auth/refresh/`, () =>
         HttpResponse.json({ access: "refreshed-token" }),
       ),
     );
@@ -115,14 +115,14 @@ describe("response interceptor", () => {
 
     server.use(
       http.get(
-        `${API_URL}/api/auth/me/`,
+        `${VITE_API_URL}/api/auth/me/`,
         () =>
           new HttpResponse(JSON.stringify({ detail: "Invalid token" }), {
             status: 401,
           }),
       ),
       http.post(
-        `${API_URL}/api/auth/refresh/`,
+        `${VITE_API_URL}/api/auth/refresh/`,
         () =>
           new HttpResponse(JSON.stringify({ detail: "Refresh failed" }), {
             status: 401,

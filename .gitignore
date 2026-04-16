@@ -12,3 +12,4 @@ dist/
 
 # Certificates
 certs/*.pem
+tmp/

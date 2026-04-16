@@ -19,12 +19,17 @@ import environ
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load environment variables
+# Load dotenv files
 env = environ.Env()
-# Allow overriding the .env file path (useful for E2E testing/CI)
-env_file = os.environ.get("PIKU_ENV_FILE", os.path.join(BASE_DIR.parent, ".env"))
+env_file = os.path.join(BASE_DIR.parent, ".env")
 if os.path.exists(env_file):
-    environ.Env.read_env(env_file)
+    environ.Env.read_env(env_file, overwrite=False)
+
+
+SSL_ENABLED = env("SSL_ENABLED") == "true"
+FRONTEND_URL = f"https://{env('FRONTEND_DOMAIN')}" if SSL_ENABLED else f"http://{env('FRONTEND_DOMAIN')}"
+if env("FRONTEND_PORT"):
+    FRONTEND_URL += f":{env('FRONTEND_PORT')}"
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
@@ -35,7 +40,7 @@ SECRET_KEY = env("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env("DEBUG")
 
-ALLOWED_HOSTS = env.list("ALLOWED_HOSTS") or []
+ALLOWED_HOSTS = [env("FRONTEND_DOMAIN")]
 
 
 # Application definition
@@ -50,6 +55,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "users",
     "letters",
+    "scripts",
 ]
 
 MIDDLEWARE = [
@@ -82,7 +88,7 @@ DATABASES = {
     }
 }
 
-CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS")
+CORS_ALLOWED_ORIGINS = [FRONTEND_URL]
 CORS_ALLOW_CREDENTIALS = True
 
 AUTH_USER_MODEL = "users.User"
@@ -107,7 +113,7 @@ NOTE: COOKIE_SAMESITE:  Lax is used to allow cross-site redirection, like links 
 AUTH_COOKIE = {
     "NAME": "refresh_token",
     "DOMAIN": None,
-    "SECURE": True,
+    "SECURE": SSL_ENABLED,
     "HTTPONLY": True,
     "SAMESITE": "Lax",
 }
@@ -117,11 +123,7 @@ EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = env("EMAIL_HOST")
 EMAIL_PORT = env("EMAIL_PORT")
 EMAIL_USE_TLS = not DEBUG
-EMAIL_HOST_USER = env("EMAIL_HOST_USER")
-EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
 FROM_EMAIL = env("FROM_EMAIL")
-
-FRONTEND_URL = env("FRONTEND_URL")
 
 
 # Password validation
