@@ -47,7 +47,7 @@ jobs:
 
       - name: Code Quality
         run: |
-          cp ../.env.example ./ .env
+          cp ../.env.example ../.env
           bun run check
 
       - name: Type Check & Build
@@ -89,7 +89,7 @@ jobs:
 
       - name: Setup Environment
         run: |
-          cp ../.env.example .env
+          cp ../.env.example ../.env
           uv sync
 
       - name: Lint & Test
@@ -132,8 +132,8 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          cd frontend && bun install
-          cd frontend && bun x playwright install --with-deps
+          (cd frontend && bun install) &
+          (cd frontend && bun x playwright install --with-deps)
 
       - name: Run E2E
         run: |
