@@ -10,8 +10,6 @@ jobs:
   setup-environment:
     name: Generate Certificates
     runs-on: ubuntu-latest
-    outputs:
-      cache-key: ${{ steps.cert-key.outputs.key }}
     steps:
       - uses: actions/checkout@v4
       - name: Generate SSL Certificates
@@ -20,18 +18,12 @@ jobs:
           mkdir -p certs
           mkcert -install
           mkcert -cert-file certs/localhost.pem -key-file certs/localhost-key.pem localhost 127.0.0.1 ::1
-          echo "cert_path=certs/localhost.pem" >> $GITHUB_OUTPUT
-          echo "key_path=certs/localhost-key.pem" >> $GITHUB_OUTPUT
-
-      - id: cert-key
-        run: echo "key=${{ runner.os }}-certs-${{ github.sha }}" >> $GITHUB_OUTPUT
 
       - name: Cache certificates
         uses: actions/cache/save@v4
         with:
           path: certs
-          key: ${{ runner.os }}-certs-${{ github.sha }}
-
+          key: certs-${{ runner.os }}-${{ github.sha }}
 
   frontend:
     name: Frontend CI
@@ -43,21 +35,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
 
       - name: Restore certificates
         uses: actions/cache/restore@v4
         with:
           path: certs
-          key: certs-${{ github.sha }}
+          key: certs-${{ runner.os }}-${{ github.sha }}
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
       - name: Code Quality
         run: |
-          cp ../.env.example ../.env
+          cp ../.env.example ./ .env
           bun run check
 
       - name: Type Check & Build
@@ -70,9 +60,6 @@ jobs:
     name: Backend CI
     runs-on: ubuntu-latest
     needs: setup-environment
-    defaults:
-      run:
-        working-directory: ./backend
     services:
       postgres:
         image: postgres:16-alpine
@@ -83,23 +70,26 @@ jobs:
         ports:
           - 5432:5432
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+    defaults:
+      run:
+        working-directory: ./backend
     steps:
       - uses: actions/checkout@v4
       - name: Install uv
         uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
-          cache-dependency-glob: backend/uv.lock
+          cache-dependency-glob: "backend/uv.lock"
 
       - name: Restore certificates
         uses: actions/cache/restore@v4
         with:
           path: certs
-          key: ${{ runner.os }}-certs-${{ github.sha }}
+          key: certs-${{ runner.os }}-${{ github.sha }}
 
       - name: Setup Environment
         run: |
-          cp ../.env.example ../.env
+          cp ../.env.example .env
           uv sync
 
       - name: Lint & Test
@@ -110,7 +100,7 @@ jobs:
   e2e:
     name: E2E Tests
     runs-on: ubuntu-latest
-    needs: [frontend, backend, setup-environment]
+    needs: setup-environment
     services:
       postgres:
         image: postgres:16-alpine
@@ -133,14 +123,12 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: certs
-          key: certs-${{ github.sha }}
+          key: certs-${{ runner.os }}-${{ github.sha }}
 
       - name: Setup Tools
         uses: astral-sh/setup-uv@v5
 
       - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
 
       - name: Install Dependencies
         run: |
