@@ -1,3 +1,5 @@
+from datetime import UTC, datetime, timedelta
+
 from rest_framework import serializers
 
 from letters.models import Letter, LetterImage
@@ -33,6 +35,16 @@ class LetterSerializer(serializers.ModelSerializer):
             "images",
         ]
         read_only_fields = ["created_at", "updated_at"]
+
+    def to_representation(self, instance):
+        fields = super().to_representation(instance)
+        if fields["type"] == Letter.Type.VAULT and fields["status"] == Letter.Status.SEALED:
+            unlock_datetime = datetime.fromisoformat(fields["unlock_at"]).replace(tzinfo=UTC)
+            if unlock_datetime - datetime.now(tz=UTC) > timedelta(seconds=0):
+                fields["encrypted_content"] = None
+                fields["images"] = None
+                fields["encrypted_dek"] = None
+        return fields
 
     def validate(self, data):
         """

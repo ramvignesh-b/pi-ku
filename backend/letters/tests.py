@@ -1,3 +1,5 @@
+from datetime import UTC
+
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from django.test import TestCase
@@ -207,6 +209,42 @@ class LetterAPITest(APITestCase):
         self.assertFalse(default_storage.exists("encrypted-images/old1.bin"))
         self.assertFalse(default_storage.exists("encrypted-images/old2.bin"))
         self.assertEqual(response.status_code, 200)
+
+    def test_vault_letters_does_not_return_letter_content_before_the_unlock_date(self):
+        """
+        Test that the vault letters does not return letter content (images and encrypted_content)
+        before the unlock date.
+        """
+        from datetime import datetime, timedelta
+
+        letter = Letter.objects.create(
+            user=self.user,
+            type="VAULT",
+            status="SEALED",
+            public_id="4281edcc-5459-4ff2-bb5e-669fb44e0757",
+            encrypted_content="enc_content==",
+            encrypted_metadata="enc_meta==",
+            encrypted_dek="enc_dek==",
+            unlock_at=datetime.now(UTC),
+        )
+        from freezegun import freeze_time
+
+        past_datetime = datetime.now(UTC) - timedelta(seconds=1)
+        future_datetime = datetime.now(UTC) + timedelta(seconds=1)
+
+        with freeze_time(past_datetime):
+            response = self.client.get(f"/api/letters/{letter.public_id}/")
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.data["encrypted_content"], None)
+            self.assertEqual(response.data["encrypted_metadata"], "enc_meta==")
+            self.assertEqual(response.data["encrypted_dek"], None)
+
+        with freeze_time(future_datetime):
+            response = self.client.get(f"/api/letters/{letter.public_id}/")
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.data["encrypted_content"], "enc_content==")
+            self.assertEqual(response.data["encrypted_metadata"], "enc_meta==")
+            self.assertEqual(response.data["encrypted_dek"], "enc_dek==")
 
 
 class LetterImageModelTest(TestCase):
