@@ -1,6 +1,7 @@
 import logging
 from datetime import UTC, datetime
 
+from apscheduler.schedulers.background import BackgroundScheduler
 from django.core.mail import send_mail
 
 from config import settings
@@ -13,8 +14,7 @@ def get_vault_letters_to_notify():
     """
     Identifies the vault letters that have been recently unlocked and not notified
     """
-    letters = Letter.objects.filter(unlock_at__lt=datetime.now(UTC), notified_at=None)
-    return letters
+    return Letter.objects.filter(unlock_at__lt=datetime.now(UTC), notified_at=None)
 
 
 def notify_unlocked_letter(letter):
@@ -31,8 +31,25 @@ def notify_unlocked_letter(letter):
 
 
 def vault_unlock_notification_polling_scheduler():
-    logger.info("Starting vault_unlock_notification_polling_scheduler")
+    """
+    Orchestrates the vault polling logic.
+    """
     letters_to_notify = get_vault_letters_to_notify()
-    print("letters_to_notify", letters_to_notify)
     for letter in letters_to_notify:
         notify_unlocked_letter(letter)
+
+
+def start_scheduler():
+    """
+    Starts the background scheduler for polling and notifying vault letters.
+    """
+    logger.info("Starting vault polling scheduler...")
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(
+        vault_unlock_notification_polling_scheduler,
+        trigger="interval",
+        minutes=1,
+        id="letter_polling",
+        replace_existing=True,
+    )
+    scheduler.start()

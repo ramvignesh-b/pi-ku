@@ -327,7 +327,7 @@ class LetterTaskTest(TestCase):
         letter_to_notify1 = Letter.objects.create(
             user=self.user, type="VAULT", status="SEALED", unlock_at=datetime.now(UTC), notified_at=None
         )
-        with patch("tasks.send_mail") as mock_send_mail:
+        with patch("letters.tasks.send_mail") as mock_send_mail:
             notify_unlocked_letter(letter_to_notify1)
 
             mock_send_mail.assert_called_with(
@@ -342,7 +342,7 @@ class LetterTaskTest(TestCase):
         letter_to_notify2 = Letter.objects.create(
             user=self.user, type="VAULT", status="SEALED", unlock_at=datetime.now(UTC), notified_at=None
         )
-        with patch("tasks.send_mail") as mock_send_mail:
+        with patch("letters.tasks.send_mail") as mock_send_mail:
             mock_send_mail.side_effect = Exception()
 
             notify_unlocked_letter(letter_to_notify2)

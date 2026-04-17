@@ -25,7 +25,6 @@ env_file = os.path.join(BASE_DIR.parent, ".env")
 if os.path.exists(env_file):
     environ.Env.read_env(env_file, overwrite=False)
 
-
 SSL_ENABLED = env("SSL_ENABLED") == "true"
 FRONTEND_URL = f"https://{env('FRONTEND_DOMAIN')}" if SSL_ENABLED else f"http://{env('FRONTEND_DOMAIN')}"
 if env("FRONTEND_PORT"):
@@ -42,10 +41,10 @@ DEBUG = env("DEBUG")
 
 ALLOWED_HOSTS = [env("FRONTEND_DOMAIN")]
 
-
 # Application definition
 
 INSTALLED_APPS = [
+    "django_apscheduler",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
@@ -72,7 +71,6 @@ MIDDLEWARE = [
 ROOT_URLCONF = "config.urls"
 
 WSGI_APPLICATION = "config.wsgi.application"
-
 
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
@@ -125,7 +123,6 @@ EMAIL_PORT = env("EMAIL_PORT")
 EMAIL_USE_TLS = not DEBUG
 FROM_EMAIL = env("FROM_EMAIL")
 
-
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
 
@@ -144,7 +141,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
 
@@ -156,10 +152,15 @@ USE_I18N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = "static/"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+LOGGING = {
+    "version": 1,
+    "handlers": {"console": {"class": "logging.StreamHandler"}},
+    "loggers": {"letters": {"handlers": ["console"], "level": "INFO"}},
+}
