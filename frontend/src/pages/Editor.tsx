@@ -3,8 +3,11 @@ import {
   DownloadSimpleIcon,
   ImageIcon,
   LockIcon,
+  QuestionIcon,
   SpinnerGapIcon,
+  StampIcon,
   TrayIcon,
+  VaultIcon,
   XCircleIcon,
   XIcon,
 } from "@phosphor-icons/react";
@@ -53,9 +56,12 @@ export default function Editor() {
   const [isInitialLoading, setIsInitialLoading] = useState(false);
   const [shareLink, setShareLink] = useState<string | null>(null);
   const [lastSaved, setLastSaved] = useState<string | null>(null);
-  const [status, setStatus] = useState<"DRAFT" | "SEALED">("DRAFT");
+  const [status, setLetterStatus] = useState<"DRAFT" | "SEALED" | "VAULT">(
+    "DRAFT",
+  );
   const [isSaveDatePulsing, setIsSaveDatePulsing] = useState(false);
   const [lastSavedPulseTick, setLastSavedPulseTick] = useState(0);
+  const [sealBtnClicked, setSealBtnClicked] = useState<boolean>(false);
 
   const [saveOverlay, setSaveOverlay] = useState<SaveOverlay>("idle");
   const [showSaveOverlay, setShowSaveOverlay] = useState(false);
@@ -65,6 +71,27 @@ export default function Editor() {
 
   const canvasRef = useRef<CanvasTools>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [offset, setOffset] = useState(0);
+  const toPlaceholderList = [
+    "Someone dear...",
+    "Somewhere near...",
+    "Something to bear...",
+  ];
+  const [toPlaceholder, setToPlaceholder] = useState(toPlaceholderList[0]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setOffset((offset) => {
+        const nextOffset = offset + 1;
+        setToPlaceholder(toPlaceholderList[offset % toPlaceholderList.length]);
+        console.log("Setting to ", toPlaceholder);
+        return nextOffset;
+      });
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [offset, toPlaceholder]);
 
   useEffect(() => {
     if (!(public_id && masterKey)) return;
@@ -82,7 +109,7 @@ export default function Editor() {
         const letterData = res.data;
 
         setLastSaved(formatRelativeDate(new Date(letterData.updated_at)));
-        setStatus(letterData.status);
+        setLetterStatus(letterData.status);
 
         if (letterData.status === "SEALED") {
           navigateRef.current(PATHS.read(public_id), { replace: true });
@@ -192,7 +219,11 @@ export default function Editor() {
     }
   };
 
-  const handleSave = async (status: "SEALED" | "DRAFT"): Promise<void> => {
+  const handleSave = async (
+    status: "SEALED" | "DRAFT" | "VAULT",
+  ): Promise<void> => {
+    setSealBtnClicked(false);
+
     let targetId = public_id || letterIdRef.current;
     if (!targetId) {
       targetId = crypto.randomUUID();
@@ -228,9 +259,15 @@ export default function Editor() {
       );
 
       const formData = new FormData();
+      if (status === "VAULT") {
+        formData.append("type", "VAULT");
+        formData.append("unlock_at", "");
+        formData.append("status", "SEALED");
+      } else {
+        formData.append("type", "KEPT");
+        formData.append("status", status);
+      }
       formData.append("public_id", targetId);
-      formData.append("type", "KEPT");
-      formData.append("status", status);
       formData.append("encrypted_content", encrypted_letter.encrypted_content);
       formData.append("encrypted_dek", encrypted_letter.encrypted_dek);
       formData.append(
@@ -251,7 +288,7 @@ export default function Editor() {
       }
 
       setLastSaved(formatRelativeDate(new Date()));
-      setStatus(status);
+      setLetterStatus(status);
       setLastSavedPulseTick((prev) => prev + 1);
 
       if (status === "SEALED" && encrypted_letter.sharingKey) {
@@ -276,6 +313,115 @@ export default function Editor() {
     await navigator.clipboard.writeText(shareLink);
   };
 
+  function ToolBar() {
+    return (
+      <div
+        id="writer-toolbar"
+        className="flex items-center justify-between mb-8 h-14 bg-base-100/50 backdrop-blur-md rounded-full border border-base-content/5 px-6"
+      >
+        <div className="flex gap-4">
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm group"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <ImageIcon size={18} weight="bold" />
+            <span className="hidden md:inline group-hover:inline transition-all duration-1000">
+              Add Image
+            </span>
+          </button>
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleImageUpload}
+            accept="image/*"
+            className="hidden"
+          />
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm text-[10px] group tracking-[0.2em] uppercase font-bold text-base-content/60 hover:text-base-content"
+            title="Store in your private drawer"
+            onClick={() => handleSave("DRAFT")}
+          >
+            <TrayIcon size={18} weight="bold" />
+            <span className="hidden md:inline group-hover:inline transition-all duration-1000">
+              Draft
+            </span>
+          </button>
+
+          <div className="w-px h-4 bg-base-content/10 mx-2" />
+
+          <button
+            type="button"
+            className={`btn btn-primary btn-sm rounded-full px-6 group ${sealBtnClicked ? "invisible" : "visible"}`}
+            onClick={() => setSealBtnClicked(true)}
+          >
+            <StampIcon
+              size={16}
+              weight="fill"
+              className="mr-1 group-hover:animate-bounce"
+            />
+            <span
+              className={`hidden md:inline ${sealBtnClicked ? "inline" : ""} group-hover:inline transition-all duration-1000`}
+            >
+              Seal
+            </span>
+          </button>
+        </div>
+
+        <div
+          className={`flex-col items-center gap-2 absolute right-0 z-100000 bg-primary/20 rounded-full p-8 -m-2 ${sealBtnClicked ? "" : "hidden"}`}
+        >
+          <button
+            type="button"
+            className="btn btn-accent btn-sm rounded-full px-6 group"
+            onClick={() => handleSave("SEALED")}
+          >
+            <StampIcon
+              size={16}
+              weight="fill"
+              className="mr-1 group-hover:animate-bounce"
+            />
+            <span className="transition-all duration-1000">Seal</span>
+          </button>
+          <div className="w-full divider text-neutral-content/60 mt-2 mb-2">
+            or
+          </div>
+          <button
+            type="button"
+            className="btn btn-neutral btn-sm rounded-full px-6 group"
+            onClick={() => handleSave("VAULT")}
+          >
+            <VaultIcon size={16} weight="fill" className="mr-1" />
+            <span className="transition-all duration-1000">Vault</span>
+          </button>
+        </div>
+        <button
+          onClick={() => window.alert("Message")}
+          className={`bg-transparent cursor-pointer -mt-2 absolute z-1000001 right-0 text-primary  ${sealBtnClicked ? "" : "hidden"}`}
+        >
+          <QuestionIcon weight="duotone" size={20} className={""} />
+        </button>
+      </div>
+    );
+  }
+
+  function LetterHead() {
+    return (
+      <div className="flex items-center justify-center mb-8 h-14">
+        <div className="badge badge-outline border-primary/20 bg-primary/5 text-primary gap-2 p-4 rounded-full">
+          <LockIcon size={14} weight="fill" />
+          <span className="text-[10px] uppercase tracking-widest font-bold">
+            Sealed & View Only
+          </span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       <Navbar
@@ -285,11 +431,6 @@ export default function Editor() {
               isSaveDatePulsing ? "animate-pulse" : ""
             }`}
           >
-            <ClockIcon
-              size={16}
-              weight="bold"
-              className="text-neutral-content/30"
-            />
             <p className="text-sm text-neutral-content/30 flex-col justify-end leading-none text-right">
               <span className="text-[10px] uppercase tracking-widest font-bold">
                 Last Save
@@ -297,6 +438,11 @@ export default function Editor() {
               <br />
               <span className="italic">{lastSaved}</span>
             </p>
+            <ClockIcon
+              size={16}
+              weight="bold"
+              className="text-neutral-content/30"
+            />
           </div>
         }
       />
@@ -441,7 +587,7 @@ export default function Editor() {
               <input
                 id="recipient"
                 type="text"
-                placeholder="Someone dear..."
+                placeholder={toPlaceholder}
                 value={recipient}
                 disabled={status === "SEALED"}
                 onChange={(e) => setRecipient(e.target.value)}
@@ -451,61 +597,7 @@ export default function Editor() {
             <DateDisplay />
           </div>
 
-          {status === "DRAFT" ? (
-            <div
-              id="writer-toolbar"
-              className="flex items-center justify-between mb-8 h-14 bg-base-100/50 backdrop-blur-md rounded-full border border-base-content/5 px-6"
-            >
-              <div className="flex gap-4">
-                <button
-                  type="button"
-                  className="btn btn-ghost btn-sm"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <ImageIcon size={18} weight="bold" />
-                </button>
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleImageUpload}
-                  accept="image/*"
-                  className="hidden"
-                />
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  className="btn btn-ghost btn-sm text-[10px] tracking-[0.2em] uppercase font-bold text-base-content/60 hover:text-base-content"
-                  title="Store in your private drawer"
-                  onClick={() => handleSave("DRAFT")}
-                >
-                  <TrayIcon size={18} weight="bold" />
-                  <span className="hidden md:inline">Store</span>
-                </button>
-
-                <div className="w-px h-4 bg-base-content/10 mx-2" />
-
-                <button
-                  type="button"
-                  className="btn btn-primary btn-sm rounded-full px-6"
-                  onClick={() => handleSave("SEALED")}
-                >
-                  <LockIcon size={14} weight="fill" className="mr-1" />
-                  Seal
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-center justify-center mb-8 h-14">
-              <div className="badge badge-outline border-primary/20 bg-primary/5 text-primary gap-2 p-4 rounded-full">
-                <LockIcon size={14} weight="fill" />
-                <span className="text-[10px] uppercase tracking-widest font-bold">
-                  Sealed & View Only
-                </span>
-              </div>
-            </div>
-          )}
+          {status === "DRAFT" ? <ToolBar /> : <LetterHead />}
 
           <ComposeCanvas ref={canvasRef} readOnly={status === "SEALED"} />
         </div>
