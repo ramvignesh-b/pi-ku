@@ -39,11 +39,14 @@ class LetterSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         fields = super().to_representation(instance)
         if fields["type"] == Letter.Type.VAULT and fields["status"] == Letter.Status.SEALED:
-            unlock_datetime = datetime.fromisoformat(fields["unlock_at"]).replace(tzinfo=UTC)
-            if unlock_datetime - datetime.now(tz=UTC) > timedelta(seconds=0):
-                fields["encrypted_content"] = None
-                fields["images"] = None
-                fields["encrypted_dek"] = None
+            try:
+                unlock_datetime = datetime.fromisoformat(fields["unlock_at"]).replace(tzinfo=UTC)
+                if unlock_datetime - datetime.now(tz=UTC) > timedelta(seconds=0):
+                    fields["encrypted_content"] = None
+                    fields["images"] = None
+                    fields["encrypted_dek"] = None
+            except (ValueError, TypeError):
+                pass
         return fields
 
     def validate(self, data):
@@ -54,4 +57,6 @@ class LetterSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 "encrypted_dek is required when encrypted_content and encrypted_metadata are present"
             )
+        if data.get("type") == Letter.Type.VAULT and not data.get("unlock_at"):
+            raise serializers.ValidationError("unlock_at is required for vault letters")
         return data
