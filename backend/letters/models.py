@@ -28,6 +28,7 @@ class Letter(models.Model):
     sealed_at = models.DateTimeField(null=True, blank=True)
     opened_at = models.DateTimeField(null=True, blank=True)
     burned_at = models.DateTimeField(null=True, blank=True)
+    notified_at = models.DateTimeField(null=True, blank=True)
     encrypted_dek = models.TextField(null=True, blank=True)
 
     def clean(self):

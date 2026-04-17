@@ -1,5 +1,7 @@
-from datetime import UTC
+from datetime import UTC, datetime, timedelta
+from unittest.mock import ANY, patch
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from django.test import TestCase
@@ -277,3 +279,72 @@ class LetterImageModelTest(TestCase):
         self.assertEqual(LetterImage.objects.count(), 1)
         self.letter.delete()
         self.assertEqual(LetterImage.objects.count(), 0)
+
+
+class LetterTaskTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(email="task@pi-ku.app", password="password1234")
+
+    def test_get_vault_letters_to_be_notified(self):
+        """
+        Test that the task can successfully retrieve the letters whose unlock date is passed and haven't been notified.
+        """
+        from letters.tasks import get_vault_letters_to_notify
+
+        Letter.objects.create(
+            user=self.user, type="VAULT", status="SEALED", unlock_at=datetime.now(UTC) + timedelta(seconds=1)
+        )
+        Letter.objects.create(user=self.user, type="VAULT", status="SEALED", unlock_at=datetime.now(UTC))
+        Letter.objects.create(
+            user=self.user, type="VAULT", status="SEALED", unlock_at=datetime.now(UTC) - timedelta(seconds=1)
+        )
+        Letter.objects.create(
+            user=self.user,
+            type="VAULT",
+            status="SEALED",
+            unlock_at=datetime.now(UTC) - timedelta(hours=1),
+            notified_at=datetime.now(UTC) - timedelta(minutes=59),
+        )
+        Letter.objects.create(
+            user=self.user, type="VAULT", status="SEALED", unlock_at=datetime.now(UTC) + timedelta(seconds=1)
+        )
+        Letter.objects.create(
+            user=self.user,
+            type="KEPT",
+            status="SEALED",
+        )
+
+        unlocked_letters = get_vault_letters_to_notify()
+
+        self.assertEqual(len(unlocked_letters), 2)
+
+    def test_notify_unlocked_letter(self):
+        """
+        Test that the task successfully notifies the user via email and updates the database field.
+        """
+        from letters.tasks import notify_unlocked_letter
+
+        letter_to_notify1 = Letter.objects.create(
+            user=self.user, type="VAULT", status="SEALED", unlock_at=datetime.now(UTC), notified_at=None
+        )
+        with patch("tasks.send_mail") as mock_send_mail:
+            notify_unlocked_letter(letter_to_notify1)
+
+            mock_send_mail.assert_called_with(
+                subject=ANY,
+                message=ANY,
+                from_email=settings.FROM_EMAIL,
+                recipient_list=[self.user.email],
+                fail_silently=False,
+            )
+            self.assertIsNotNone(letter_to_notify1.notified_at)
+
+        letter_to_notify2 = Letter.objects.create(
+            user=self.user, type="VAULT", status="SEALED", unlock_at=datetime.now(UTC), notified_at=None
+        )
+        with patch("tasks.send_mail") as mock_send_mail:
+            mock_send_mail.side_effect = Exception()
+
+            notify_unlocked_letter(letter_to_notify2)
+
+            self.assertIsNone(letter_to_notify2.notified_at)
