@@ -78,7 +78,7 @@ export function useLetters() {
     setLetters(
       letters.sort(
         (a, b) =>
-          new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime(),
+          new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
       ),
     );
     return {
@@ -92,7 +92,6 @@ export function useLetters() {
   return {
     ...drawerItems,
     loading,
-    refreshLetters: () => setLoading(true),
     isAuthRequired,
   };
 }

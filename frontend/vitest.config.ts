@@ -10,7 +10,7 @@ export default defineConfig({
       VITE_API_URL: "http://piku-server",
       TZ: "Asia/Kolkata",
     },
-    include: ["**/*.test.ts"],
+    include: ["**/*.test.ts", "**/*.test.tsx"],
     environment: "jsdom",
     globals: true,
     setupFiles: ["./test/setup.ts"],
