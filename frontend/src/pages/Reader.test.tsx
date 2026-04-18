@@ -9,20 +9,6 @@ import Reader from "./Reader";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-// Spy on crypto methods so we don't have to do actual decryption in the UI test
-const spyDecryptLetter = vi.spyOn(
-  CryptoUtils.prototype,
-  "decryptLetterWithSharingKey",
-);
-const spyDecryptMetadata = vi.spyOn(
-  CryptoUtils.prototype,
-  "decryptMetadataWithSharingKey",
-);
-const spyDecryptImage = vi.spyOn(
-  CryptoUtils.prototype,
-  "decryptImageWithSharingKey",
-);
-
 // Fabric.js needs to know when fonts are loaded
 Object.defineProperty(document, "fonts", {
   value: { ready: Promise.resolve() },
@@ -30,13 +16,16 @@ Object.defineProperty(document, "fonts", {
 });
 
 describe("Reader Page", () => {
-  beforeEach(() => {
+  let masterKey: CryptoKey;
+  let utils: CryptoUtils;
+
+  beforeEach(async () => {
     vi.clearAllMocks();
 
-    // Default mock behavior for successful decryption
-    spyDecryptLetter.mockResolvedValue('{"objects": []}');
-    spyDecryptMetadata.mockResolvedValue({ recipient: "Guest" });
-    spyDecryptImage.mockResolvedValue("blob:url");
+    utils = new CryptoUtils();
+    await utils.initialize();
+    const bundle = await CryptoUtils.deriveKeyBundle("password", "salt");
+    masterKey = bundle.masterKey;
 
     // Clear the URL hash
     vi.stubGlobal("location", {
@@ -61,19 +50,27 @@ describe("Reader Page", () => {
 
   it("should load and decrypt the letter when a valid key is provided", async () => {
     const mockPublicId = "test-uuid";
-    const mockKey = "fake-key";
+    const letterContent = JSON.stringify({ objects: [] });
+    const metadata = { recipient: "Guest" };
+
+    const encryptedLetter = await utils.encryptLetter(letterContent, masterKey);
+    const encryptedMetadata = await utils.encryptMetadata(metadata, masterKey);
+
+    const sharingKey = encryptedLetter.sharingKey as string;
+
     server.use(
       http.get(`${API_URL}${endpoints.LETTERS}${mockPublicId}/`, () => {
         return HttpResponse.json({
-          encrypted_content: "packed-content",
-          encrypted_metadata: "packed-metadata",
+          encrypted_content: encryptedLetter.encrypted_content,
+          encrypted_metadata: encryptedMetadata.encrypted_content, // Reader expects .encrypted_content for metadata too
+          encrypted_dek: encryptedLetter.encrypted_dek,
           images: [],
         });
       }),
     );
 
     render(
-      <MemoryRouter initialEntries={[`/read/${mockPublicId}#${mockKey}`]}>
+      <MemoryRouter initialEntries={[`/read/${mockPublicId}#${sharingKey}`]}>
         <Routes>
           <Route path="/read/:public_id" element={<Reader />} />
         </Routes>
@@ -81,11 +78,10 @@ describe("Reader Page", () => {
     );
 
     // Should show loading state first
-    expect(screen.getByText(/Decrypting.../i)).toBeInTheDocument();
+    expect(screen.getByText(/Breaking the seal.../i)).toBeInTheDocument();
 
-    expect(
-      await screen.findByText(/A sealed message for/i),
-    ).toBeInTheDocument();
+    expect(await screen.findByText(/A sealed letter for/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Guest/i).length).toBeGreaterThanOrEqual(1);
   });
 
   it("should display an error message if the server request fails", async () => {

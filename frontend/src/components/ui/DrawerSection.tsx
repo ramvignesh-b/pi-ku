@@ -1,3 +1,5 @@
+import { GearFineIcon } from "@phosphor-icons/react";
+
 interface DrawerSectionProps {
   id: string;
   title: string;
@@ -21,7 +23,7 @@ export function DrawerSection({
       className={`overflow-visible join-item group flex flex-col transition-colors ${isOpen ? "bg-base-300/30" : ""}`}
     >
       <div
-        className={`transition-all duration-1000 ease-in-out bg-neutral/10 ${
+        className={`transition-normal duration-1000 ease-in-out bg-neutral/10 ${
           isOpen
             ? "max-h-125 opacity-100 py-3 border-b border-base-content/5"
             : "max-h-0 opacity-0 pointer-events-none"
@@ -33,7 +35,7 @@ export function DrawerSection({
       <button
         type="button"
         onClick={onClick}
-        className={`w-full p-[24px_28px] cursor-pointer flex items-center gap-5 transition-all duration-1000 outline-none focus-visible:ring-2 focus-visible:ring-primary/50 border border-base-content/10 text-left bg-linear-to-r from-transparent to-base-100/40`}
+        className={`w-full p-[24px_28px] cursor-pointer flex items-center gap-5 transition-none outline-none focus-visible:ring-2 focus-visible:ring-primary/50 border border-base-content/10 text-left bg-linear-to-r from-transparent to-base-100/40`}
       >
         <div className="flex-1">
           <div
@@ -49,15 +51,26 @@ export function DrawerSection({
             {count}
           </div>
         </div>
-        <div
-          className={`w-8 h-1 rounded-sm transition-all duration-300 bg-neutral ${
-            isOpen
-              ? "bg-primary/80! opacity-80 scale-110"
-              : "group-hover:bg-primary"
-          }`}
-        >
-          <div className="absolute -top-1 left-1.75 w-5 h-px bg-base-content/5" />
-        </div>
+
+        {id === "vault" ? (
+          <GearFineIcon
+            className={
+              "-mt-3 group-hover:animate-[spin_8s_ease-in-out_1] group-hover:text-neutral-content text-neutral"
+            }
+            weight={"duotone"}
+            size={30}
+          />
+        ) : (
+          <div
+            className={`w-8 h-1 rounded-sm transition-all duration-300 bg-neutral ${
+              isOpen
+                ? "bg-primary/80! opacity-80 scale-110"
+                : "group-hover:bg-primary"
+            }`}
+          >
+            <div className="absolute -top-1 left-1.75 w-5 h-px bg-base-content/5" />
+          </div>
+        )}
       </button>
     </div>
   );

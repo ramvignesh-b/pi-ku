@@ -18,6 +18,53 @@ export default function Drawer() {
 
   if (!user) return null;
 
+  function PasskeyModal() {
+    return (
+      <div className="modal modal-open bg-base-100/20 backdrop-blur-md">
+        <div className="modal-box p-12 flex flex-col items-center">
+          <LockKeyIcon
+            size={48}
+            className="text-primary mx-auto mb-8 animate-pulse"
+          />
+          <h3 className="font-bold text-lg font-display text-primary">
+            Authentication Required
+          </h3>
+          <p className="py-4 font-sans">
+            We need your passkey to open your letters
+          </p>
+          <div className="divider w-1/2 mx-auto text-xs text-neutral-content/30 mt-0"></div>
+          <p className="text-xs text-neutral-content/30 font-mono italic">
+            P.S. We don't validate your input at the moment.
+          </p>
+          <div className="modal-action items-center gap-4">
+            <form
+              className="form-control w-full inline-flex"
+              onSubmit={async (e: React.SubmitEvent<HTMLFormElement>) => {
+                e.preventDefault();
+                const formData = new FormData(e.currentTarget);
+                const password = formData.get("password") as string;
+                if (!password) return;
+                await unlock(password);
+              }}
+            >
+              <input
+                name="password"
+                required
+                type="password"
+                placeholder="password"
+                className="font-sans validator input input-bordered rounded-r-none"
+              />
+              <div className="validator-message text-xs text-error"></div>
+              <button type="submit" className="btn btn-primary rounded-l-none">
+                Unlock
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const toggleSection = (id: string) =>
     setOpenSection(openSection === id ? null : id);
 
@@ -25,53 +72,7 @@ export default function Drawer() {
     <div className="min-h-screen w-full bg-base-100 text-base-content flex flex-col items-center py-12 px-5 pb-32 font-serif transition-colors">
       <div className="fixed inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.5)_100%)] pointer-events-none z-0" />
 
-      {isAuthRequired && (
-        <div className="modal modal-open bg-base-100/20 backdrop-blur-md">
-          <div className="modal-box p-12 flex flex-col items-center">
-            <LockKeyIcon
-              size={48}
-              className="text-primary mx-auto mb-8 animate-pulse"
-            />
-            <h3 className="font-bold text-lg font-display text-primary">
-              Authentication Required
-            </h3>
-            <p className="py-4 font-sans">
-              We need your passkey to open your letters
-            </p>
-            <div className="divider w-1/2 mx-auto text-xs text-neutral-content/30 mt-0"></div>
-            <p className="text-xs text-neutral-content/30 font-mono italic">
-              P.S. We don't validate your input at the moment.
-            </p>
-            <div className="modal-action items-center gap-4">
-              <form
-                className="form-control w-full inline-flex"
-                onSubmit={async (e: React.SubmitEvent<HTMLFormElement>) => {
-                  e.preventDefault();
-                  const formData = new FormData(e.currentTarget);
-                  const password = formData.get("password") as string;
-                  if (!password) return;
-                  unlock(password);
-                }}
-              >
-                <input
-                  name="password"
-                  required
-                  type="password"
-                  placeholder="password"
-                  className="font-sans validator input input-bordered rounded-r-none"
-                />
-                <div className="validator-message text-xs text-error"></div>
-                <button
-                  type="submit"
-                  className="btn btn-primary rounded-l-none"
-                >
-                  Unlock
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
+      {isAuthRequired && <PasskeyModal />}
       <header className="text-center mb-12 z-10 animate-in fade-in slide-in-from-top-4 duration-1000">
         <Logo />
         <div className="font-sans text-xs tracking-[0.3em] uppercase text-base-content/40 mt-2">
