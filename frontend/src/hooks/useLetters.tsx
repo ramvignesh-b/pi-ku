@@ -69,18 +69,20 @@ export function useLetters() {
     api
       .get(endpoints.LETTERS)
       .then((res) => decryptLetters(res.data, masterKey))
-      .then(setLetters)
+      .then((decrypted) => {
+        setLetters(
+          decrypted.sort(
+            (a, b) =>
+              new Date(b.updated_at).getTime() -
+              new Date(a.updated_at).getTime(),
+          ),
+        );
+      })
       .catch((_err) => {})
       .finally(() => setLoading(false));
   }, [masterKey]);
 
   const drawerItems = useMemo(() => {
-    setLetters(
-      letters.sort(
-        (a, b) =>
-          new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
-      ),
-    );
     return {
       drafts: letters.filter((l) => l.status === "DRAFT"),
       kept: letters.filter((l) => l.type === "KEPT" && l.status === "SEALED"),
