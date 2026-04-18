@@ -18,10 +18,10 @@ export function DrawerSection({
   return (
     <div
       id={id}
-      className={`join-item group flex flex-col transition-colors ${isOpen ? "bg-base-300/30" : ""}`}
+      className={`overflow-visible join-item group flex flex-col transition-colors ${isOpen ? "bg-base-300/30" : ""}`}
     >
       <div
-        className={`overflow-hidden transition-all duration-1000 ease-in-out bg-neutral/10 ${
+        className={`transition-all duration-1000 ease-in-out bg-neutral/10 ${
           isOpen
             ? "max-h-125 opacity-100 py-3 border-b border-base-content/5"
             : "max-h-0 opacity-0 pointer-events-none"

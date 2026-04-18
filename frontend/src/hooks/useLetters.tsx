@@ -75,6 +75,12 @@ export function useLetters() {
   }, [masterKey]);
 
   const drawerItems = useMemo(() => {
+    setLetters(
+      letters.sort(
+        (a, b) =>
+          new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime(),
+      ),
+    );
     return {
       drafts: letters.filter((l) => l.status === "DRAFT"),
       kept: letters.filter((l) => l.type === "KEPT" && l.status === "SEALED"),

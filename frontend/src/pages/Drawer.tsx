@@ -7,6 +7,7 @@ import { LetterItem } from "../components/ui/LetterItem";
 import { PATHS } from "../config/routes";
 import { useAuth } from "../hooks/useAuth";
 import { useLetters } from "../hooks/useLetters";
+import { formatRelativeDate } from "../utils/dateFormat.ts";
 
 export default function Drawer() {
   const { user, logout, unlock } = useAuth();
@@ -89,7 +90,7 @@ export default function Drawer() {
         </div>
       </header>
 
-      <div className="join join-vertical w-full max-w-120 bg-base-200 border border-base-content/10 shadow-2xl z-10 rounded-sm overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200 fill-mode-backwards min-h-64 flex flex-col">
+      <div className="join join-vertical w-full max-w-120 bg-base-200 border border-base-content/10 shadow-2xl z-10 rounded-sm animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200 fill-mode-backwards min-h-64 flex flex-col">
         {loading ? (
           <div className="flex-1 flex flex-col items-center justify-center p-12 gap-4">
             <span className="loading loading-ring loading-lg text-primary opacity-20"></span>
@@ -112,7 +113,7 @@ export default function Drawer() {
                   status={draft.status}
                   key={draft.public_id}
                   preview={draft.metadata?.recipient || "Untitled Draft"}
-                  timestamp={draft.updated_at}
+                  timestamp={formatRelativeDate(draft.updated_at)}
                 />
               ))}
             </DrawerSection>
@@ -130,7 +131,7 @@ export default function Drawer() {
                   status={letter.status}
                   key={letter.public_id}
                   preview={letter.metadata?.recipient || "Someone dear..."}
-                  timestamp={letter.updated_at}
+                  timestamp={formatRelativeDate(letter.updated_at)}
                 />
               ))}
             </DrawerSection>
@@ -147,7 +148,7 @@ export default function Drawer() {
                   status={letter.status}
                   id={letter.public_id}
                   preview={letter.metadata?.recipient || "Someone dear..."}
-                  timestamp={letter.updated_at}
+                  timestamp={formatRelativeDate(letter.updated_at)}
                 />
               ))}
               {sent.length === 0 && (
@@ -169,7 +170,7 @@ export default function Drawer() {
                   status={letter.status}
                   id={letter.public_id}
                   preview={letter.metadata?.recipient || "Future Self"}
-                  timestamp={letter.updated_at}
+                  timestamp={formatRelativeDate(letter.updated_at)}
                 />
               ))}
             </DrawerSection>
@@ -199,7 +200,7 @@ export default function Drawer() {
       </button>
 
       <footer className="mt-25 font-sans text-[0.6rem] tracking-[0.2em] uppercase text-base-content/10 z-10">
-        Kept. Unsent.
+        For your unsaid.
       </footer>
     </div>
   );
