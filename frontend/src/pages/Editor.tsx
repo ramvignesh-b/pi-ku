@@ -38,6 +38,12 @@ const OVERLAY_FADE_MS = 250;
 const SAVED_VISIBLE_MS = 1400;
 const ERROR_VISIBLE_MS = 2400;
 
+const toPlaceholderList = [
+  "Someone dear...",
+  "Somewhere near...",
+  "Something to bear...",
+];
+
 export default function Editor() {
   const navigate = useNavigate();
   const navigateRef = useRef<NavigateFunction>(navigate);
@@ -65,33 +71,36 @@ export default function Editor() {
 
   const [saveOverlay, setSaveOverlay] = useState<SaveOverlay>("idle");
   const [showSaveOverlay, setShowSaveOverlay] = useState(false);
+  const [confirmModal, setConfirmModal] = useState<"VAULT" | "SEAL" | null>(
+    null,
+  );
 
   const [recipient, setRecipient] = useState("");
+  const [unlockDate, setUnlockDate] = useState<Date | null>(null);
+
   const { masterKey } = useKeyStore();
 
   const canvasRef = useRef<CanvasTools>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const [offset, setOffset] = useState(0);
-  const toPlaceholderList = [
-    "Someone dear...",
-    "Somewhere near...",
-    "Something to bear...",
-  ];
-  const [toPlaceholder, setToPlaceholder] = useState(toPlaceholderList[0]);
+  const recipientInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setOffset((offset) => {
-        const nextOffset = offset + 1;
-        setToPlaceholder(toPlaceholderList[offset % toPlaceholderList.length]);
-        console.log("Setting to ", toPlaceholder);
-        return nextOffset;
-      });
+      if (recipientInputRef.current) {
+        let currentOffset = parseInt(
+          recipientInputRef.current.dataset.offset || "0",
+        );
+        recipientInputRef.current.dataset.offset = (
+          (currentOffset + 1) %
+          toPlaceholderList.length
+        ).toString();
+        recipientInputRef.current.placeholder =
+          toPlaceholderList[parseInt(recipientInputRef.current.dataset.offset)];
+      }
     }, 4000);
 
     return () => clearInterval(interval);
-  }, [offset, toPlaceholder]);
+  }, []);
 
   useEffect(() => {
     if (!(public_id && masterKey)) return;
@@ -221,6 +230,7 @@ export default function Editor() {
 
   const handleSave = async (
     status: "SEALED" | "DRAFT" | "VAULT",
+    vaultDate?: Date,
   ): Promise<void> => {
     setSealBtnClicked(false);
 
@@ -260,8 +270,12 @@ export default function Editor() {
 
       const formData = new FormData();
       if (status === "VAULT") {
+        const finalDate = vaultDate || unlockDate;
+        console.log(finalDate?.toISOString());
         formData.append("type", "VAULT");
-        formData.append("unlock_at", "");
+        if (finalDate) {
+          formData.append("unlock_at", finalDate.toISOString());
+        }
         formData.append("status", "SEALED");
       } else {
         formData.append("type", "KEPT");
@@ -393,14 +407,14 @@ export default function Editor() {
           <button
             type="button"
             className="btn btn-neutral btn-sm rounded-full px-6 group"
-            onClick={() => handleSave("VAULT")}
+            onClick={() => setConfirmModal("VAULT")}
           >
             <VaultIcon size={16} weight="fill" className="mr-1" />
             <span className="transition-all duration-1000">Vault</span>
           </button>
         </div>
         <button
-          onClick={() => window.alert("Message")}
+          onClick={() => setSealBtnClicked(false)}
           className={`bg-transparent cursor-pointer -mt-2 absolute z-1000001 right-0 text-primary  ${sealBtnClicked ? "" : "hidden"}`}
         >
           <QuestionIcon weight="duotone" size={20} className={""} />
@@ -417,6 +431,66 @@ export default function Editor() {
           <span className="text-[10px] uppercase tracking-widest font-bold">
             Sealed & View Only
           </span>
+        </div>
+      </div>
+    );
+  }
+
+  function VaultConfirm() {
+    return (
+      <div className={"modal modal-open bg-base-100/20 backdrop-blur-md"}>
+        <div className="modal-box p-12 flex flex-col items-center">
+          <VaultIcon
+            size={48}
+            className="text-primary mx-auto mb-8 animate-pulse"
+          />
+          <h3 className="font-serif text-3xl">Vault this letter?</h3>
+          <p className="text-base-content/60 text-sm text-center mt-4">
+            Vaulting locks the letter permanently and will be{" "}
+            <span className={"font-bold text-primary"}>mailed</span> to you
+            automatically on the unlock date.
+            <br />
+            <span className={"underline"}>
+              You cannot edit or view the contents of the letter until then.
+            </span>
+          </p>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget);
+              const unlockDateStr = formData.get("vault-date") as string;
+              const newUnlockDate = new Date(unlockDateStr);
+              setUnlockDate(newUnlockDate);
+              setConfirmModal(null);
+              handleSave("VAULT", newUnlockDate);
+            }}
+            id="vault-form"
+          >
+            <div className={"divider tracking-tightest font-display text-sm"}>
+              Set an unlock date
+            </div>
+            <input
+              required
+              type="date"
+              className="input input-bordered w-full"
+              name="vault-date"
+            />
+            <button
+              className="btn btn-primary mt-4"
+              type="submit"
+              form="vault-form"
+            >
+              Vault
+            </button>
+
+            <button
+              type={"submit"}
+              className="btn btn-ghost mt-4"
+              onClick={() => setConfirmModal(null)}
+            >
+              Cancel
+            </button>
+          </form>
         </div>
       </div>
     );
@@ -575,6 +649,8 @@ export default function Editor() {
           </div>
         )}
 
+        {confirmModal === "VAULT" && <VaultConfirm />}
+
         <div className="max-w-180 mx-auto px-1 md:px-0">
           <div className="flex justify-between items-end mb-16 border-b border-base-content/5 pb-8 px-0">
             <div className="flex flex-col gap-2 flex-1">
@@ -587,9 +663,11 @@ export default function Editor() {
               <input
                 id="recipient"
                 type="text"
-                placeholder={toPlaceholder}
+                ref={recipientInputRef}
+                placeholder={toPlaceholderList[0]}
+                data-offset={"0"}
                 value={recipient}
-                disabled={status === "SEALED"}
+                disabled={status !== "DRAFT"}
                 onChange={(e) => setRecipient(e.target.value)}
                 className="bg-transparent border-none outline-none text-2xl md:text-3xl lg:text-4xl font-serif text-base-content placeholder:text-base-content/10 w-full disabled:opacity-50"
               />
@@ -599,7 +677,7 @@ export default function Editor() {
 
           {status === "DRAFT" ? <ToolBar /> : <LetterHead />}
 
-          <ComposeCanvas ref={canvasRef} readOnly={status === "SEALED"} />
+          <ComposeCanvas ref={canvasRef} readOnly={status !== "DRAFT"} />
         </div>
       </section>
     </>

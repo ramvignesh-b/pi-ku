@@ -7,7 +7,10 @@ import { LetterItem } from "../components/ui/LetterItem";
 import { PATHS } from "../config/routes";
 import { useAuth } from "../hooks/useAuth";
 import { useLetters } from "../hooks/useLetters";
-import { formatRelativeDate } from "../utils/dateFormat.ts";
+import {
+  formateRelativeDateWithoutTime,
+  formatRelativeDate,
+} from "../utils/dateFormat.ts";
 
 export default function Drawer() {
   const { user, logout, unlock } = useAuth();
@@ -172,6 +175,8 @@ export default function Drawer() {
                   id={letter.public_id}
                   preview={letter.metadata?.recipient || "Future Self"}
                   timestamp={formatRelativeDate(letter.updated_at)}
+                  unlock_at={formateRelativeDateWithoutTime(letter.unlock_at)}
+                  isLocked={letter.unlock_at > new Date().toISOString()}
                 />
               ))}
             </DrawerSection>

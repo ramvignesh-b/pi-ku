@@ -13,3 +13,17 @@ dist/
 # Certificates
 certs/*.pem
 tmp/
+.idea/.gitignore
+.idea/misc.xml
+.idea/modules.xml
+.idea/pi ku.iml
+.idea/vcs.xml
+.idea/inspectionProfiles/profiles_settings.xml
+.idea/runConfigurations/pi_ku.xml
+backend/.idea/.gitignore
+backend/.idea/backend.iml
+backend/.idea/misc.xml
+backend/.idea/modules.xml
+backend/.idea/vcs.xml
+backend/.idea/inspectionProfiles/profiles_settings.xml
+backend/.idea/runConfigurations/backend.xml

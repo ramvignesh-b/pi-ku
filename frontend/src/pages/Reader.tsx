@@ -152,26 +152,13 @@ export default function Reader() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-base-100 px-6 font-serif">
-        <div className="fixed inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.4)_100%)] pointer-events-none z-0" />
-        <div className="max-w-md w-full glass-card p-12 text-center space-y-6 z-10 animate-in fade-in zoom-in-95 duration-700">
-          <div className="space-y-2">
-            <h2 className="text-error font-display text-xl">
-              Something went wrong
-            </h2>
-            <p className="text-base-content/60 text-sm leading-relaxed">
-              {error}
-            </p>
-          </div>
-          <button
-            type="button"
-            className="btn btn-ghost btn-sm text-xs uppercase tracking-widest hover:text-primary transition-colors"
-            onClick={() => (window.location.href = "/")}
-          >
-            Return Home
-          </button>
-        </div>
-      </div>
+      <LogModal
+        isOpen={!!error}
+        onClose={() => (window.location.href = "/")}
+        message={error}
+        log={error}
+        status="ERROR"
+      />
     );
   }
 

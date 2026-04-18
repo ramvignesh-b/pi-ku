@@ -16,6 +16,7 @@ function startOfDay(d: Date) {
 }
 
 export function formatRelativeDate(input: Date | string | number) {
+  if (!input) return "";
   const date = new Date(input);
   const now = new Date();
 
@@ -31,4 +32,21 @@ export function formatRelativeDate(input: Date | string | number) {
   if (diffDays > -7) return `${rtf.format(diffDays, "day")}, ${time}`;
 
   return dateTimeFormatter.format(date);
+}
+
+export function formateRelativeDateWithoutTime(input: Date | string | number) {
+  if (!input) return "";
+  const date = new Date(input);
+  const now = new Date();
+
+  const dayMs = 24 * 60 * 60 * 1000;
+  const diffDays = Math.round(
+    (startOfDay(date).getTime() - startOfDay(now).getTime()) / dayMs,
+  );
+
+  if (diffDays === 0) return `Today`;
+  if (diffDays === -1) return `Yesterday`;
+  if (diffDays > -7) return `${rtf.format(diffDays, "day")}`;
+
+  return date.toDateString();
 }
