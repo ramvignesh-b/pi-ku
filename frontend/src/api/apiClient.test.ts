@@ -1,13 +1,5 @@
 import { HttpResponse, http } from "msw";
-import {
-  afterAll,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  vi,
-} from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { mockUser } from "../../test/fixtures/user.fixture";
 import { server } from "../../test/mocks/server";
 import { useAuthStore } from "../store/useAuthStore";
@@ -21,13 +13,10 @@ beforeEach(() => {
     user: null,
     isInitializing: false,
   });
-});
-
-beforeAll(() => {
   vi.stubEnv("VITE_API_URL", VITE_API_URL);
 });
 
-afterAll(() => {
+afterEach(() => {
   vi.unstubAllEnvs();
 });
 

@@ -6,7 +6,6 @@ import { mockUser } from "../../test/fixtures/user.fixture";
 import { server } from "../../test/mocks/server";
 import { useAuthStore } from "../store/useAuthStore";
 import { useKeyStore } from "../store/useKeyStore";
-import { CryptoUtils } from "../utils/crypto";
 import {
   clearMasterKey,
   loadMasterKey,
@@ -14,19 +13,12 @@ import {
 } from "../utils/keystore";
 import { useAuth } from "./useAuth";
 
-vi.mock("../utils/crypto");
 vi.mock("../utils/keystore");
 
 const VITE_API_URL = "http://piku-server";
 
 beforeEach(() => {
   vi.clearAllMocks();
-
-  // hack to set up mock implementations using fixtures
-  vi.mocked(CryptoUtils.deriveKeyBundle).mockResolvedValue({
-    masterKey: mockMasterKey,
-    authHash: "mock-auth-hash",
-  });
 
   vi.mocked(loadMasterKey).mockResolvedValue(mockMasterKey);
   vi.mocked(saveMasterKey).mockResolvedValue("masterKey");

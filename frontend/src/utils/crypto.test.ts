@@ -169,7 +169,7 @@ describe("encryptImage / decryptImage", () => {
   });
 });
 
-describe("Sharing Key Decryption (TDD)", () => {
+describe("Sharing Key Decryption", () => {
   let masterKey: CryptoKey;
   beforeEach(async () => {
     const bundle = await CryptoUtils.deriveKeyBundle("password", "salt");
