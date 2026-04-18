@@ -68,7 +68,10 @@ export default function Activate() {
             type="button"
             className="btn btn-primary w-full shadow-lg"
             onClick={() =>
-              navigate(ROUTES.LOGIN, { state: { firstTime: true } })
+              navigate(ROUTES.LOGIN, {
+                state: { firstTime: true },
+                replace: true,
+              })
             }
           >
             Start Writing

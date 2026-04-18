@@ -55,7 +55,7 @@ export default function Register() {
         email: data.email,
         password: authHash,
       });
-      navigate(ROUTES.VERIFY_EMAIL);
+      navigate(ROUTES.VERIFY_EMAIL, { replace: true });
     } catch (err) {
       let message = "Registration failed. Please try again.";
       if (axios.isAxiosError(err)) {

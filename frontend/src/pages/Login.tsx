@@ -59,7 +59,7 @@ export default function Login() {
       // store the auth related data
       await setAuthStore(authData.access, userData, masterKey);
 
-      navigate(ROUTES.DRAWER);
+      navigate(ROUTES.DRAWER, { replace: true });
     } catch (err) {
       let message =
         "Sorry, we're experiencing technical issues.\nPlease try again later.";
