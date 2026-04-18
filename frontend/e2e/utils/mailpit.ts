@@ -23,7 +23,7 @@ export const MailpitHelper = {
       });
 
       if (response.ok()) {
-        const data = await response.json();
+        const data: { messages: MailpitMessage[] } = await response.json();
         if (data.messages?.length > 0) {
           const msgId = data.messages[0].ID;
           const detailRes = await requestContext.get(
