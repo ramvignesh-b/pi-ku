@@ -455,14 +455,14 @@ export default function Editor() {
             </span>
           </p>
           <form
-            onSubmit={(e) => {
+            onSubmit={async (e) => {
               e.preventDefault();
               const formData = new FormData(e.currentTarget);
               const unlockDateStr = formData.get("vault-date") as string;
               const newUnlockDate = new Date(unlockDateStr);
               setUnlockDate(newUnlockDate);
+              await handleSave("VAULT", newUnlockDate);
               setConfirmModal(null);
-              handleSave("VAULT", newUnlockDate);
             }}
             id="vault-form"
           >

@@ -31,7 +31,7 @@ export function LetterItem({
     <button
       type="button"
       onClick={handleNavigate}
-      className={`${isLocked ? "pointer-events-none" : ""} p-4 border-base-content/3 flex items-start gap-4 hover:bg-base-300 transition-all duration-100 group text-left cursor-pointer w-9/12 mx-auto hover:scale-120 hover:h-24 hover:-translate-y-3 hover:pb-4 hover:border-x-5 hover:border-t-5 border-t-2 hover:-mb-2`}
+      className={`${isLocked ? "pointer-events-none" : ""} p-4 border-base-content/3 flex items-start gap-4 hover:bg-base-300 transition-all delay-75 duration-100 group text-left cursor-pointer w-9/12 mx-auto hover:scale-120 hover:h-24 hover:-translate-y-3 hover:pb-4 hover:border-x-5 hover:border-t-5 border-t-2 hover:-mb-2`}
     >
       <div className="text-[0.85rem] italic text-base-content/40 flex-1 truncate group-hover:text-base-content/60 transition-none animate-[opacity_200ms_linear_forwards]">
         {preview}

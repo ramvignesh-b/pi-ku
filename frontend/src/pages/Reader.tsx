@@ -7,10 +7,12 @@ import {
   type CanvasTools,
   ComposeCanvas,
 } from "../components/ui/ComposeCanvas";
+import { EnvelopeReveal } from "../components/ui/EnvelopeReveal";
 import { LogModal } from "../components/ui/LogModal";
 import { endpoints } from "../config/endpoints";
 import { useKeyStore } from "../store/useKeyStore";
 import { CryptoUtils } from "../utils/crypto";
+import { formatRelativeDate } from "../utils/dateFormat";
 import {
   decryptCanvasImages,
   decryptCanvasImagesWithSharingKey,
@@ -18,6 +20,7 @@ import {
 
 interface LetterMetadata {
   recipient?: string;
+  updated_at?: string;
 }
 
 export default function Reader() {
@@ -28,6 +31,9 @@ export default function Reader() {
   const canvasRef = useRef<CanvasTools>(null);
 
   const [isDecrypting, setIsDecrypting] = useState(true);
+  const [revealState, setRevealState] = useState<"sealed" | "revealed">(
+    "sealed",
+  );
   const [error, setError] = useState<string | null>(null);
   const [warning, setWarning] = useState<{
     message: string;
@@ -51,8 +57,13 @@ export default function Reader() {
     const loadAndDecrypt = async () => {
       try {
         const response = await api.get(`${endpoints.LETTERS}${public_id}/`);
-        const { encrypted_content, encrypted_metadata, encrypted_dek, images } =
-          response.data;
+        const {
+          encrypted_content,
+          encrypted_metadata,
+          encrypted_dek,
+          images,
+          updated_at,
+        } = response.data;
 
         const cryptoUtils = new CryptoUtils();
         const isShared = !!sharingKey;
@@ -73,7 +84,10 @@ export default function Reader() {
               // biome-ignore lint/style/noNonNullAssertion: masterKey is guaranteed to be non-null here as isDecryptionKeyAvailable is true
               masterKey!,
             );
-        setMetadata(decryptedMetadata as LetterMetadata);
+        setMetadata({
+          ...(decryptedMetadata as LetterMetadata),
+          updated_at,
+        });
 
         // Decrypt Content
         const decryptedContent = isShared
@@ -128,10 +142,15 @@ export default function Reader() {
   }, [public_id, sharingKey, masterKey]);
 
   useEffect(() => {
-    if (!isDecrypting && decryptedCanvasData && canvasRef.current) {
+    if (
+      !isDecrypting &&
+      revealState === "revealed" &&
+      decryptedCanvasData &&
+      canvasRef.current
+    ) {
       canvasRef.current.loadData(decryptedCanvasData);
     }
-  }, [isDecrypting, decryptedCanvasData]);
+  }, [isDecrypting, revealState, decryptedCanvasData]);
 
   if (isDecrypting) {
     return (
@@ -163,8 +182,7 @@ export default function Reader() {
   }
 
   return (
-    <section className="min-h-screen w-full bg-base-100 px-4 py-8 md:py-16 font-serif relative overflow-hidden">
-      {/* Background Ambience */}
+    <section className="min-h-fit w-full bg-base-100 px-4 py-8 md:py-16 font-serif relative overflow-hidden">
       <div className="fixed inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.5)_100%)] pointer-events-none z-0" />
 
       <LogModal
@@ -175,49 +193,40 @@ export default function Reader() {
         status="WARN"
       />
 
-      <div className="max-w-4xl mx-auto space-y-8 relative z-10">
-        {/* Floating Header */}
-        <div className="glass-card px-6 py-4 flex items-center justify-between animate-in fade-in slide-in-from-top-6 duration-1000">
-          <div className="flex items-center gap-4">
-            <Logo />
-            <div className="h-4 w-px bg-base-content/10 hidden sm:block" />
+      {revealState === "revealed" && (
+        <div className="max-w-4xl m-8 mx-auto space-y-8 relative inset-0 z-100">
+          <div className="relative group perspective-1000">
+            <div className="absolute inset-0 bg-primary/5 blur-3xl rounded-full scale-75 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none" />
+
+            <div className="bg-paper shadow-warm rounded-sm overflow-hidden animate-[opacity_1s_ease-in-out_1]">
+              <div className="p-1 md:p-2 bg-base-content/5 opacity-10 pointer-events-none absolute inset-0 z-10" />
+              <ComposeCanvas ref={canvasRef} readOnly />
+            </div>
+
             {metadata?.recipient && (
-              <p className="text-[11px] uppercase tracking-[0.2em] text-base-content/40 hidden sm:block">
-                A sealed letter for{" "}
-                <span className="text-base-content/60 font-semibold">
-                  {metadata.recipient}
-                </span>
+              <p className="text-center sm:hidden text-[10px] uppercase tracking-[0.3em] text-base-content/20 mt-8">
+                For {metadata.recipient}
               </p>
             )}
           </div>
-          <button
-            type="button"
-            className="btn btn-ghost btn-circle btn-sm hover:rotate-90 transition-transform duration-500"
-            onClick={() => (window.location.href = "/")}
-            aria-label="Close"
-          ></button>
         </div>
-
-        {/* The Letter */}
-        <div className="relative group perspective-1000">
-          <div className="absolute inset-0 bg-primary/5 blur-3xl rounded-full scale-75 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none" />
-
-          <div className="bg-paper shadow-warm rounded-sm overflow-hidden animate-in fade-in zoom-in-95 slide-in-from-bottom-8 duration-1000 delay-300 fill-mode-backwards rotate-[-0.3deg] hover:rotate-0 transition-transform">
-            <div className="p-1 md:p-2 bg-base-content/5 opacity-10 pointer-events-none absolute inset-0 z-10" />
-            <ComposeCanvas ref={canvasRef} readOnly />
-          </div>
-
-          {metadata?.recipient && (
-            <p className="text-center sm:hidden text-[10px] uppercase tracking-[0.3em] text-base-content/20 mt-8">
-              For {metadata.recipient}
-            </p>
-          )}
-        </div>
+      )}
+      <div
+        className={`transition-all duration-1000 relative ${revealState === "revealed" ? "opacity-0 w-0 h-0" : "opacity-100"}`}
+      >
+        <EnvelopeReveal
+          recipient={metadata?.recipient}
+          date={
+            metadata?.updated_at
+              ? formatRelativeDate(new Date(metadata.updated_at))
+              : undefined
+          }
+          onRevealComplete={() => setRevealState("revealed")}
+        />
       </div>
 
-      {/* Atmospheric Footer */}
       <footer className="mt-16 text-center z-10 opacity-10 pointer-events-none">
-        <p className="text-[9px] uppercase tracking-[0.5em]">
+        <p className="text-xs font-sans uppercase tracking-[0.5em]">
           Read. Remember. Release.
         </p>
       </footer>

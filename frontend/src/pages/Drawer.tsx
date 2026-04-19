@@ -94,7 +94,7 @@ export default function Drawer() {
         </div>
       </header>
 
-      <div className="join join-vertical w-full max-w-120 bg-base-200 border border-base-content/10 shadow-2xl z-10 rounded-sm animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200 fill-mode-backwards min-h-64 flex flex-col">
+      <div className="join join-vertical w-full max-w-120 bg-base-200 border border-base-content/10 shadow-2xl z-10 rounded-sm duration-1000 delay-200 min-h-64 flex flex-col">
         {loading ? (
           <div className="flex-1 flex flex-col items-center justify-center p-12 gap-4">
             <span className="loading loading-ring loading-lg text-primary opacity-20"></span>

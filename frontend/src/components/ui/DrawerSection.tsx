@@ -20,12 +20,12 @@ export function DrawerSection({
   return (
     <div
       id={id}
-      className={`overflow-visible join-item group flex flex-col transition-colors ${isOpen ? "bg-base-300/30" : ""}`}
+      className={`join-item group flex flex-col transition-colors duration-3000 ease-in-out ${isOpen ? "bg-base-300/30" : ""}`}
     >
       <div
-        className={`transition-normal duration-1000 ease-in-out bg-neutral/10 ${
+        className={`transition-all duration-2000 ease-in-out bg-neutral/10 ${
           isOpen
-            ? "opacity-100 py-3 border-b border-base-content/5"
+            ? "max-h-125 opacity-100 py-3 border-b border-base-content/5 overflow-visible"
             : "max-h-0 opacity-0 pointer-events-none"
         }`}
       >
@@ -35,11 +35,11 @@ export function DrawerSection({
       <button
         type="button"
         onClick={onClick}
-        className={`w-full p-[24px_28px] cursor-pointer flex items-center gap-5 transition-none outline-none focus-visible:ring-2 focus-visible:ring-primary/50 border border-base-content/10 text-left bg-linear-to-r from-transparent to-base-100/40`}
+        className={`w-full p-[24px_28px] cursor-pointer flex items-center gap-5 transition-all duration-2000 ease-in-out outline-none focus-visible:ring-2 focus-visible:ring-primary/50 border border-base-content/10 text-left bg-linear-to-r from-transparent to-base-100/40`}
       >
         <div className="flex-1">
           <div
-            className={`font-sans text-xs tracking-[0.2em] uppercase transition-colors duration-300 ${
+            className={`font-sans text-xs tracking-[0.2em] uppercase transition-colors duration-800 ${
               isOpen
                 ? "text-base-content"
                 : "text-base-content/40 group-hover:text-base-content/80"
