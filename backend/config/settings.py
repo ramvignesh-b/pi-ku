@@ -21,7 +21,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Load dotenv files
 env = environ.Env()
-env_file = os.path.join(BASE_DIR.parent, ".env")
+env_file = os.environ.get("PIKU_ENV_FILE", os.path.join(BASE_DIR.parent, ".env"))
 if os.path.exists(env_file):
     environ.Env.read_env(env_file, overwrite=False)
 

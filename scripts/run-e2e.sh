@@ -35,6 +35,7 @@ cleanup() {
 trap cleanup EXIT
 
 echo "Starting Database and Mail server..."
+
 COMPOSE_BIN="$(command -v docker-compose || true)"
 
 if echo "$CONTAINER_BIN" | grep -q "podman"; then
@@ -51,6 +52,7 @@ until $CONTAINER_BIN exec "$DB_NAME" pg_isready -U "${DB_USER:-test}" >/dev/null
     sleep 2
 done
 
+export PIKU_ENV_FILE="$ENV_FILE"
 echo "Starting Backend..."
 mkdir -p ./tmp/logs
 (cd backend && uv run manage.py migrate)
