@@ -12,7 +12,7 @@ import { LogModal } from "../components/ui/LogModal";
 import { endpoints } from "../config/endpoints";
 import { useKeyStore } from "../store/useKeyStore";
 import { CryptoUtils } from "../utils/crypto";
-import { formatRelativeDate } from "../utils/dateFormat";
+import { formatDate } from "../utils/dateFormat";
 import {
   decryptCanvasImages,
   decryptCanvasImagesWithSharingKey,
@@ -215,10 +215,10 @@ export default function Reader() {
         className={`transition-all duration-1000 relative ${revealState === "revealed" ? "opacity-0 w-0 h-0" : "opacity-100"}`}
       >
         <EnvelopeReveal
-          recipient={metadata?.recipient}
+          recipient={metadata?.recipient || "Someone dear"}
           date={
             metadata?.updated_at
-              ? formatRelativeDate(new Date(metadata.updated_at))
+              ? formatDate(new Date(metadata.updated_at))
               : undefined
           }
           onRevealComplete={() => setRevealState("revealed")}

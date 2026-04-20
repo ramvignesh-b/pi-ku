@@ -7,6 +7,10 @@ const dateTimeFormatter = new Intl.DateTimeFormat("en-US", {
   timeStyle: "short",
 });
 
+const dateFormatter = new Intl.DateTimeFormat("en-US", {
+  dateStyle: "long",
+});
+
 const rtf = new Intl.RelativeTimeFormat("en-US", {
   numeric: "auto",
 });
@@ -49,4 +53,11 @@ export function formateRelativeDateWithoutTime(input: Date | string | number) {
   if (diffDays > -7) return `${rtf.format(diffDays, "day")}`;
 
   return date.toDateString();
+}
+
+export function formatDate(input: Date | string | number) {
+  if (!input) return "";
+  const date = new Date(input);
+
+  return dateFormatter.format(date);
 }

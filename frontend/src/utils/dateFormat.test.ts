@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { formatDate } from "../../../../../../../../../home/atom/Documents/code/pi_ku/frontend/src/utils/dateFormat";
 import { formatRelativeDate } from "./dateFormat";
 
 describe("formatRelativeDate", () => {
@@ -33,5 +34,13 @@ describe("formatRelativeDate", () => {
     const result = formatRelativeDate("2026-04-01T13:15:00Z");
 
     expect(result).toBe("Apr 1, 2026, 6:45 PM");
+  });
+});
+
+describe("formatDate", () => {
+  it("should format a new date as mmm dd, yyyy", () => {
+    const result = formatDate("2026-04-01T10:15:00Z");
+
+    expect(result).toBe("April 1, 2026");
   });
 });
