@@ -34,7 +34,10 @@ export default function Reader() {
   const [revealState, setRevealState] = useState<"sealed" | "revealed">(
     "sealed",
   );
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{
+    message: string;
+    log: string;
+  } | null>(null);
   const [warning, setWarning] = useState<{
     message: string;
     log: string;
@@ -48,7 +51,10 @@ export default function Reader() {
   useEffect(() => {
     if (!(sharingKey || masterKey)) {
       setError(
-        "No sharing key provided. Please check the link or log in if you are the author.",
+          {
+            message: "No sharing key provided. Please check the link or log in if you are the author.",
+            log: ""
+          },
       );
       setIsDecrypting(false);
       return;
@@ -131,8 +137,7 @@ export default function Reader() {
         }
         setDecryptedCanvasData(canvasData);
       } catch (err) {
-        const message = err instanceof Error ? err.message : "Unknown error";
-        setError(`Failed to load letter: ${message}`);
+        setError({ message: `Failed to load letter :(`, log: err instanceof Error ? err.message : "Unknown error"});
       } finally {
         setIsDecrypting(false);
       }
@@ -174,8 +179,8 @@ export default function Reader() {
       <LogModal
         isOpen={!!error}
         onClose={() => (window.location.href = "/")}
-        message={error}
-        log={error}
+        message={error.message}
+        log={error.log}
         status="ERROR"
       />
     );
@@ -184,7 +189,19 @@ export default function Reader() {
   return (
     <section className="min-h-fit w-full bg-base-100 px-4 py-8 md:py-16 font-serif relative overflow-hidden">
       <div className="fixed inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.5)_100%)] pointer-events-none z-0" />
-
+      <div
+          className={`transition-all duration-1000 relative ${revealState === "revealed" ? "opacity-0 w-0 h-0" : "opacity-100"}`}
+      >
+        <EnvelopeReveal
+            recipient={metadata?.recipient || "Someone dear"}
+            date={
+              metadata?.updated_at
+                  ? formatDate(new Date(metadata.updated_at))
+                  : undefined
+            }
+            onRevealComplete={() => setRevealState("revealed")}
+        />
+      </div>
       <LogModal
         isOpen={!!warning}
         onClose={() => setWarning(null)}
@@ -211,19 +228,7 @@ export default function Reader() {
           </div>
         </div>
       )}
-      <div
-        className={`transition-all duration-1000 relative ${revealState === "revealed" ? "opacity-0 w-0 h-0" : "opacity-100"}`}
-      >
-        <EnvelopeReveal
-          recipient={metadata?.recipient || "Someone dear"}
-          date={
-            metadata?.updated_at
-              ? formatDate(new Date(metadata.updated_at))
-              : undefined
-          }
-          onRevealComplete={() => setRevealState("revealed")}
-        />
-      </div>
+
 
       <footer className="mt-16 text-center z-10 opacity-10 pointer-events-none">
         <p className="text-xs font-sans uppercase tracking-[0.5em]">
