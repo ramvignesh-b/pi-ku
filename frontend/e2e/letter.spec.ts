@@ -182,19 +182,21 @@ test.describe("Letter Drafting (Real Backend)", () => {
     logger.info(">> [Drawer] Verifying Reader page...");
     // Give it a bit more time for decryption
     await expect(page).toHaveURL(/\/read\/[a-f0-9-]{36}$/, { timeout: 15000 }); // UUID without hash
-
     // Reveal and check decrypted content in Reader
     await expect(page.getByText(/breaking the seal/i)).toBeHidden({
       timeout: 10000,
     });
 
-    // Reveal the letter: click seal, flip to check recipient, then click letter
-    await page.getByAltText("Seal").click();
-
-    // Check recipient on the back of the envelope
-    await page.locator("#env-bottom").click();
+    // Check recipient on the front of the envelope
     await expect(page.getByText(new RegExp(recipientName, "i"))).toBeVisible();
-    await page.locator("#env-bottom").click(); // Flip back
+
+    // Flip the envelope to the back (click the recipient name or the front div to flip)
+    await page.getByText(new RegExp(recipientName, "i")).click();
+
+    // Reveal the letter: click seal then click letter
+    // Wait for flip animation to progress
+    await page.getByAltText("Seal").waitFor({ state: "visible" });
+    await page.getByAltText("Seal").click({ force: true });
 
     await page.locator("#letter").click();
 
