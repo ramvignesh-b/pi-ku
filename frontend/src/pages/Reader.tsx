@@ -50,12 +50,11 @@ export default function Reader() {
 
   useEffect(() => {
     if (!(sharingKey || masterKey)) {
-      setError(
-          {
-            message: "No sharing key provided. Please check the link or log in if you are the author.",
-            log: ""
-          },
-      );
+      setError({
+        message:
+          "No sharing key provided. Please check the link or log in if you are the author.",
+        log: "",
+      });
       setIsDecrypting(false);
       return;
     }
@@ -137,7 +136,10 @@ export default function Reader() {
         }
         setDecryptedCanvasData(canvasData);
       } catch (err) {
-        setError({ message: `Failed to load letter :(`, log: err instanceof Error ? err.message : "Unknown error"});
+        setError({
+          message: `Failed to load letter :(`,
+          log: err instanceof Error ? err.message : "Unknown error",
+        });
       } finally {
         setIsDecrypting(false);
       }
@@ -190,16 +192,16 @@ export default function Reader() {
     <section className="min-h-fit w-full bg-base-100 px-4 py-8 md:py-16 font-serif relative overflow-hidden">
       <div className="fixed inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.5)_100%)] pointer-events-none z-0" />
       <div
-          className={`transition-all duration-1000 relative ${revealState === "revealed" ? "opacity-0 w-0 h-0" : "opacity-100"}`}
+        className={`transition-all duration-1000 relative ${revealState === "revealed" ? "opacity-0 w-0 h-0" : "opacity-100"}`}
       >
         <EnvelopeReveal
-            recipient={metadata?.recipient || "Someone dear"}
-            date={
-              metadata?.updated_at
-                  ? formatDate(new Date(metadata.updated_at))
-                  : undefined
-            }
-            onRevealComplete={() => setRevealState("revealed")}
+          recipient={metadata?.recipient || "Someone dear"}
+          date={
+            metadata?.updated_at
+              ? formatDate(new Date(metadata.updated_at))
+              : undefined
+          }
+          onRevealComplete={() => setRevealState("revealed")}
         />
       </div>
       <LogModal
@@ -228,7 +230,6 @@ export default function Reader() {
           </div>
         </div>
       )}
-
 
       <footer className="mt-16 text-center z-10 opacity-10 pointer-events-none">
         <p className="text-xs font-sans uppercase tracking-[0.5em]">

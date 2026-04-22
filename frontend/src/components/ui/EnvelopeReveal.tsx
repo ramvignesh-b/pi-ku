@@ -101,7 +101,6 @@ export function EnvelopeReveal({
           </div>
         </div>
       </div>
-
     </div>
   );
 }

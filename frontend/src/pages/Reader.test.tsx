@@ -78,7 +78,7 @@ describe("Reader Page", () => {
     );
     await waitFor(() => {
       expect(screen.getByText(/Guest/i)).toBeInTheDocument();
-    })
+    });
   });
 
   it("should display an error message if the server request fails", async () => {
