@@ -28,7 +28,9 @@ if os.path.exists(env_file):
 SSL_ENABLED = env("SSL_ENABLED") == "true"
 
 FRONTEND_URLS = []
-if env("FRONTEND_PORT"):
+if env("FRONTEND_URL", None):
+    FRONTEND_URLS.append(env("FRONTEND_URL"))
+if env("FRONTEND_PORT", None):
     FRONTEND_URLS.append(f"http://{env('FRONTEND_DOMAIN')}:{env('FRONTEND_PORT')}")
     FRONTEND_URLS.append(f"https://{env('FRONTEND_DOMAIN')}:{env('FRONTEND_PORT')}")
 else:

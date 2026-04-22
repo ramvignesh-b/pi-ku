@@ -8,7 +8,7 @@ from django.utils.http import urlsafe_base64_encode
 def send_activation_email(user):
     token = default_token_generator.make_token(user)
     uid = urlsafe_base64_encode(force_bytes(user.public_id))
-    activation_url = f"{settings.FRONTEND_URL}/activate/{uid}/{token}"
+    activation_url = f"{settings.FRONTEND_URLS[0]}/activate/{uid}/{token}"
     subject = "Activate Your Piku Account"
     message = f"""Hi {user.full_name},
 
