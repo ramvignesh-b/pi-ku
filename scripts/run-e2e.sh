@@ -59,9 +59,4 @@ mkdir -p ./tmp/logs
 (cd backend && uv run manage.py serve) > ./tmp/logs/backend.log 2>&1 &
 BACKEND_PID=$!
 
-if [ "$CI" = "true" ]; then
-    cd frontend && bun run test:e2e "$@"
-else
-    # Because playwright decided not to support Fedora :)
-    cd frontend && distrobox-enter --name ubuntu-24.04 -- bun run test:e2e "$@"
-fi
+cd frontend && bun run test:e2e "$@"
