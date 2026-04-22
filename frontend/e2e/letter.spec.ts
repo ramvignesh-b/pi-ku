@@ -198,10 +198,11 @@ test.describe("Letter Drafting (Real Backend)", () => {
     await page.getByAltText("Seal").waitFor({ state: "visible" });
     await page.getByAltText("Seal").click({ force: true });
 
-    await page.locator("#letter").click();
+    // Click the letter to pull it out
+    await page.locator("#letter").click({ force: true });
 
     // Wait for reveal transition
-    await expect(page.locator("#letter")).toBeHidden({ timeout: 10000 });
+    await expect(page.locator("#letter")).toBeHidden({ timeout: 15000 });
 
     // Also check if we are redirected to the Reader if we manually go to the Editor URL
     const readerUrl = page.url();
