@@ -175,7 +175,7 @@ export default function Drawer() {
                   id={letter.public_id}
                   preview={letter.metadata?.recipient || "Future Self"}
                   timestamp={formatRelativeDate(letter.updated_at)}
-                  unlock_at={formateRelativeDateWithoutTime(letter.unlock_at)}
+                  unlock_at={formateRelativeDateWithoutTime(letter.unlock_at || "")}
                   isLocked={letter.unlock_at > new Date().toISOString()}
                 />
               ))}

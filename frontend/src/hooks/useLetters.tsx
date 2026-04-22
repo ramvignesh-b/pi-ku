@@ -10,7 +10,7 @@ export interface Letter {
   status: "DRAFT" | "SEALED" | "BURNED";
   updated_at: string;
   sealed_at?: string;
-  unlock_at?: string;
+  unlock_at: string;
   encrypted_metadata: string;
   encrypted_content: string;
   encrypted_dek: string;

@@ -69,7 +69,7 @@ describe("Reader Page", () => {
       }),
     );
 
-    const {container} = render(
+    render(
       <MemoryRouter initialEntries={[`/read/${mockPublicId}#${sharingKey}`]}>
         <Routes>
           <Route path="/read/:public_id" element={<Reader />} />

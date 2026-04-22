@@ -1,4 +1,4 @@
-import { LockIcon, LockKeyOpenIcon, LockOpenIcon } from "@phosphor-icons/react";
+import { LockIcon, LockKeyOpenIcon } from "@phosphor-icons/react";
 import { useNavigate } from "react-router-dom";
 import { PATHS } from "../../config/routes";
 
