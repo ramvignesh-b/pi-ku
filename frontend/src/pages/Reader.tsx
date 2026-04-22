@@ -192,7 +192,11 @@ export default function Reader() {
     <section className="min-h-fit w-full bg-base-100 px-4 py-8 md:py-16 font-serif relative overflow-hidden">
       <div className="fixed inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.5)_100%)] pointer-events-none z-0" />
       <div
-        className={`transition-all duration-1000 relative ${revealState === "revealed" ? "opacity-0 w-0 h-0" : "opacity-100"}`}
+        className={`transition-all duration-1000 relative ${
+          revealState === "revealed"
+            ? "opacity-0 w-0 h-0 overflow-hidden invisible"
+            : "opacity-100"
+        }`}
       >
         <EnvelopeReveal
           recipient={metadata?.recipient || "Someone dear"}
