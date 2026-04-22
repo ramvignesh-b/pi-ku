@@ -5,9 +5,22 @@ import react from "@vitejs/plugin-react";
 import { defineConfig, loadEnv } from "vite";
 import { getBaseUrl } from "./utils/url-builder";
 
-// https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, "../", "");
+
+  // PROD Config
+  if (mode === "production") {
+    return {
+      envDir: "../",
+      plugins: [react(), tailwindcss()],
+      server: {
+        port: Number(env.FRONTEND_PORT),
+        host: env.FRONTEND_DOMAIN,
+      },
+    };
+  }
+
+  // DEV Config
   const isSslEnabled = env.SSL_ENABLED === "true";
   let sslCerts: { key: Buffer; cert: Buffer } | undefined;
 
@@ -20,17 +33,13 @@ export default defineConfig(({ mode }) => {
     };
   }
 
-  const baseApiUrl = getBaseUrl(
-    isSslEnabled,
-    env.BACKEND_DOMAIN,
-    env.BACKEND_PORT,
-  );
-  console.log(baseApiUrl);
   return {
     envDir: "../",
     plugins: [react(), tailwindcss()],
     define: {
-      "import.meta.env.VITE_API_URL": JSON.stringify(baseApiUrl),
+      "import.meta.env.VITE_API_URL": JSON.stringify(
+        getBaseUrl(isSslEnabled, env.BACKEND_DOMAIN, env.BACKEND_PORT),
+      ),
     },
     server: {
       port: Number(env.FRONTEND_PORT),

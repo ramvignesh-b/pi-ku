@@ -5,22 +5,22 @@ pre-commit:
     ruff:
       root: "backend/"
       glob: "*.py"
-      run: uv run ruff check --fix {staged_files} && uv run ruff format {staged_files}
+      run: export PATH="$HOME/.local/bin:$PATH" && uv run ruff check --fix {staged_files} && uv run ruff format {staged_files}
       stage_fixed: true
 
     django-check:
       root: "backend/"
-      run: uv run manage.py check
+      run: export PATH="$HOME/.local/bin:$PATH" && uv run manage.py check
 
     # Frontend: Biome (Linter + Formatter)
     biome:
       root: "frontend/"
       glob: "**/*.{js,ts,jsx,tsx}"
-      run: bunx @biomejs/biome check --write --no-errors-on-unmatched {staged_files}
+      run: export PATH="$HOME/.bun/bin:$PATH" && bunx @biomejs/biome check --write --no-errors-on-unmatched {staged_files}
       stage_fixed: true
 
     # Frontend: TypeScript
     tsc:
       root: "frontend/"
       glob: "**/*.ts, **/*.tsx"
-      run: bunx tsc --noEmit --incremental --tsBuildInfoFile --ignoreConfig .tsbuildinfo {staged_files}
+      run: export PATH="$HOME/.bun/bin:$PATH" && bunx tsc --noEmit --incremental --tsBuildInfoFile --ignoreConfig .tsbuildinfo {staged_files}
