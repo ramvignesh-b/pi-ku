@@ -1,6 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { formatDate } from "../../../../../../../../../home/atom/Documents/code/pi_ku/frontend/src/utils/dateFormat";
-import { formatRelativeDate } from "./dateFormat";
+import { formatDate, formatRelativeDate } from "./dateFormat";
 
 describe("formatRelativeDate", () => {
   beforeEach(() => {
