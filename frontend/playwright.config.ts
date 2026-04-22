@@ -14,7 +14,6 @@ const baseUrl = getBaseUrl(
   env.FRONTEND_PORT,
 );
 
-console.log(baseUrl);
 export default defineConfig({
   timeout: 60000,
   expect: {
@@ -61,7 +60,7 @@ export default defineConfig({
 
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: "bun run dev -- --mode e2e",
+    command: "npm run dev -- --mode e2e",
     url: getBaseUrl(
       process.env.SSL_ENABLED === "true",
       process.env.FRONTEND_DOMAIN,

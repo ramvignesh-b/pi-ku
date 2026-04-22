@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+# Usage: ./run-e2e.sh [--docker] [--ui]
+
 # Use podman if available. Not everyone has it
 CONTAINER_BIN=$(command -v podman || command -v docker)
 if [ -z "$CONTAINER_BIN" ]; then
@@ -26,7 +28,7 @@ else
     exit 1
 fi
 
-# This cleans up containers. Very useful for local e2e to free system resources immediately.
+# This cleans up django backend process and containers. Very useful for local e2e to free system resources immediately.
 cleanup() {
     echo "Cleaning up..."
     $CONTAINER_BIN rm -f "$DB_NAME" 2>/dev/null || true
@@ -59,4 +61,22 @@ mkdir -p ./tmp/logs
 (cd backend && uv run manage.py serve) > ./tmp/logs/backend.log 2>&1 &
 BACKEND_PID=$!
 
-cd frontend && bun run test:e2e "$@"
+TEST_COMMAND="test:e2e"
+MODE="local"
+
+for arg in "$@"; do
+    echo "$arg"
+    if [ "$arg" = "--ui" ]; then
+        TEST_COMMAND="test:e2e:ui"
+    fi
+    if [ "$arg" = "--docker" ]; then
+        MODE="docker"
+    fi
+done
+
+# optionally using docker to run playwright since someone at microsoft thought it'd be nice to not support fedora :)
+if [ $MODE = "docker" ]; then
+    $CONTAINER_BIN run --rm -it --network host -v $(pwd):/e2e:Z -w /e2e/frontend -p 43008:43008 mcr.microsoft.com/playwright:v1.59.1-noble npm run $TEST_COMMAND
+else
+    cd frontend && bun run $TEST_COMMAND
+fi

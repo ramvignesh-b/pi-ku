@@ -186,23 +186,24 @@ test.describe("Letter Drafting (Real Backend)", () => {
     await expect(page.getByText(/breaking the seal/i)).toBeHidden({
       timeout: 10000,
     });
-
     // Check recipient on the front of the envelope
     await expect(page.getByText(new RegExp(recipientName, "i"))).toBeVisible();
 
-    // Flip the envelope to the back (click the recipient name or the front div to flip)
+    // Flip the envelope to the back
     await page.getByText(new RegExp(recipientName, "i")).click();
+    // Wait for flip transition (2s)
+    await page.waitForTimeout(2500);
 
     // Reveal the letter: click seal then click letter
-    // Wait for flip animation to progress
-    await page.getByAltText("Seal").waitFor({ state: "visible" });
-    await page.getByAltText("Seal").click({ force: true });
+    await page.getByAltText("Seal").click();
+    // Wait for flap transition
+    await page.waitForTimeout(1500);
 
     // Click the letter to pull it out
-    await page.locator("#letter").click({ force: true });
+    await page.locator("#letter").click();
 
     // Wait for reveal transition
-    await expect(page.locator("#letter")).toBeHidden({ timeout: 15000 });
+    await expect(page.locator("#letter")).toBeHidden({ timeout: 20000 });
 
     // Also check if we are redirected to the Reader if we manually go to the Editor URL
     const readerUrl = page.url();

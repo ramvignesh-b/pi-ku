@@ -20,6 +20,7 @@ export function EnvelopeReveal({
   const flapCheckbox = useRef<HTMLInputElement>(null);
 
   const handleClick = () => {
+    if (revealLetter) return;
     setRevealLetter(true);
     setTimeout(() => {
       onRevealComplete();
@@ -45,7 +46,7 @@ export function EnvelopeReveal({
             </div>
             <img
               className={
-                "translate-y-24 delay-2000 absolute z-6 peer-has-checked:opacity-0 peer-has-checked:delay-0 transition-opacity duration-1500 cursor-pointer"
+                "translate-y-24 delay-2000 absolute z-6 peer-has-checked:pointer-events-none peer-has-checked:opacity-0 peer-has-checked:delay-0 transition-opacity duration-1500 cursor-pointer"
               }
               src={waxSeal}
               alt="Seal"
@@ -53,22 +54,21 @@ export function EnvelopeReveal({
             />
             <button
               id="letter"
-              className={`absolute mx-auto transition-all peer-has-checked:delay-800 peer-has-checked:duration-1000 duration-1000 mt-2 h-63 w-105 bg-paper peer-has-checked:-mt-12 hover:-mt-24 cursor-pointer ${revealLetter ? "duration-1000 peer-has-checked:duration-2000 w-screen h-screen z-101 -translate-y-90" : "peer-has-checked:z-1"}`}
+              className={`absolute mx-auto transition-all peer-has-checked:delay-800 peer-has-checked:duration-1000 duration-1000 mt-2 h-63 w-105 bg-paper peer-has-checked:-mt-12 hover:-mt-24 cursor-pointer ${revealLetter ? "duration-1000 peer-has-checked:duration-2000 w-screen max-w-4xl h-screen  z-101 -translate-y-90" : "peer-has-checked:z-1"}`}
               onClick={handleClick}
             ></button>
 
             <div
               id="env-right"
-              className="absolute h-70 w-105 bg-base-300 mask mask-triangle-3 -mr-48 z-3"
+              className="absolute h-70 w-105 bg-base-300 mask mask-triangle-3 -mr-48 z-3 pointer-events-none"
             ></div>
             <div
               id="env-left"
-              className="absolute h-70 w-105 bg-base-300 mask mask-triangle-4 -ml-48 z-3"
+              className="absolute h-70 w-105 bg-base-300 mask mask-triangle-4 -ml-48 z-3 pointer-events-none"
             ></div>
             <button
               id="env-bottom"
-              className="absolute h-70 w-45 bg-base-200 mask mask-triangle-2 scale-y-[-1] mt-15 scale-x-240 z-3"
-              onClick={() => setIsFlipped((prev) => !prev)}
+              className="absolute h-70 w-45 bg-base-200 mask mask-triangle-2 scale-y-[-1] mt-15 scale-x-240 z-3 pointer-events-none"
             ></button>
           </div>
 
