@@ -26,9 +26,14 @@ if os.path.exists(env_file):
     environ.Env.read_env(env_file, overwrite=False)
 
 SSL_ENABLED = env("SSL_ENABLED") == "true"
-FRONTEND_URL = f"https://{env('FRONTEND_DOMAIN')}" if SSL_ENABLED else f"http://{env('FRONTEND_DOMAIN')}"
+
+FRONTEND_URLS = []
 if env("FRONTEND_PORT"):
-    FRONTEND_URL += f":{env('FRONTEND_PORT')}"
+    FRONTEND_URLS.append(f"http://{env('FRONTEND_DOMAIN')}:{env('FRONTEND_PORT')}")
+    FRONTEND_URLS.append(f"https://{env('FRONTEND_DOMAIN')}:{env('FRONTEND_PORT')}")
+else:
+    FRONTEND_URLS.append(f"http://{env('FRONTEND_DOMAIN')}")
+    FRONTEND_URLS.append(f"https://{env('FRONTEND_DOMAIN')}")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
@@ -86,7 +91,7 @@ DATABASES = {
     }
 }
 
-CORS_ALLOWED_ORIGINS = [FRONTEND_URL]
+CORS_ALLOWED_ORIGINS = FRONTEND_URLS
 CORS_ALLOW_CREDENTIALS = True
 
 AUTH_USER_MODEL = "users.User"
@@ -110,8 +115,8 @@ NOTE: COOKIE_SAMESITE:  Lax is used to allow cross-site redirection, like links 
 """
 AUTH_COOKIE = {
     "NAME": "refresh_token",
-    "DOMAIN": None,
-    "SECURE": SSL_ENABLED,
+    "DOMAIN": None if DEBUG else env("FRONTEND_DOMAIN"),
+    "SECURE": SSL_ENABLED if DEBUG else True,
     "HTTPONLY": True,
     "SAMESITE": "Lax",
 }
