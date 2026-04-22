@@ -45,8 +45,8 @@ test.describe("Letter Drafting (Real Backend)", () => {
     await page.keyboard.type("This is a secret draft");
     await page.keyboard.press("Enter");
     await page.keyboard.type("It should persist.");
-    logger.info(">> [Draft] Clicking Store...");
-    await page.getByRole("button", { name: /store/i }).click();
+    logger.info(">> [Draft] Clicking Draft...");
+    await page.getByRole("button", { name: /draft/i }).click();
 
     // Verify Success Modal/Alert
     await expect(page.getByText(/your letter is saved/i)).toBeVisible();
@@ -96,7 +96,14 @@ test.describe("Letter Drafting (Real Backend)", () => {
 
     // Click Seal
     logger.info(">> [Seal] Clicking Seal...");
-    await page.getByRole("button", { name: /seal/i }).click();
+    await page
+      .getByRole("button", { name: /seal/i })
+      .filter({ visible: true })
+      .click(); // Open menu
+    await page
+      .getByRole("button", { name: /seal/i })
+      .filter({ visible: true })
+      .click(); // Click confirm Seal
 
     // Verify "Sealed & Ready" modal
     logger.info(">> [Seal] Verifying sharing modal...");
@@ -142,7 +149,14 @@ test.describe("Letter Drafting (Real Backend)", () => {
     await canvasInput.fill(letterContent);
 
     // Click Seal
-    await page.getByRole("button", { name: /seal/i }).click();
+    await page
+      .getByRole("button", { name: /seal/i })
+      .filter({ visible: true })
+      .click(); // Open menu
+    await page
+      .getByRole("button", { name: /seal/i })
+      .filter({ visible: true })
+      .click(); // Click confirm Seal
     await expect(page.getByText(/sealed & ready/i)).toBeVisible();
 
     // Close modal
@@ -169,13 +183,23 @@ test.describe("Letter Drafting (Real Backend)", () => {
     // Give it a bit more time for decryption
     await expect(page).toHaveURL(/\/read\/[a-f0-9-]{36}$/, { timeout: 15000 }); // UUID without hash
 
-    // Check decrypted content in Reader
-    await expect(page.getByText(/decrypting/i)).toBeHidden({
+    // Reveal and check decrypted content in Reader
+    await expect(page.getByText(/breaking the seal/i)).toBeHidden({
       timeout: 10000,
     });
-    await expect(
-      page.getByText(new RegExp(`A sealed letter for ${recipientName}`, "i")),
-    ).toBeVisible();
+
+    // Reveal the letter: click seal, flip to check recipient, then click letter
+    await page.getByAltText("Seal").click();
+
+    // Check recipient on the back of the envelope
+    await page.locator("#env-bottom").click();
+    await expect(page.getByText(new RegExp(recipientName, "i"))).toBeVisible();
+    await page.locator("#env-bottom").click(); // Flip back
+
+    await page.locator("#letter").click();
+
+    // Wait for reveal transition
+    await expect(page.locator("#letter")).toBeHidden({ timeout: 10000 });
 
     // Also check if we are redirected to the Reader if we manually go to the Editor URL
     const readerUrl = page.url();
