@@ -3,10 +3,10 @@ set -e
 
 # Usage: ./run-e2e.sh [--docker] [--ui]
 
-NODE_BIN= $(command -v bun || command -v npm)
+NODE_BIN=$(command -v bun || command -v npm)
 # Use podman if available. Not everyone has it
 CONTAINER_BIN=$(command -v podman || command -v docker)
-COMPOSE_BIN= $(command -v docker-compose)
+COMPOSE_BIN=$(command -v docker-compose)
 if [ -z "$CONTAINER_BIN" ]; then
     echo "Sorry, you need either podman or docker installed to run this script."
     exit 1
