@@ -6,7 +6,7 @@ set -e
 NODE_BIN= $(command -v bun || command -v npm)
 # Use podman if available. Not everyone has it
 CONTAINER_BIN=$(command -v podman || command -v docker)
-COMPOSE_BIN="$(command -v docker-compose || true)"
+COMPOSE_BIN= $(command -v docker-compose)
 if [ -z "$CONTAINER_BIN" ]; then
     echo "Sorry, you need either podman or docker installed to run this script."
     exit 1
@@ -30,7 +30,7 @@ else
     exit 1
 fi
 
-# This cleans up django backend process and containers. Very useful for local e2e to free system resources immediately.
+# This cleans up django backend process and containers.
 cleanup() {
     echo "Cleaning up..."
     $CONTAINER_BIN compose -p "piku_e2e" -f "./docker-compose.e2e.yml" down --remove-orphans -v
@@ -43,7 +43,7 @@ echo "Starting Database and Mail server..."
 if echo "$CONTAINER_BIN" | grep -q "podman"; then
     podman compose -p "piku_e2e" -f "./docker-compose.e2e.yml" up -d
 elif [ -n "$COMPOSE_BIN" ]; then
-    "$COMPOSE_BIN" -p "piku_e2e" -f "./docker-compose.e2e.yml" up -d
+    $COMPOSE_BIN -p "piku_e2e" -f "./docker-compose.e2e.yml" up -d
 else
     docker compose -p "piku_e2e" -f "./docker-compose.e2e.yml" up -d
 fi
@@ -57,8 +57,14 @@ done
 export PIKU_ENV_FILE="$ENV_FILE"
 echo "Starting Backend..."
 mkdir -p ./tmp/logs
-(cd backend && uv run manage.py migrate)
-(cd backend && uv run manage.py serve) > ./tmp/logs/backend.log 2>&1 &
+(
+    cd backend
+    uv run manage.py migrate
+)
+(
+    cd backend
+    uv run manage.py serve
+) > ./tmp/logs/backend.log 2>&1 &
 BACKEND_PID=$!
 
 TEST_COMMAND="test:e2e"
@@ -78,5 +84,8 @@ done
 if [ $MODE = "docker" ]; then
     $CONTAINER_BIN run --rm -it --network host -v $(pwd):/e2e:Z -w /e2e/frontend -p 43008:43008 mcr.microsoft.com/playwright:v1.59.1-noble npm run $TEST_COMMAND
 else
-    (cd frontend &&  $NODE_BIN run $TEST_COMMAND)
+    (
+        cd frontend
+        $NODE_BIN run $TEST_COMMAND
+    )
 fi
