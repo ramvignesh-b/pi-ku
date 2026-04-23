@@ -47,6 +47,12 @@ class LetterSerializer(serializers.ModelSerializer):
                     fields["encrypted_dek"] = None
             except (ValueError, TypeError):
                 pass
+
+        if fields["status"] == Letter.Status.BURNED:
+            fields["encrypted_content"] = None
+            fields["images"] = None
+            fields["encrypted_dek"] = None
+
         return fields
 
     def validate(self, data):

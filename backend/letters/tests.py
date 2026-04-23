@@ -248,6 +248,38 @@ class LetterAPITest(APITestCase):
             self.assertEqual(response.data["encrypted_metadata"], "enc_meta==")
             self.assertEqual(response.data["encrypted_dek"], "enc_dek==")
 
+    def test_burn_letter(self):
+        """
+        Test that a sealed letter can only be burned but not updated.
+        """
+        letter = Letter.objects.create(
+            user=self.user,
+            type="KEPT",
+            status="SEALED",
+            public_id="4281edcc-5459-4ff2-bb5e-669fb44e0757",
+            encrypted_content="enc_content==",
+            encrypted_metadata="enc_meta==",
+            encrypted_dek="enc_dek==",
+        )
+
+        response_update_content = self.client.patch(
+            self.url + letter.public_id + "/",
+            {
+                "encrypted_content": "enc_content_new==",
+                "encrypted_metadata": "enc_meta_new==",
+                "encrypted_dek": "enc_dek_new==",
+            },
+        )
+        response_burn = self.client.patch(self.url + letter.public_id + "/", {"status": "BURNED"})
+
+        self.assertEqual(response_update_content.status_code, 400)
+        self.assertEqual(response_update_content.data["error"], "Sealed letters can only be burned.")
+        self.assertEqual(Letter.objects.get().encrypted_content, "enc_content==")
+
+        self.assertEqual(response_burn.status_code, 200)
+        self.assertEqual(Letter.objects.count(), 1)
+        self.assertEqual(Letter.objects.get().status, "BURNED")
+
 
 class LetterImageModelTest(TestCase):
     def setUp(self):
