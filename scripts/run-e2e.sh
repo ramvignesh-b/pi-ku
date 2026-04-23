@@ -3,6 +3,7 @@ set -e
 
 # Usage: ./run-e2e.sh [--docker] [--ui]
 
+NODE_BIN= $(command -v bun || command -v npm)
 # Use podman if available. Not everyone has it
 CONTAINER_BIN=$(command -v podman || command -v docker)
 COMPOSE_BIN="$(command -v docker-compose || true)"
@@ -77,5 +78,5 @@ done
 if [ $MODE = "docker" ]; then
     $CONTAINER_BIN run --rm -it --network host -v $(pwd):/e2e:Z -w /e2e/frontend -p 43008:43008 mcr.microsoft.com/playwright:v1.59.1-noble npm run $TEST_COMMAND
 else
-    (cd frontend && bun run $TEST_COMMAND)
+    (cd frontend &&  $NODE_BIN run $TEST_COMMAND)
 fi
