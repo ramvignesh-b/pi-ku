@@ -31,6 +31,7 @@ done
 
 (
   cd backend || exit 1
+  uv run manage.py migrate
   uv run manage.py serve
 ) &
 BACKEND_PID=$!
