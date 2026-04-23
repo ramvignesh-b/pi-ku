@@ -59,7 +59,7 @@ case $OS in
         ;;
 esac
 case $ARCH in
-    arm64)
+    arm64|aarch64)
         MKCERT_ARCH="arm64"
         ;;
     *)
