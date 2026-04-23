@@ -6,7 +6,7 @@ set -e
 NODE_BIN=$(command -v bun || command -v npm || true)
 # Use podman if available. Not everyone has it
 CONTAINER_BIN=$(command -v podman || command -v docker || true)
-COMPOSE_BIN=$(command -v docker-compose)
+COMPOSE_BIN=$(command -v docker-compose || true)
 if [ -z "$CONTAINER_BIN" ]; then
     echo "Sorry, you need either podman or docker installed to run this script."
     exit 1
