@@ -26,16 +26,15 @@ if os.path.exists(env_file):
     environ.Env.read_env(env_file, overwrite=False)
 
 SSL_ENABLED = env("SSL_ENABLED") == "true"
+URI_SCHEME = "https://" if SSL_ENABLED else "http://"
 
 FRONTEND_URLS = []
 if env("FRONTEND_URL", default=None):
     FRONTEND_URLS.append(env("FRONTEND_URL"))
 if env("FRONTEND_PORT", default=None):
-    FRONTEND_URLS.append(f"http://{env('FRONTEND_DOMAIN')}:{env('FRONTEND_PORT')}")
-    FRONTEND_URLS.append(f"https://{env('FRONTEND_DOMAIN')}:{env('FRONTEND_PORT')}")
+    FRONTEND_URLS.append(f"{URI_SCHEME}{env('FRONTEND_DOMAIN')}:{env('FRONTEND_PORT')}")
 else:
-    FRONTEND_URLS.append(f"http://{env('FRONTEND_DOMAIN')}")
-    FRONTEND_URLS.append(f"https://{env('FRONTEND_DOMAIN')}")
+    FRONTEND_URLS.append(f"{URI_SCHEME}{env('FRONTEND_DOMAIN')}")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
