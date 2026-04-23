@@ -1,3 +1,4 @@
+name: piku_e2e
 services:
   db:
     image: postgres:16-alpine

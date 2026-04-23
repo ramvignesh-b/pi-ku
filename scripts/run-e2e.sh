@@ -5,6 +5,7 @@ set -e
 
 # Use podman if available. Not everyone has it
 CONTAINER_BIN=$(command -v podman || command -v docker)
+COMPOSE_BIN="$(command -v docker-compose || true)"
 if [ -z "$CONTAINER_BIN" ]; then
     echo "Sorry, you need either podman or docker installed to run this script."
     exit 1
@@ -31,21 +32,19 @@ fi
 # This cleans up django backend process and containers. Very useful for local e2e to free system resources immediately.
 cleanup() {
     echo "Cleaning up..."
-    $CONTAINER_BIN rm -f "$DB_NAME" 2>/dev/null || true
+    $CONTAINER_BIN compose -p "piku_e2e" -f "./docker-compose.e2e.yml" down --remove-orphans -v
     [ -n "$BACKEND_PID" ] && kill "$BACKEND_PID" 2>/dev/null || true
 }
 trap cleanup EXIT
 
 echo "Starting Database and Mail server..."
 
-COMPOSE_BIN="$(command -v docker-compose || true)"
-
 if echo "$CONTAINER_BIN" | grep -q "podman"; then
-    podman compose -f "./docker-compose.e2e.yml" up -d
+    podman compose -p "piku_e2e" -f "./docker-compose.e2e.yml" up -d
 elif [ -n "$COMPOSE_BIN" ]; then
-    "$COMPOSE_BIN" -f "./docker-compose.e2e.yml" up -d
+    "$COMPOSE_BIN" -p "piku_e2e" -f "./docker-compose.e2e.yml" up -d
 else
-    docker compose -f "./docker-compose.e2e.yml" up -d
+    docker compose -p "piku_e2e" -f "./docker-compose.e2e.yml" up -d
 fi
 
 # postgress will take some time, so we wait, and no race condition. Also, no point in logging this output
@@ -78,5 +77,5 @@ done
 if [ $MODE = "docker" ]; then
     $CONTAINER_BIN run --rm -it --network host -v $(pwd):/e2e:Z -w /e2e/frontend -p 43008:43008 mcr.microsoft.com/playwright:v1.59.1-noble npm run $TEST_COMMAND
 else
-    cd frontend && bun run $TEST_COMMAND
+    (cd frontend && bun run $TEST_COMMAND)
 fi
