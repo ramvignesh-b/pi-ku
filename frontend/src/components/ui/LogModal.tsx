@@ -18,7 +18,7 @@ export const LogModal = ({
   return status === "RESET" || !isOpen ? (
     <div></div>
   ) : (
-    <div className="modal modal-open modal-bottom sm:modal-middle bg-base-100/20 backdrop-blur-md z-100">
+    <div className="modal modal-open modal-middle bg-base-100/20 backdrop-blur-md z-100">
       <div className="modal-box bg-transparent border-none shadow-none relative">
         <div
           className={`alert ${status === "WARN" ? "alert-warning" : "alert-error"} flex flex-col items-center text-center gap-6 py-4`}

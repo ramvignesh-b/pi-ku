@@ -548,7 +548,7 @@ export default function Editor() {
         )}
 
         {shareLink && (
-          <div className="modal modal-open modal-bottom sm:modal-middle bg-base-100/20 backdrop-blur-md z-100">
+          <div className="modal modal-open modal-middle bg-base-100/20 backdrop-blur-md z-100">
             <div className="modal-box bg-base-100 border border-base-content/5 shadow-2xl relative">
               <button
                 type="button"

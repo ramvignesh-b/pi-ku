@@ -200,7 +200,7 @@ test.describe("Letter Drafting (Real Backend)", () => {
     await page.waitForTimeout(1500);
 
     // Click the letter to pull it out
-    await page.locator("#letter").click();
+    await page.locator("#letter").click({ position: { x: 30, y: 15 } });
 
     // Wait for reveal transition
     await expect(page.locator("#letter")).toBeHidden({ timeout: 20000 });

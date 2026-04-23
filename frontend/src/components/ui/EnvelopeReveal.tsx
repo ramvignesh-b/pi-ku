@@ -1,5 +1,5 @@
 import { WavesIcon } from "@phosphor-icons/react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import stamp from "../../assets/envelope/stamp.png";
 import waxSeal from "../../assets/envelope/waxSeal.png";
 
@@ -7,17 +7,32 @@ export interface EnvelopeRevealProps {
   recipient?: string;
   date?: string;
   onRevealComplete: () => void;
+  ignite: boolean;
 }
 
 export function EnvelopeReveal({
   recipient,
   date,
   onRevealComplete,
+  ignite,
 }: EnvelopeRevealProps) {
   const [revealLetter, setRevealLetter] = useState(false);
   const [isFlipped, setIsFlipped] = useState(false);
 
+  const [burn, setBurn] = useState<{ width: number; height: number }>({
+    width: 0,
+    height: 0,
+  });
+
   const flapCheckbox = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!ignite) return;
+    const burnInterval = setInterval(() => {
+      setBurn((prev) => ({ width: prev.width + 4, height: prev.height + 6 }));
+    }, 100);
+    return () => clearInterval(burnInterval);
+  }, [ignite]);
 
   const handleClick = () => {
     if (revealLetter) return;
@@ -28,7 +43,7 @@ export function EnvelopeReveal({
   };
 
   return (
-    <div className="h-screen mx-auto items-center flex justify-center">
+    <div className="h-screen mx-auto flex-col items-center flex justify-center">
       <div className="perspective-distant scale-80 duration-1000 transition-all animate-[pulse_2s_linear_1]">
         <div
           className={`relative h-70 w-105 transform-3d transition-transform duration-2000 ${isFlipped ? "rotate-y-180" : ""}`}
@@ -54,7 +69,7 @@ export function EnvelopeReveal({
             />
             <button
               id="letter"
-              className={`absolute mx-auto transition-all peer-has-checked:delay-800 peer-has-checked:duration-1000 duration-1000 mt-2 h-63 w-105 bg-paper peer-has-checked:-mt-12 hover:-mt-24 cursor-pointer ${revealLetter ? "duration-1000 peer-has-checked:duration-2000 w-screen max-w-4xl h-screen  z-101 -translate-y-90" : "peer-has-checked:z-1"}`}
+              className={`absolute mx-auto transition-all peer-has-checked:delay-800 peer-has-checked:duration-1000 duration-1000 mt-2 h-55 w-105 bg-paper peer-has-checked:-mt-12 hover:-mt-24 cursor-pointer ${revealLetter ? "duration-1000 peer-has-checked:duration-2000 w-screen max-w-4xl h-screen  z-101 -translate-y-90" : "peer-has-checked:z-1"}`}
               onClick={handleClick}
             ></button>
 
@@ -68,7 +83,7 @@ export function EnvelopeReveal({
             ></div>
             <button
               id="env-bottom"
-              className="absolute h-70 w-45 bg-base-200 mask mask-triangle-2 scale-y-[-1] mt-15 scale-x-240 z-3 pointer-events-none"
+              className="absolute h-70 w-45 bg-base-200 mask mask-triangle-2 scale-y-[-1] mt-15 scale-x-240 z-3"
             ></button>
           </div>
 
@@ -101,6 +116,17 @@ export function EnvelopeReveal({
           </div>
         </div>
       </div>
+      {ignite && (
+        <div className="absolute w-90 h-60 bg-transparent z-100 overflow-hidden flex align-baseline">
+          <div
+            className="absolute border-2 border-amber-200 -bottom-3 -right-3 w-0 h-0  transition-all duration-500 bg-base-100 rounded-tl-full rounded-bl-full origin-bottom-right"
+            style={{
+              width: 2 * burn.width,
+              height: 2 * burn.height,
+            }}
+          ></div>
+        </div>
+      )}
     </div>
   );
 }
