@@ -1,9 +1,9 @@
 #!/bin/bash
 set -e
 
-NODE_BIN=$(command -v bun || command -v npm)
-PY_BIN=$(command -v uv || command -v pip)
-DISTRO_BIN=$(command -v apt || command -v yum || command -v pacman || command -v zypper)
+NODE_BIN=$(command -v bun || command -v npm || true)
+PY_BIN=$(command -v uv || command -v pip || true)
+DISTRO_BIN=$(command -v apt || command -v yum || command -v pacman || command -v zypper || true)
 
 echo "[Backend] Installing Backend Packages..."
 if [ $(basename "$PY_BIN") = "pip" ]; then

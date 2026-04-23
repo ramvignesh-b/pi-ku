@@ -3,9 +3,9 @@ set -e
 
 # Usage: ./run-e2e.sh [--docker] [--ui]
 
-NODE_BIN=$(command -v bun || command -v npm)
+NODE_BIN=$(command -v bun || command -v npm || true)
 # Use podman if available. Not everyone has it
-CONTAINER_BIN=$(command -v podman || command -v docker)
+CONTAINER_BIN=$(command -v podman || command -v docker || true)
 COMPOSE_BIN=$(command -v docker-compose)
 if [ -z "$CONTAINER_BIN" ]; then
     echo "Sorry, you need either podman or docker installed to run this script."
@@ -13,7 +13,7 @@ if [ -z "$CONTAINER_BIN" ]; then
 fi
 
 if [ "$CI" = "true" ]; then
-    CONTAINER_BIN=$(command -v docker)
+    CONTAINER_BIN=$(command -v docker || true)
 fi
 
 echo "Using $CONTAINER_BIN for container operations..."
@@ -63,7 +63,7 @@ mkdir -p ./tmp/logs
 )
 (
     cd backend
-    uv run manage.py serve
+    exec uv run manage.py serve
 ) > ./tmp/logs/backend.log 2>&1 &
 BACKEND_PID=$!
 
