@@ -76,7 +76,9 @@ test.describe("Letter Drafting (Real Backend)", () => {
     await expect(canvasInput).toHaveValue(/It should persist/i);
   });
 
-  test("should seal a letter and show sharing link", async ({ page }) => {
+  test("should seal a letter and navigate to Reader, then share on demand", async ({
+    page,
+  }) => {
     const timestamp = Date.now() + Math.random();
     const email = `seal-${timestamp}@example.com`;
     const name = `Seal Author ${timestamp}`;
@@ -94,36 +96,53 @@ test.describe("Letter Drafting (Real Backend)", () => {
     await canvasInput.focus();
     await canvasInput.fill("This letter will be sealed and shared.");
 
-    // Click Seal
+    // Click Seal (open menu, then confirm)
     logger.info(">> [Seal] Clicking Seal...");
     await page
       .getByRole("button", { name: /seal/i })
       .filter({ visible: true })
-      .click(); // Open menu
+      .click();
     await page
       .getByRole("button", { name: /seal/i })
       .filter({ visible: true })
-      .click(); // Click confirm Seal
+      .click();
 
-    // Verify "Sealed & Ready" modal
-    logger.info(">> [Seal] Verifying sharing modal...");
-    await expect(page.getByText(/sealed & ready/i)).toBeVisible();
+    // Should show sealed confirmation modal
+    logger.info(">> [Seal] Verifying sealed modal...");
+    await expect(page.getByText(/your letter is sealed/i)).toBeVisible({
+      timeout: 10000,
+    });
 
-    // Verify sharing link contains a hash (the key)
-    const linkInput = page.locator("input[readOnly]");
+    // Navigate to Reader via "View letter"
+    await page.getByRole("button", { name: /view letter/i }).click();
+
+    // Should be on Reader URL
+    await expect(page).toHaveURL(/\/read\/[a-f0-9-]{36}$/, { timeout: 15000 });
+
+    // Open the envelope to reveal the letter
+    await expect(page.getByText(/breaking the seal/i)).toBeHidden({
+      timeout: 10000,
+    });
+    await page.getByAltText("Seal").click();
+    await page.waitForTimeout(1500);
+    await page.locator("#letter").click({ position: { x: 30, y: 15 } });
+    await expect(page.locator("#letter")).toBeHidden({ timeout: 20000 });
+
+    // Share on demand
+    logger.info(">> [Seal] Clicking Share button in Reader...");
+    await page.locator("#share-letter-btn").click();
+
+    // Verify share modal with a valid link
+    await expect(page.getByText(/share this letter/i)).toBeVisible();
+    const linkInput = page.locator("#share-link-input");
     const linkValue = await linkInput.inputValue();
-
     expect(linkValue).toContain("/read/");
     expect(linkValue).toContain("#");
+    logger.info(`>> [Seal] Sharing link: ${linkValue}`);
 
-    logger.info(`>> [Seal] Sharing link generated: ${linkValue}`);
-
-    // Verify "Copy" button works
     await expect(page.getByRole("button", { name: /copy/i })).toBeVisible();
-
-    // Close modal
     await page.getByRole("button", { name: /close/i }).click();
-    await expect(page.getByText(/sealed & ready/i)).toBeHidden();
+    await expect(page.getByText(/share this letter/i)).toBeHidden();
   });
 
   test("should allow author to access sealed letter from drawer without sharing key", async ({
@@ -148,19 +167,21 @@ test.describe("Letter Drafting (Real Backend)", () => {
     await canvasInput.focus();
     await canvasInput.fill(letterContent);
 
-    // Click Seal
+    // Click Seal (open menu, then confirm)
     await page
       .getByRole("button", { name: /seal/i })
       .filter({ visible: true })
-      .click(); // Open menu
+      .click();
     await page
       .getByRole("button", { name: /seal/i })
       .filter({ visible: true })
-      .click(); // Click confirm Seal
-    await expect(page.getByText(/sealed & ready/i)).toBeVisible();
+      .click();
 
-    // Close modal
-    await page.getByRole("button", { name: /close/i }).click();
+    // Sealed modal should appear — click "Keep it" to go to Drawer
+    await expect(page.getByText(/your letter is sealed/i)).toBeVisible({
+      timeout: 10000,
+    });
+    await page.getByRole("button", { name: /keep it/i }).click();
 
     // Navigate to Drawer - use ID or precise label
     logger.info(">> [Drawer] Navigating to Drawer...");

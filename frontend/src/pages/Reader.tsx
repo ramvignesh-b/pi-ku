@@ -1,4 +1,10 @@
-import { CampfireIcon, FlameIcon } from "@phosphor-icons/react";
+import {
+  CampfireIcon,
+  EyeSlashIcon,
+  FlameIcon,
+  PaperPlaneTiltIcon,
+  XCircleIcon,
+} from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { api } from "../api/apiClient";
@@ -51,10 +57,92 @@ export default function Reader() {
   const [showBurnModal, setShowBurnModal] = useState(false);
   const [isBurning, setIsBurning] = useState(false);
   const [ignite, setIgnite] = useState(false);
+  const [encryptedDek, setEncryptedDek] = useState<string | null>(null);
+  const [shareLink, setShareLink] = useState<string | null>(null);
 
   const { masterKey } = useKeyStore();
 
-  const isOwner = !!masterKey && !sharingKey;
+  const isAuthor = !!masterKey && !sharingKey;
+
+  const handleShare = async () => {
+    if (!encryptedDek || !masterKey || !public_id) return;
+    const cryptoUtils = new CryptoUtils();
+    const key = await cryptoUtils.extractSharingKey(encryptedDek, masterKey);
+    try {
+      await api.patch(`${endpoints.LETTERS}${public_id}/`, { type: "SENT" });
+    } catch (err) {
+      console.error("Failed to update letter:", err);
+    } finally {
+      setShareLink(`${window.location.origin}${PATHS.read(public_id)}#${key}`);
+    }
+  };
+
+  const copyToClipboard = async () => {
+    if (!shareLink) return;
+    await navigator.clipboard.writeText(shareLink);
+  };
+
+  function ShareModal() {
+    return (
+      <div className="modal modal-open modal-middle bg-base-100/20 backdrop-blur-md z-100">
+        <div className="modal-box bg-base-100 border border-base-content/5 shadow-2xl relative">
+          <button
+            type="button"
+            className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+            onClick={() => setShareLink(null)}
+            aria-label="Close"
+          >
+            <XCircleIcon size={18} weight="bold" />
+          </button>
+          <div className="flex flex-col items-center justify-center text-center gap-6 py-4">
+            <div className="space-y-2">
+              <PaperPlaneTiltIcon
+                size={48}
+                weight="bold"
+                className="mb-4 text-primary mx-auto animate-[bounce_3s_ease-in-out_infinite]"
+              />
+              <h3 className="font-serif text-3xl">Send this letter</h3>
+              <p className="text-base-content/80 text-sm font-sans mt-4">
+                You've carried these words long enough. Send your letter now,
+                and let the{" "}
+                <span className="text-accent font-display">unsaid</span> finally
+                find its home.
+              </p>
+              <div className="divider mx-auto" />
+              <blockquote className="text-sm info text-neutral-content/60 font-sans">
+                The recipient will have the same viewing experience like you do
+                now.
+              </blockquote>
+            </div>
+            <div className="w-full flex items-center gap-2 bg-base-300 p-2 rounded-xl">
+              <input
+                id="share-link-input"
+                readOnly
+                value={shareLink ?? ""}
+                className="flex-1 bg-transparent text-xs font-mono px-2 overflow-hidden text-ellipsis whitespace-nowrap outline-none"
+              />
+              <button
+                type="button"
+                onClick={copyToClipboard}
+                className="btn btn-primary font-sans btn-sm rounded-tl-xl rounded-bl-xl rounded-tr-full rounded-br-full"
+              >
+                Copy
+              </button>
+            </div>
+            <div className="flex flex-col gap-1 uppercase tracking-widest text-base-content/30 font-sans">
+              <p className="textarea-xs flex items-center justify-center">
+                <EyeSlashIcon weight="duotone" size={18} className="mr-2" />{" "}
+                Zero-Knowledge Share:
+              </p>
+              <p className="textarea-xs font-mono text-center">
+                The key never leaves your or the recipient's browser.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const burnLetter = async () => {
     console.log("Burning letter...");
@@ -95,27 +183,42 @@ export default function Reader() {
     const burnStyle = flameOn < 30 ? "" : `contrast(${flameOn / 30})`;
 
     return (
-      <div className="modal modal-open bg-base-100/20 backdrop-blur-md">
+      <div className="modal modal-open modal-middle bg-base-100/20 backdrop-blur-md">
         <div
-          className={`modal-box flex flex-col items-center gap-4 text-center transition-all duration-200 ease-in-out ${burnClicked ? "animate-[pulse_15s_linear_infinite]" : ""}`}
+          className={`modal-box flex flex-col items-center gap-4 py-8 text-center transition-all duration-200 ease-in-out ${burnClicked ? "animate-[pulse_15s_linear_infinite]" : ""}`}
           style={
             {
               transform: `rotate(${rotate}deg)`,
             } as React.CSSProperties
           }
         >
-          <CampfireIcon size={36} weight="duotone" className="text-error" />
+          <button
+            type="button"
+            className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+            onClick={() => setShowBurnModal(false)}
+            aria-label="Close"
+          >
+            <XCircleIcon size={18} weight="bold" />
+          </button>
+          <CampfireIcon
+            size={48}
+            weight="duotone"
+            className="text-error animate-pulse"
+          />
           <h3 className="font-serif text-2xl">
             Are you ready to burn this letter?
           </h3>
-          <p className="text-sm font-sans text-base-content/60 max-w-xs">
-            The ashes will be released into the winds.
+          <p className="text-sm font-sans text-base-content/80 mt-4">
+            Some words are meant to be unsaid, but they don't have to linger
+            forever.
             <br />
-            <span className="text-error font-semibold">Press</span> and{" "}
-            <span className="text-error font-semibold">hold</span> the{" "}
-            <span className="text-amber-300 font-semibold">flame</span> to
-            proceed.
+            Let the echoes of your unsaid be finally released.
           </p>
+          <div className="mt-4 font-sans text-sm">
+            <span className="text-error">Press</span> and{" "}
+            <span className="text-error">hold</span> the{" "}
+            <span className="text-amber-300">flame</span> to proceed.
+          </div>
           <div className="modal-action w-full justify-center gap-3 mt-2">
             <div
               className="absolute -mt-2 w-28 h-28 radial-progress pointer-events-none text-amber-200/60"
@@ -178,6 +281,8 @@ export default function Reader() {
 
         if (status === "BURNED")
           throw new Error("This letter has been burned.");
+
+        if (encrypted_dek) setEncryptedDek(encrypted_dek);
 
         const cryptoUtils = new CryptoUtils();
         const isShared = !!sharingKey;
@@ -333,13 +438,16 @@ export default function Reader() {
           <div
             className={`text-xl ${revealState === "burned" ? "opacity-100" : "opacity-0"} lg:text-4xl text-center font-extralight text-base-content font-display mt-8 delay-3000 transition-all duration-2000 tracking-wide`}
           >
-            <p className="w-full overflow-hidden">
-              May your soul find solace like your{" "}
-              <span className="text-accent italic">unsaid</span> words did.
+            <p className="w-full">
+              May your <span className="italic text-primary">soul</span> find
+              solace,
+              <br />
+              just like your <span className="text-accent italic">unsaid</span>{" "}
+              words did.
             </p>
             <div className="divider mx-auto w-24 text-center"></div>
             <button
-              className="btn btn-ghost text-xs text-neutral-content/60 font-sans"
+              className="btn btn-ghost text-sm text-neutral-content/60 font-sans"
               onClick={() => navigate(ROUTES.DRAWER)}
             >
               Turn the page
@@ -372,26 +480,38 @@ export default function Reader() {
               </p>
             )}
           </div>
-
-          {isOwner && (
-            <div className="flex justify-center">
-              <button
-                id="burn-letter-btn"
-                type="button"
-                className="btn btn-ghost btn-sm text-error/40 hover:text-error hover:bg-error/10 gap-1.5"
-                onClick={() => setShowBurnModal(true)}
-              >
-                <FlameIcon size={26} weight="duotone" />
-                <span className="text-[10px] uppercase font-sans tracking-widest">
-                  Burn this letter
-                </span>
-              </button>
-            </div>
-          )}
         </div>
       )}
 
+      {shareLink && <ShareModal />}
       {showBurnModal && <BurnModal />}
+
+      {isAuthor && revealState !== "burned" && (
+        <div className="flex justify-center gap-2 mt-8 z-10 relative">
+          <button
+            id="share-letter-btn"
+            type="button"
+            className="btn btn-ghost btn-sm text-base-content/30 hover:text-base-content hover:bg-base-content/10 gap-1.5"
+            onClick={handleShare}
+          >
+            <PaperPlaneTiltIcon size={16} weight="duotone" />
+            <span className="text-md uppercase font-sans tracking-widest">
+              Send to someone...
+            </span>
+          </button>
+          <button
+            id="burn-letter-btn"
+            type="button"
+            className="btn btn-ghost btn-sm text-error/40 hover:text-error hover:bg-error/10 gap-1.5"
+            onClick={() => setShowBurnModal(true)}
+          >
+            <FlameIcon size={16} weight="duotone" />
+            <span className="text-md uppercase font-sans tracking-widest">
+              Burn the letter
+            </span>
+          </button>
+        </div>
+      )}
 
       <footer className="mt-16 text-center z-10 opacity-10 pointer-events-none">
         <p className="text-xs font-sans uppercase tracking-[0.5em]">

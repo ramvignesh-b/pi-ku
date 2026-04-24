@@ -8,7 +8,6 @@ import {
   StampIcon,
   TrayIcon,
   VaultIcon,
-  XCircleIcon,
   XIcon,
 } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
@@ -26,7 +25,7 @@ import DateDisplay from "../components/ui/DateDisplay";
 import { LogModal } from "../components/ui/LogModal";
 import { Navbar } from "../components/ui/Navbar";
 import { endpoints } from "../config/endpoints";
-import { PATHS } from "../config/routes";
+import { PATHS, ROUTES } from "../config/routes";
 import { useKeyStore } from "../store/useKeyStore";
 import { CryptoUtils } from "../utils/crypto";
 import { formatRelativeDate } from "../utils/dateFormat";
@@ -60,7 +59,7 @@ export default function Editor() {
   }>({ status: "RESET", message: "", log: "" });
 
   const [isInitialLoading, setIsInitialLoading] = useState(false);
-  const [shareLink, setShareLink] = useState<string | null>(null);
+  const [sealedTargetId, setSealedTargetId] = useState<string | null>(null);
   const [lastSaved, setLastSaved] = useState<string | null>(null);
   const [status, setLetterStatus] = useState<"DRAFT" | "SEALED" | "VAULT">(
     "DRAFT",
@@ -164,8 +163,6 @@ export default function Editor() {
             log: error,
           });
         }
-
-        console.log(canvasData);
 
         if (canvasRef.current) {
           await canvasRef.current.loadData(canvasData);
@@ -271,7 +268,6 @@ export default function Editor() {
       const formData = new FormData();
       if (status === "VAULT") {
         const finalDate = vaultDate || unlockDate;
-        console.log(finalDate?.toISOString());
         formData.append("type", "VAULT");
         if (finalDate) {
           formData.append("unlock_at", finalDate.toISOString());
@@ -305,27 +301,59 @@ export default function Editor() {
       setLetterStatus(status);
       setLastSavedPulseTick((prev) => prev + 1);
 
-      if (status === "SEALED" && encrypted_letter.sharingKey) {
-        const link = `${window.location.origin}${PATHS.read(
-          targetId,
-        )}#${encrypted_letter.sharingKey}`;
-        setShareLink(link);
-        setShowSaveOverlay(false);
-        setTimeout(() => setSaveOverlay("idle"), OVERLAY_FADE_MS);
-      } else {
-        setSaveOverlay("saved");
-        setShowSaveOverlay(true);
+      if (status === "SEALED") {
+        setSealedTargetId(targetId);
       }
+      setSaveOverlay("saved");
+      setShowSaveOverlay(true);
     } catch (_error) {
       setSaveOverlay("error");
       setShowSaveOverlay(true);
     }
   };
 
-  const copyToClipboard = async () => {
-    if (!shareLink) return;
-    await navigator.clipboard.writeText(shareLink);
-  };
+  function SealedModal() {
+    if (!sealedTargetId) return null;
+    return (
+      <div className="modal modal-open modal-middle bg-base-100/20 backdrop-blur-md z-1000">
+        <div className="modal-box flex flex-col items-center text-center gap-6">
+          <LockIcon size={32} weight="duotone" className="text-primary mt-3" />
+          <h3 className="font-serif text-2xl">Your letter is sealed</h3>
+          <p className="text-base-content/60">
+            It's encrypted and always safe in your drawer.
+          </p>
+          <p className="text-base-content font-sans">
+            When you're ready,
+            <br />
+            you can{" "}
+            <span className="text-primary font-bold font-display">read</span>{" "}
+            it, <span className="text-accent font-bold font-display">send</span>{" "}
+            it to someone, or{" "}
+            <span className="text-error font-bold font-display">burn</span> it
+            to release
+          </p>
+          <div className="modal-action w-full justify-center gap-3 mt-4 mb-4">
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              onClick={() => navigate(ROUTES.DRAWER)}
+            >
+              Keep it to myself
+            </button>
+            <button
+              type="button"
+              className="btn btn-primary btn-sm"
+              onClick={() =>
+                navigate(PATHS.read(sealedTargetId), { replace: true })
+              }
+            >
+              View letter
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   function ToolBar() {
     return (
@@ -547,53 +575,7 @@ export default function Editor() {
           </div>
         )}
 
-        {shareLink && (
-          <div className="modal modal-open modal-middle bg-base-100/20 backdrop-blur-md z-100">
-            <div className="modal-box bg-base-100 border border-base-content/5 shadow-2xl relative">
-              <button
-                type="button"
-                className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
-                onClick={() => setShareLink(null)}
-                aria-label="Close"
-              >
-                <XCircleIcon size={18} weight="bold" />
-              </button>
-              <div className="flex flex-col items-center text-center gap-6 py-4">
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
-                  <LockIcon size={32} weight="fill" className="text-primary" />
-                </div>
-                <div className="space-y-2">
-                  <h3 className="font-serif text-3xl">Sealed & Ready</h3>
-                  <p className="text-base-content/60 text-sm max-w-xs">
-                    This letter is now encrypted. Share this secret link with
-                    your recipient.
-                  </p>
-                </div>
-
-                <div className="w-full flex items-center gap-2 bg-base-300 p-2 rounded-xl group relative">
-                  <input
-                    readOnly
-                    value={shareLink}
-                    className="flex-1 bg-transparent text-xs font-mono px-2 overflow-hidden text-ellipsis whitespace-nowrap outline-none"
-                  />
-                  <button
-                    type="button"
-                    onClick={copyToClipboard}
-                    className="btn btn-primary btn-sm rounded-lg"
-                  >
-                    Copy
-                  </button>
-                </div>
-
-                <p className="text-[10px] uppercase tracking-widest text-base-content/30">
-                  Zero-Knowledge: The key is in the link, not our servers.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {saveOverlay !== "idle" && !shareLink && (
+        {saveOverlay !== "idle" && (
           <div
             className={`modal modal-open bg-base-100/20 backdrop-blur-md transition-opacity duration-300 ${
               showSaveOverlay ? "opacity-100" : "opacity-0"
@@ -650,6 +632,7 @@ export default function Editor() {
         )}
 
         {confirmModal === "VAULT" && <VaultConfirm />}
+        {sealedTargetId && <SealedModal />}
 
         <div className="max-w-180 mx-auto px-1 md:px-0">
           <div className="flex justify-between items-end mb-16 border-b border-base-content/5 pb-8 px-0">
