@@ -190,3 +190,44 @@ describe("Sharing Key Decryption", () => {
     expect(decryptedLetter).toBe(letterContent);
   });
 });
+
+describe("extractSharingKey", () => {
+  let masterKey: CryptoKey;
+
+  beforeEach(async () => {
+    utils = new CryptoUtils();
+    await utils.initialize();
+    const bundle = await CryptoUtils.deriveKeyBundle(
+      "password",
+      "test@test.com",
+    );
+    masterKey = bundle.masterKey;
+  });
+
+  it("should return the same key that encryptLetter embedded as sharingKey", async () => {
+    const encrypted = await utils.encryptLetter("any content", masterKey);
+
+    const extracted = await utils.extractSharingKey(
+      encrypted.encrypted_dek,
+      masterKey,
+    );
+
+    expect(extracted).toBe(encrypted.sharingKey);
+  });
+
+  it("extracted key should decrypt the ciphertext produced by encryptLetter", async () => {
+    const plaintext = "hello from the owner";
+    const encrypted = await utils.encryptLetter(plaintext, masterKey);
+
+    const extracted = await utils.extractSharingKey(
+      encrypted.encrypted_dek,
+      masterKey,
+    );
+    const decrypted = await utils.decryptLetterWithSharingKey(
+      encrypted.encrypted_content,
+      extracted,
+    );
+
+    expect(decrypted).toBe(plaintext);
+  });
+});

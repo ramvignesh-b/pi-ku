@@ -309,4 +309,24 @@ export class CryptoUtils {
     );
     return URL.createObjectURL(new Blob([bytes]));
   }
+
+  //  Re-derives the sharing key (raw DEK) on demand (browser only, not sent to server).
+  public async extractSharingKey(
+    encrypted_dek: string,
+    masterKey: CryptoKey,
+  ): Promise<string> {
+    const [dekIv, wrappedDek] = this.unpackWithIv(encrypted_dek);
+    const rawDek = await crypto.subtle.unwrapKey(
+      "raw",
+      wrappedDek,
+      masterKey,
+      { name: "AES-GCM", iv: dekIv },
+      CryptoUtils.AES_GCM,
+      true,
+      ["decrypt"],
+    );
+    return this.toBase64(
+      new Uint8Array(await crypto.subtle.exportKey("raw", rawDek)),
+    );
+  }
 }
