@@ -13,7 +13,7 @@ import Editor from "./Editor";
 const API_URL = import.meta.env.VITE_API_URL;
 
 // Mock ComposeCanvas to avoid Fabric.js issues and check readOnly prop
-vi.mock("../components/ui/ComposeCanvas", () => ({
+vi.mock("../components/editor/ComposeCanvas", () => ({
   ComposeCanvas: vi.fn(({ readOnly }) => (
     <div data-testid="canvas" data-readonly={readOnly}>
       Canvas
@@ -24,21 +24,21 @@ vi.mock("../components/ui/ComposeCanvas", () => ({
 // Mock CryptoUtils to avoid real crypto calls in UI tests
 vi.mock("../utils/crypto", () => {
   return {
-    CryptoUtils: () => ({
-      initialize: vi.fn().mockResolvedValue(undefined),
-      encryptLetter: vi.fn().mockResolvedValue({
+    CryptoUtils: class {
+      initialize = vi.fn().mockResolvedValue(undefined);
+      encryptLetter = vi.fn().mockResolvedValue({
         encrypted_content: "enc-content",
         encrypted_dek: "enc-dek",
         sharingKey: "share-key",
-      }),
-      encryptMetadata: vi.fn().mockResolvedValue({
+      });
+      encryptMetadata = vi.fn().mockResolvedValue({
         encrypted_content: "enc-meta",
         encrypted_dek: "enc-dek",
-      }),
-      decryptMetadata: vi.fn().mockResolvedValue({ recipient: "Test User" }),
-      decryptLetter: vi.fn().mockResolvedValue("{}"),
-      extractSharingKey: vi.fn().mockResolvedValue("share-key"),
-    }),
+      });
+      decryptMetadata = vi.fn().mockResolvedValue({ recipient: "Test User" });
+      decryptLetter = vi.fn().mockResolvedValue("{}");
+      extractSharingKey = vi.fn().mockResolvedValue("share-key");
+    },
   };
 });
 

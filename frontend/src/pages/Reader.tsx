@@ -8,13 +8,13 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { api } from "../api/apiClient";
-import Logo from "../components/Logo";
 import {
   type CanvasJSON,
   type CanvasTools,
   ComposeCanvas,
-} from "../components/ui/ComposeCanvas";
-import { EnvelopeReveal } from "../components/ui/EnvelopeReveal";
+} from "../components/editor/ComposeCanvas";
+import Logo from "../components/Logo";
+import { EnvelopeReveal } from "../components/reader/EnvelopeReveal";
 import { LogModal } from "../components/ui/LogModal";
 import { endpoints } from "../config/endpoints";
 import { PATHS, ROUTES } from "../config/routes";

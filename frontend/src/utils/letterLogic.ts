@@ -2,7 +2,7 @@ import { api } from "../api/apiClient";
 import type {
   CanvasJSON,
   FabricImageJSON,
-} from "../components/ui/ComposeCanvas";
+} from "../components/editor/ComposeCanvas";
 import type { CryptoUtils } from "./crypto";
 import { blobUrlToFile } from "./fileUtils";
 

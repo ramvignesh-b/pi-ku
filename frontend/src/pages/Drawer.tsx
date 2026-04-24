@@ -1,10 +1,10 @@
 import { FeatherIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { DrawerSection } from "../components/drawer/DrawerSection.tsx";
+import { LetterItem } from "../components/drawer/LetterItem.tsx";
+import { PasskeyModal } from "../components/drawer/PasskeyModal.tsx";
 import Logo from "../components/Logo";
-import { DrawerSection } from "../components/ui/DrawerSection";
-import { LetterItem } from "../components/ui/LetterItem";
-import { PasskeyModal } from "../components/ui/PasskeyModal";
 import { PATHS } from "../config/routes";
 import { useAuth } from "../hooks/useAuth";
 import { useLetters } from "../hooks/useLetters";

@@ -11,16 +11,16 @@ import {
   useParams,
 } from "react-router-dom";
 import { api } from "../api/apiClient";
+import {
+  type CanvasTools,
+  ComposeCanvas,
+} from "../components/editor/ComposeCanvas";
 import { PostSealModal } from "../components/editor/PostSealModal";
 import {
   LetterHead,
   ToolBar,
   VaultConfirmModal,
 } from "../components/editor/ToolBar";
-import {
-  type CanvasTools,
-  ComposeCanvas,
-} from "../components/ui/ComposeCanvas";
 import DateDisplay from "../components/ui/DateDisplay";
 import { LogModal } from "../components/ui/LogModal";
 import { Navbar } from "../components/ui/Navbar";
