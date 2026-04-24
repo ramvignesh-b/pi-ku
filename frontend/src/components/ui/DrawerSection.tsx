@@ -23,7 +23,7 @@ export function DrawerSection({
       className={`join-item group flex flex-col transition-colors duration-3000 ease-in-out ${isOpen ? "bg-base-300/30" : ""}`}
     >
       <div
-        className={`transition-all duration-2000 ease-in-out bg-neutral/10 ${
+        className={`transition-all duration-1500 ease-in-out bg-neutral/10 ${
           isOpen
             ? "max-h-125 opacity-100 py-3 border-b border-base-content/5 overflow-visible"
             : "max-h-0 opacity-0 pointer-events-none"

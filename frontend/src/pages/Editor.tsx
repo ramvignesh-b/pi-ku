@@ -43,6 +43,241 @@ const toPlaceholderList = [
   "Something to bear...",
 ];
 
+interface SealedModalProps {
+  sealedTargetId: string | null;
+  navigate: NavigateFunction;
+}
+
+function SealedModal({ sealedTargetId, navigate }: SealedModalProps) {
+  if (!sealedTargetId) return null;
+  return (
+    <div className="modal modal-open modal-middle bg-base-100/20 backdrop-blur-md z-1000">
+      <div className="modal-box flex flex-col items-center text-center gap-6">
+        <LockIcon size={32} weight="duotone" className="text-primary mt-3" />
+        <h3 className="font-serif text-2xl">Your letter is sealed</h3>
+        <p className="text-base-content/60">
+          It's encrypted and always safe in your drawer.
+        </p>
+        <p className="text-base-content font-sans">
+          When you're ready,
+          <br />
+          you can{" "}
+          <span className="text-primary font-bold font-display">read</span> it,{" "}
+          <span className="text-accent font-bold font-display">send</span> it to
+          someone, or{" "}
+          <span className="text-error font-bold font-display">burn</span> it to
+          release
+        </p>
+        <div className="modal-action w-full justify-center gap-3 mt-4 mb-4">
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            onClick={() => navigate(ROUTES.DRAWER)}
+          >
+            Keep it to myself
+          </button>
+          <button
+            type="button"
+            className="btn btn-primary btn-sm"
+            onClick={() =>
+              navigate(PATHS.read(sealedTargetId), { replace: true })
+            }
+          >
+            View letter
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface ToolBarProps {
+  fileInputRef: React.RefObject<HTMLInputElement | null>;
+  sealBtnClicked: boolean;
+  setSealBtnClicked: (v: boolean) => void;
+  onSave: (status: "SEALED" | "DRAFT" | "VAULT", date?: Date) => Promise<void>;
+  setConfirmModal: (v: "VAULT" | "SEAL" | null) => void;
+}
+
+function ToolBar({
+  fileInputRef,
+  sealBtnClicked,
+  setSealBtnClicked,
+  onSave,
+  setConfirmModal,
+}: ToolBarProps) {
+  return (
+    <div
+      id="writer-toolbar"
+      className="flex items-center justify-between mb-8 h-14 bg-base-100/50 backdrop-blur-md rounded-full border border-base-content/5 px-6"
+    >
+      <div className="flex gap-4">
+        <button
+          type="button"
+          className="btn btn-ghost btn-sm group"
+          onClick={() => fileInputRef.current?.click()}
+        >
+          <ImageIcon size={18} weight="bold" />
+          <span className="hidden md:inline group-hover:inline transition-all duration-1000">
+            Add Image
+          </span>
+        </button>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          className="btn btn-ghost btn-sm text-[10px] group tracking-[0.2em] uppercase font-bold text-base-content/60 hover:text-base-content"
+          title="Store in your private drawer"
+          onClick={() => onSave("DRAFT")}
+        >
+          <TrayIcon size={18} weight="bold" />
+          <span className="hidden md:inline group-hover:inline transition-all duration-1000">
+            Draft
+          </span>
+        </button>
+
+        <div className="w-px h-4 bg-base-content/10 mx-2" />
+
+        <button
+          type="button"
+          className={`btn btn-primary btn-sm rounded-full px-6 group ${sealBtnClicked ? "invisible" : "visible"}`}
+          onClick={() => setSealBtnClicked(true)}
+        >
+          <StampIcon
+            size={16}
+            weight="fill"
+            className="mr-1 group-hover:animate-bounce"
+          />
+          <span
+            className={`hidden md:inline ${sealBtnClicked ? "inline" : ""} group-hover:inline transition-all duration-1000`}
+          >
+            Seal
+          </span>
+        </button>
+      </div>
+
+      <div
+        className={`flex-col items-center gap-2 absolute right-0 z-100000 bg-primary/20 rounded-full p-8 -m-2 ${sealBtnClicked ? "" : "hidden"}`}
+      >
+        <button
+          type="button"
+          className="btn btn-accent btn-sm rounded-full px-6 group"
+          onClick={() => onSave("SEALED")}
+        >
+          <StampIcon
+            size={16}
+            weight="fill"
+            className="mr-1 group-hover:animate-bounce"
+          />
+          <span className="transition-all duration-1000">Seal</span>
+        </button>
+        <div className="w-full divider text-neutral-content/60 mt-2 mb-2">
+          or
+        </div>
+        <button
+          type="button"
+          className="btn btn-neutral btn-sm rounded-full px-6 group"
+          onClick={() => setConfirmModal("VAULT")}
+        >
+          <VaultIcon size={16} weight="fill" className="mr-1" />
+          <span className="transition-all duration-1000">Vault</span>
+        </button>
+      </div>
+      <button
+        type="button"
+        onClick={() => setSealBtnClicked(false)}
+        className={`bg-transparent cursor-pointer -mt-2 absolute z-1000001 right-0 text-primary  ${sealBtnClicked ? "" : "hidden"}`}
+      >
+        <QuestionIcon weight="duotone" size={20} className={""} />
+      </button>
+    </div>
+  );
+}
+
+function LetterHead() {
+  return (
+    <div className="flex items-center justify-center mb-8 h-14">
+      <div className="badge badge-outline border-primary/20 bg-primary/5 text-primary gap-2 p-4 rounded-full">
+        <LockIcon size={14} weight="fill" />
+        <span className="text-[10px] uppercase tracking-widest font-bold">
+          Sealed & View Only
+        </span>
+      </div>
+    </div>
+  );
+}
+
+interface VaultConfirmProps {
+  onSave: (status: "SEALED" | "DRAFT" | "VAULT", date?: Date) => Promise<void>;
+  setConfirmModal: (v: "VAULT" | "SEAL" | null) => void;
+  setUnlockDate: (d: Date | null) => void;
+}
+
+function VaultConfirm({
+  onSave,
+  setConfirmModal,
+  setUnlockDate,
+}: VaultConfirmProps) {
+  return (
+    <div className={"modal modal-open bg-base-100/20 backdrop-blur-md"}>
+      <div className="modal-box p-12 flex flex-col items-center">
+        <VaultIcon
+          size={48}
+          className="text-primary mx-auto mb-8 animate-pulse"
+        />
+        <h3 className="font-serif text-3xl">Vault this letter?</h3>
+        <p className="text-base-content/60 text-sm text-center mt-4">
+          Vaulting locks the letter permanently and will be{" "}
+          <span className={"font-bold text-primary"}>mailed</span> to you
+          automatically on the unlock date.
+          <br />
+          <span className={"underline"}>
+            You cannot edit or view the contents of the letter until then.
+          </span>
+        </p>
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.currentTarget);
+            const unlockDateStr = formData.get("vault-date") as string;
+            const newUnlockDate = new Date(unlockDateStr);
+            setUnlockDate(newUnlockDate);
+            await onSave("VAULT", newUnlockDate);
+            setConfirmModal(null);
+          }}
+          id="vault-form"
+        >
+          <div className={"divider tracking-tightest font-display text-sm"}>
+            Set an unlock date
+          </div>
+          <input
+            required
+            type="date"
+            className="input input-bordered w-full"
+            name="vault-date"
+          />
+          <button
+            className="btn btn-primary mt-4"
+            type="submit"
+            form="vault-form"
+          >
+            Vault
+          </button>
+
+          <button
+            type="button"
+            className="btn btn-ghost mt-4"
+            onClick={() => setConfirmModal(null)}
+          >
+            Cancel
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 export default function Editor() {
   const navigate = useNavigate();
   const navigateRef = useRef<NavigateFunction>(navigate);
@@ -76,26 +311,17 @@ export default function Editor() {
 
   const [recipient, setRecipient] = useState("");
   const [unlockDate, setUnlockDate] = useState<Date | null>(null);
+  const [placeholderIndex, setPlaceholderIndex] = useState(0);
 
   const { masterKey } = useKeyStore();
 
   const canvasRef = useRef<CanvasTools>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const recipientInputRef = useRef<HTMLInputElement>(null);
 
+  // Placeholder rotation
   useEffect(() => {
     const interval = setInterval(() => {
-      if (recipientInputRef.current) {
-        let currentOffset = parseInt(
-          recipientInputRef.current.dataset.offset || "0",
-        );
-        recipientInputRef.current.dataset.offset = (
-          (currentOffset + 1) %
-          toPlaceholderList.length
-        ).toString();
-        recipientInputRef.current.placeholder =
-          toPlaceholderList[parseInt(recipientInputRef.current.dataset.offset)];
-      }
+      setPlaceholderIndex((prev) => (prev + 1) % toPlaceholderList.length);
     }, 4000);
 
     return () => clearInterval(interval);
@@ -312,218 +538,6 @@ export default function Editor() {
     }
   };
 
-  function SealedModal() {
-    if (!sealedTargetId) return null;
-    return (
-      <div className="modal modal-open modal-middle bg-base-100/20 backdrop-blur-md z-1000">
-        <div className="modal-box flex flex-col items-center text-center gap-6">
-          <LockIcon size={32} weight="duotone" className="text-primary mt-3" />
-          <h3 className="font-serif text-2xl">Your letter is sealed</h3>
-          <p className="text-base-content/60">
-            It's encrypted and always safe in your drawer.
-          </p>
-          <p className="text-base-content font-sans">
-            When you're ready,
-            <br />
-            you can{" "}
-            <span className="text-primary font-bold font-display">read</span>{" "}
-            it, <span className="text-accent font-bold font-display">send</span>{" "}
-            it to someone, or{" "}
-            <span className="text-error font-bold font-display">burn</span> it
-            to release
-          </p>
-          <div className="modal-action w-full justify-center gap-3 mt-4 mb-4">
-            <button
-              type="button"
-              className="btn btn-ghost btn-sm"
-              onClick={() => navigate(ROUTES.DRAWER)}
-            >
-              Keep it to myself
-            </button>
-            <button
-              type="button"
-              className="btn btn-primary btn-sm"
-              onClick={() =>
-                navigate(PATHS.read(sealedTargetId), { replace: true })
-              }
-            >
-              View letter
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  function ToolBar() {
-    return (
-      <div
-        id="writer-toolbar"
-        className="flex items-center justify-between mb-8 h-14 bg-base-100/50 backdrop-blur-md rounded-full border border-base-content/5 px-6"
-      >
-        <div className="flex gap-4">
-          <button
-            type="button"
-            className="btn btn-ghost btn-sm group"
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <ImageIcon size={18} weight="bold" />
-            <span className="hidden md:inline group-hover:inline transition-all duration-1000">
-              Add Image
-            </span>
-          </button>
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleImageUpload}
-            accept="image/*"
-            className="hidden"
-          />
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            className="btn btn-ghost btn-sm text-[10px] group tracking-[0.2em] uppercase font-bold text-base-content/60 hover:text-base-content"
-            title="Store in your private drawer"
-            onClick={() => handleSave("DRAFT")}
-          >
-            <TrayIcon size={18} weight="bold" />
-            <span className="hidden md:inline group-hover:inline transition-all duration-1000">
-              Draft
-            </span>
-          </button>
-
-          <div className="w-px h-4 bg-base-content/10 mx-2" />
-
-          <button
-            type="button"
-            className={`btn btn-primary btn-sm rounded-full px-6 group ${sealBtnClicked ? "invisible" : "visible"}`}
-            onClick={() => setSealBtnClicked(true)}
-          >
-            <StampIcon
-              size={16}
-              weight="fill"
-              className="mr-1 group-hover:animate-bounce"
-            />
-            <span
-              className={`hidden md:inline ${sealBtnClicked ? "inline" : ""} group-hover:inline transition-all duration-1000`}
-            >
-              Seal
-            </span>
-          </button>
-        </div>
-
-        <div
-          className={`flex-col items-center gap-2 absolute right-0 z-100000 bg-primary/20 rounded-full p-8 -m-2 ${sealBtnClicked ? "" : "hidden"}`}
-        >
-          <button
-            type="button"
-            className="btn btn-accent btn-sm rounded-full px-6 group"
-            onClick={() => handleSave("SEALED")}
-          >
-            <StampIcon
-              size={16}
-              weight="fill"
-              className="mr-1 group-hover:animate-bounce"
-            />
-            <span className="transition-all duration-1000">Seal</span>
-          </button>
-          <div className="w-full divider text-neutral-content/60 mt-2 mb-2">
-            or
-          </div>
-          <button
-            type="button"
-            className="btn btn-neutral btn-sm rounded-full px-6 group"
-            onClick={() => setConfirmModal("VAULT")}
-          >
-            <VaultIcon size={16} weight="fill" className="mr-1" />
-            <span className="transition-all duration-1000">Vault</span>
-          </button>
-        </div>
-        <button
-          onClick={() => setSealBtnClicked(false)}
-          className={`bg-transparent cursor-pointer -mt-2 absolute z-1000001 right-0 text-primary  ${sealBtnClicked ? "" : "hidden"}`}
-        >
-          <QuestionIcon weight="duotone" size={20} className={""} />
-        </button>
-      </div>
-    );
-  }
-
-  function LetterHead() {
-    return (
-      <div className="flex items-center justify-center mb-8 h-14">
-        <div className="badge badge-outline border-primary/20 bg-primary/5 text-primary gap-2 p-4 rounded-full">
-          <LockIcon size={14} weight="fill" />
-          <span className="text-[10px] uppercase tracking-widest font-bold">
-            Sealed & View Only
-          </span>
-        </div>
-      </div>
-    );
-  }
-
-  function VaultConfirm() {
-    return (
-      <div className={"modal modal-open bg-base-100/20 backdrop-blur-md"}>
-        <div className="modal-box p-12 flex flex-col items-center">
-          <VaultIcon
-            size={48}
-            className="text-primary mx-auto mb-8 animate-pulse"
-          />
-          <h3 className="font-serif text-3xl">Vault this letter?</h3>
-          <p className="text-base-content/60 text-sm text-center mt-4">
-            Vaulting locks the letter permanently and will be{" "}
-            <span className={"font-bold text-primary"}>mailed</span> to you
-            automatically on the unlock date.
-            <br />
-            <span className={"underline"}>
-              You cannot edit or view the contents of the letter until then.
-            </span>
-          </p>
-          <form
-            onSubmit={async (e) => {
-              e.preventDefault();
-              const formData = new FormData(e.currentTarget);
-              const unlockDateStr = formData.get("vault-date") as string;
-              const newUnlockDate = new Date(unlockDateStr);
-              setUnlockDate(newUnlockDate);
-              await handleSave("VAULT", newUnlockDate);
-              setConfirmModal(null);
-            }}
-            id="vault-form"
-          >
-            <div className={"divider tracking-tightest font-display text-sm"}>
-              Set an unlock date
-            </div>
-            <input
-              required
-              type="date"
-              className="input input-bordered w-full"
-              name="vault-date"
-            />
-            <button
-              className="btn btn-primary mt-4"
-              type="submit"
-              form="vault-form"
-            >
-              Vault
-            </button>
-
-            <button
-              type={"submit"}
-              className="btn btn-ghost mt-4"
-              onClick={() => setConfirmModal(null)}
-            >
-              Cancel
-            </button>
-          </form>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <>
       <Navbar
@@ -533,13 +547,13 @@ export default function Editor() {
               isSaveDatePulsing ? "animate-pulse" : ""
             }`}
           >
-            <p className="text-sm text-neutral-content/30 flex-col justify-end leading-none text-right">
+            <div className="text-sm text-neutral-content/30 flex-col justify-end leading-none text-right">
               <span className="text-[10px] uppercase tracking-widest font-bold">
                 Last Save
               </span>
               <br />
               <span className="italic">{lastSaved}</span>
-            </p>
+            </div>
             <ClockIcon
               size={16}
               weight="bold"
@@ -631,8 +645,16 @@ export default function Editor() {
           </div>
         )}
 
-        {confirmModal === "VAULT" && <VaultConfirm />}
-        {sealedTargetId && <SealedModal />}
+        {confirmModal === "VAULT" && (
+          <VaultConfirm
+            onSave={handleSave}
+            setConfirmModal={setConfirmModal}
+            setUnlockDate={setUnlockDate}
+          />
+        )}
+        {sealedTargetId && (
+          <SealedModal sealedTargetId={sealedTargetId} navigate={navigate} />
+        )}
 
         <div className="max-w-180 mx-auto px-1 md:px-0">
           <div className="flex justify-between items-end mb-16 border-b border-base-content/5 pb-8 px-0">
@@ -646,9 +668,7 @@ export default function Editor() {
               <input
                 id="recipient"
                 type="text"
-                ref={recipientInputRef}
-                placeholder={toPlaceholderList[0]}
-                data-offset={"0"}
+                placeholder={toPlaceholderList[placeholderIndex]}
                 value={recipient}
                 disabled={status !== "DRAFT"}
                 onChange={(e) => setRecipient(e.target.value)}
@@ -658,7 +678,25 @@ export default function Editor() {
             <DateDisplay />
           </div>
 
-          {status === "DRAFT" ? <ToolBar /> : <LetterHead />}
+          {status === "DRAFT" ? (
+            <ToolBar
+              fileInputRef={fileInputRef}
+              sealBtnClicked={sealBtnClicked}
+              setSealBtnClicked={setSealBtnClicked}
+              onSave={handleSave}
+              setConfirmModal={setConfirmModal}
+            />
+          ) : (
+            <LetterHead />
+          )}
+
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleImageUpload}
+            accept="image/*"
+            className="hidden"
+          />
 
           <ComposeCanvas ref={canvasRef} readOnly={status !== "DRAFT"} />
         </div>

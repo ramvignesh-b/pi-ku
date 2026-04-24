@@ -38,7 +38,7 @@ export function formatRelativeDate(input: Date | string | number) {
   return dateTimeFormatter.format(date);
 }
 
-export function formateRelativeDateWithoutTime(input: Date | string | number) {
+export function formatRelativeDateWithoutTime(input: Date | string | number) {
   if (!input) return "";
   const date = new Date(input);
   const now = new Date();

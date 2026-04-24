@@ -8,9 +8,60 @@ import { PATHS } from "../config/routes";
 import { useAuth } from "../hooks/useAuth";
 import { useLetters } from "../hooks/useLetters";
 import {
-  formateRelativeDateWithoutTime,
   formatRelativeDate,
+  formatRelativeDateWithoutTime,
 } from "../utils/dateFormat.ts";
+
+interface PasskeyModalProps {
+  onUnlock: (password: string) => Promise<void>;
+}
+
+function PasskeyModal({ onUnlock }: PasskeyModalProps) {
+  return (
+    <div className="modal modal-open bg-base-100/20 backdrop-blur-md z-100">
+      <div className="modal-box p-12 flex flex-col items-center">
+        <LockKeyIcon
+          size={48}
+          className="text-primary mx-auto mb-8 animate-pulse"
+        />
+        <h3 className="font-bold text-lg font-display text-primary">
+          Authentication Required
+        </h3>
+        <p className="py-4 font-sans">
+          We need you to re-enter your passkey to open your letters
+        </p>
+        <div className="divider w-1/2 mx-auto text-xs text-neutral-content/30 mt-0"></div>
+        <p className="text-xs text-neutral-content/30 font-mono italic">
+          P.S. We don't validate your input at the moment.
+        </p>
+        <div className="modal-action items-center gap-4">
+          <form
+            className="form-control w-full inline-flex"
+            onSubmit={async (e: React.SubmitEvent<HTMLFormElement>) => {
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget);
+              const password = formData.get("password") as string;
+              if (!password) return;
+              await onUnlock(password);
+            }}
+          >
+            <input
+              name="password"
+              required
+              type="password"
+              placeholder="password"
+              className="font-sans validator input input-bordered rounded-r-none"
+            />
+            <div className="validator-message text-xs text-error"></div>
+            <button type="submit" className="btn btn-primary rounded-l-none">
+              Unlock
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function Drawer() {
   const { user, logout, unlock } = useAuth();
@@ -21,53 +72,6 @@ export default function Drawer() {
 
   if (!user) return null;
 
-  function PasskeyModal() {
-    return (
-      <div className="modal modal-open bg-base-100/20 backdrop-blur-md">
-        <div className="modal-box p-12 flex flex-col items-center">
-          <LockKeyIcon
-            size={48}
-            className="text-primary mx-auto mb-8 animate-pulse"
-          />
-          <h3 className="font-bold text-lg font-display text-primary">
-            Authentication Required
-          </h3>
-          <p className="py-4 font-sans">
-            We need your passkey to open your letters
-          </p>
-          <div className="divider w-1/2 mx-auto text-xs text-neutral-content/30 mt-0"></div>
-          <p className="text-xs text-neutral-content/30 font-mono italic">
-            P.S. We don't validate your input at the moment.
-          </p>
-          <div className="modal-action items-center gap-4">
-            <form
-              className="form-control w-full inline-flex"
-              onSubmit={async (e: React.SubmitEvent<HTMLFormElement>) => {
-                e.preventDefault();
-                const formData = new FormData(e.currentTarget);
-                const password = formData.get("password") as string;
-                if (!password) return;
-                await unlock(password);
-              }}
-            >
-              <input
-                name="password"
-                required
-                type="password"
-                placeholder="password"
-                className="font-sans validator input input-bordered rounded-r-none"
-              />
-              <div className="validator-message text-xs text-error"></div>
-              <button type="submit" className="btn btn-primary rounded-l-none">
-                Unlock
-              </button>
-            </form>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   const toggleSection = (id: string) =>
     setOpenSection(openSection === id ? null : id);
 
@@ -75,8 +79,8 @@ export default function Drawer() {
     <div className="min-h-screen w-full bg-base-100 text-base-content flex flex-col items-center py-12 px-5 pb-32 font-serif transition-colors">
       <div className="fixed inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.5)_100%)] pointer-events-none z-0" />
 
-      {isAuthRequired && <PasskeyModal />}
-      <header className="text-center mb-12 z-10 animate-in fade-in slide-in-from-top-4 duration-1000">
+      {isAuthRequired && <PasskeyModal onUnlock={unlock} />}
+      <header className="text-center mb-12 z-10 animate-in fade-in slide-in-from-top-4 duration-500">
         <Logo />
         <div className="font-sans text-xs tracking-[0.3em] uppercase text-base-content/40 mt-2">
           Personal Archive
@@ -94,7 +98,7 @@ export default function Drawer() {
         </div>
       </header>
 
-      <div className="join join-vertical w-full max-w-120 bg-base-200 border border-base-content/10 shadow-2xl z-10 rounded-sm duration-1000 delay-200 min-h-64 flex flex-col">
+      <div className="join join-vertical w-full max-w-120 bg-base-200 border border-base-content/10 shadow-2xl z-10 rounded-sm duration-500 delay-200 min-h-64 flex flex-col">
         {loading ? (
           <div className="flex-1 flex flex-col items-center justify-center p-12 gap-4">
             <span className="loading loading-ring loading-lg text-primary opacity-20"></span>
@@ -175,7 +179,7 @@ export default function Drawer() {
                   id={letter.public_id}
                   preview={letter.metadata?.recipient || "Future Self"}
                   timestamp={formatRelativeDate(letter.updated_at)}
-                  unlock_at={formateRelativeDateWithoutTime(
+                  unlock_at={formatRelativeDateWithoutTime(
                     letter.unlock_at || "",
                   )}
                   isLocked={letter.unlock_at > new Date().toISOString()}
@@ -188,20 +192,20 @@ export default function Drawer() {
 
       <button
         type="button"
-        className="group mt-15 z-10 bg-transparent border border-dashed border-base-content/10 px-8 py-4 text-base-content/40 italic cursor-pointer transition-all hover:border-primary/40 hover:text-base-content/60 hover:bg-primary/5 hover:-translate-y-0.5 flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-primary/50 duration-1000"
+        className="group mt-15 z-10 bg-transparent border border-dashed border-base-content/10 px-8 py-4 text-base-content/40 italic cursor-pointer transition-all hover:border-primary/40 hover:text-base-content/60 hover:bg-primary/5 hover:-translate-y-0.5 flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-primary/50 duration-500"
         onClick={() => navigate(PATHS.write(""))}
       >
         <FeatherIcon
           size={18}
           weight="duotone"
-          className="text-primary/30 transition-all duration-700 group-hover:text-primary"
+          className="text-primary/30 transition-all duration-300 group-hover:text-primary"
         />
         Write something{" "}
         <span className="relative inline-flex">
-          <span className="transition-opacity duration-1500 opacity-80 group-hover:opacity-0">
+          <span className="transition-opacity duration-500 opacity-80 group-hover:opacity-0">
             . . . . . .
           </span>
-          <span className="absolute inset-0 text-primary transition-opacity duration-1000 opacity-0 group-hover:opacity-100">
+          <span className="absolute inset-0 text-primary transition-opacity duration-300 opacity-0 group-hover:opacity-100">
             unsaid
           </span>
         </span>
