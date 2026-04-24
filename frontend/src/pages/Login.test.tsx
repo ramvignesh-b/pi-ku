@@ -44,7 +44,19 @@ describe("Login Page", () => {
     expect(await screen.findByText(/technical issues/i)).toBeInTheDocument();
   });
 
-  it("should redirect to the drawer when login is successful", async () => {
+  it.each([
+    {
+      locationState: undefined,
+      nextRoute: "Drawer",
+    },
+    {
+      locationState: { redirectUrl: "/read/123" },
+      nextRoute: "Reader",
+    },
+  ])("should redirect to the next route when login is successful", async ({
+    locationState,
+    nextRoute,
+  }) => {
     const mockUser = {
       public_id: "user-123",
       email: "test@example.com",
@@ -61,10 +73,18 @@ describe("Login Page", () => {
     );
 
     render(
-      <MemoryRouter initialEntries={["/login"]}>
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: "/login",
+            state: locationState,
+          },
+        ]}
+      >
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/drawer" element={<div>Drawer</div>} />
+          <Route path="/read/:publicId" element={<div>Reader</div>} />
         </Routes>
       </MemoryRouter>,
     );
@@ -73,6 +93,6 @@ describe("Login Page", () => {
     await userEvent.type(screen.getByLabelText(/password/i), "password123");
     await userEvent.click(screen.getByRole("button", { name: /sign in/i }));
 
-    expect(await screen.findByText(/Drawer/i)).toBeInTheDocument();
+    expect(await screen.findByText(nextRoute)).toBeInTheDocument();
   });
 });

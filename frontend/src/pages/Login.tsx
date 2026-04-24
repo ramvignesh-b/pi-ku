@@ -78,6 +78,7 @@ export default function Login() {
   const [apiError, setApiError] = useState<string | null>(null);
   const { setAuthStore } = useAuth();
   const [showWelcome, setShowWelcome] = useState(!!location.state?.firstTime);
+  const nextRoute = location.state?.redirectUrl || ROUTES.DRAWER;
 
   const {
     register,
@@ -110,7 +111,7 @@ export default function Login() {
       // store the auth related data
       await setAuthStore(authData.access, userData, masterKey);
 
-      navigate(ROUTES.DRAWER, { replace: true });
+      navigate(nextRoute, { replace: true });
     } catch (err) {
       let message =
         "Sorry, we're experiencing technical issues.\nPlease try again later.";

@@ -6,7 +6,12 @@ import {
   XCircleIcon,
 } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import {
+  type NavigateFunction,
+  useLocation,
+  useNavigate,
+  useParams,
+} from "react-router-dom";
 import { api } from "../api/apiClient";
 import {
   type CanvasJSON,
@@ -37,6 +42,7 @@ export default function Reader() {
   const navigate = useNavigate();
   const sharingKey = location.hash.replace("#", "");
 
+  const navigateRef = useRef<NavigateFunction>(navigate);
   const canvasRef = useRef<CanvasTools>(null);
 
   const [isDecrypting, setIsDecrypting] = useState(true);
@@ -256,12 +262,9 @@ export default function Reader() {
 
   useEffect(() => {
     if (!(sharingKey || masterKey)) {
-      setError({
-        message:
-          "No sharing key provided. Please check the link or log in if you are the author.",
-        log: "",
+      navigateRef.current("/login", {
+        state: { redirectUrl: `/read/${public_id}` },
       });
-      setIsDecrypting(false);
       return;
     }
 
@@ -373,7 +376,7 @@ export default function Reader() {
 
   if (isDecrypting) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-base-100 font-serif">
+      <div className="flex items-center justify-center bg-base-100 font-serif">
         <div className="fixed inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.4)_100%)] pointer-events-none z-0" />
         <div className="text-center space-y-6 z-10">
           <Logo />
