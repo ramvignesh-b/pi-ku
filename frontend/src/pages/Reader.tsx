@@ -315,7 +315,7 @@ export default function Reader() {
           >
             <PaperPlaneTiltIcon size={16} weight="duotone" />
             <span className="text-md uppercase font-sans tracking-widest">
-              Send to someone...
+              Send to someone
             </span>
           </button>
           <button

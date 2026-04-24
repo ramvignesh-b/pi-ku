@@ -142,6 +142,7 @@ export default function Drawer() {
 
       <button
         type="button"
+        id="write-letter-btn"
         className="group mt-15 z-10 bg-transparent border border-dashed border-base-content/10 px-8 py-4 text-base-content/40 italic cursor-pointer transition-all hover:border-primary/40 hover:text-base-content/60 hover:bg-primary/5 hover:-translate-y-0.5 flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-primary/50 duration-500"
         onClick={() => navigate(PATHS.write(""))}
       >

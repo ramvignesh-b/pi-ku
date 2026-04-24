@@ -86,10 +86,10 @@ test.describe("Letter Drafting (Real Backend)", () => {
     await AuthHelper.registerAndLogin(page, email, name, password);
 
     logger.info(">> [Seal] Navigating to Editor via UI...");
-    await page.getByRole("button", { name: /write something/i }).click();
+    await page.locator("#write-letter-btn").click();
 
     const recipientInput = page.locator("#recipient");
-    await recipientInput.waitFor({ state: "visible", timeout: 20000 });
+    await recipientInput.waitFor({ state: "visible", timeout: 10000 });
     await recipientInput.fill("A Secret Guest");
 
     const canvasInput = page.getByLabel("Canvas text input");
@@ -123,6 +123,10 @@ test.describe("Letter Drafting (Real Backend)", () => {
     await expect(page.getByText(/breaking the seal/i)).toBeHidden({
       timeout: 10000,
     });
+    // Flip the envelope to show the seal
+    await page.locator("#env-front").click();
+    await page.waitForTimeout(2500); // Wait for flip transition
+
     await page.getByAltText("Seal").click();
     await page.waitForTimeout(1500);
     await page.locator("#letter").click({ position: { x: 30, y: 15 } });
@@ -133,7 +137,7 @@ test.describe("Letter Drafting (Real Backend)", () => {
     await page.locator("#share-letter-btn").click();
 
     // Verify share modal with a valid link
-    await expect(page.getByText(/share this letter/i)).toBeVisible();
+    await expect(page.getByText(/send this letter/i)).toBeVisible();
     const linkInput = page.locator("#share-link-input");
     const linkValue = await linkInput.inputValue();
     expect(linkValue).toContain("/read/");
@@ -142,7 +146,7 @@ test.describe("Letter Drafting (Real Backend)", () => {
 
     await expect(page.getByRole("button", { name: /copy/i })).toBeVisible();
     await page.getByRole("button", { name: /close/i }).click();
-    await expect(page.getByText(/share this letter/i)).toBeHidden();
+    await expect(page.getByText(/send this letter/i)).toBeHidden();
   });
 
   test("should allow author to access sealed letter from drawer without sharing key", async ({
@@ -182,10 +186,6 @@ test.describe("Letter Drafting (Real Backend)", () => {
       timeout: 10000,
     });
     await page.getByRole("button", { name: /keep it/i }).click();
-
-    // Navigate to Drawer - use ID or precise label
-    logger.info(">> [Drawer] Navigating to Drawer...");
-    await page.locator("button[aria-label='Open Drawer']").click();
 
     // Open "Kept" section - search for the section with id='kept' and click its toggle button
     logger.info(">> [Drawer] Opening Kept section...");

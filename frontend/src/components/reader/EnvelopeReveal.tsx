@@ -48,7 +48,9 @@ export function EnvelopeReveal({
         <div
           className={`relative h-70 w-105 transform-3d transition-transform duration-2000 ${isFlipped ? "rotate-y-180" : ""}`}
         >
-          <div className=" flex backface-hidden rotate-y-180 justify-center transition-all duration-1000">
+          <div
+            className={` flex backface-hidden rotate-y-180 justify-center transition-all duration-1000 ${isFlipped ? "" : "pointer-events-none"}`}
+          >
             <div
               id="env-top"
               className="z-4 delay-500 transition-all duration-2000 absolute peer h-40 w-54 mt-0 bg-base-200 mask mask-triangle-2 scale-x-234 has-checked:scale-y-[-1] has-checked:-translate-y-full has-checked:z-1 has-checked:duration-1000"
@@ -93,7 +95,7 @@ export function EnvelopeReveal({
           <button
             id="env-front"
             type="button"
-            className="text-left p-10 absolute inset-0 backface-hidden w-110 bg-base-200 z-99 rounded-md -translate-x-2"
+            className={`text-left p-10 absolute inset-0 backface-hidden w-110 bg-base-200 z-99 rounded-md -translate-x-2 ${isFlipped ? "pointer-events-none" : ""}`}
             onClick={() => setIsFlipped((prev) => !prev)}
           >
             <span className={"text-neutral-content/60 font-xs font-display"}>
