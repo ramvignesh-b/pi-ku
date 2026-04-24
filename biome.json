@@ -42,7 +42,7 @@
         "noUnusedVariables": "error"
       }
     },
-    "includes": ["**/src", "!backend"]
+    "includes": ["**", "!backend"]
   },
   "assist": {
     "actions": {

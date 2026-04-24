@@ -48,9 +48,7 @@ export const useAuth = () => {
     try {
       const masterKey = await loadMasterKey();
       if (masterKey) setMasterKey(masterKey);
-    } catch {
-      console.error("Master key restoration failed");
-    }
+    } catch {}
 
     // If session in memory, don't trigger refresh/me again
     if (accessToken && user) {
@@ -82,9 +80,7 @@ export const useAuth = () => {
       );
       await saveMasterKey(masterKey);
       setMasterKey(masterKey);
-    } catch {
-      console.error("Master key restoration failed");
-    }
+    } catch {}
   };
 
   return {

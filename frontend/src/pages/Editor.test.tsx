@@ -24,21 +24,20 @@ vi.mock("../components/ui/ComposeCanvas", () => ({
 // Mock CryptoUtils to avoid real crypto calls in UI tests
 vi.mock("../utils/crypto", () => {
   return {
-    CryptoUtils: vi.fn().mockImplementation(function () {
-      return {
-        initialize: vi.fn().mockResolvedValue(undefined),
-        encryptLetter: vi.fn().mockResolvedValue({
-          encrypted_content: "enc-content",
-          encrypted_dek: "enc-dek",
-          sharingKey: "share-key",
-        }),
-        encryptMetadata: vi.fn().mockResolvedValue({
-          encrypted_content: "enc-meta",
-          encrypted_dek: "enc-dek",
-        }),
-        decryptMetadata: vi.fn().mockResolvedValue({ recipient: "Test User" }),
-        decryptLetter: vi.fn().mockResolvedValue("{}"),
-      };
+    CryptoUtils: () => ({
+      initialize: vi.fn().mockResolvedValue(undefined),
+      encryptLetter: vi.fn().mockResolvedValue({
+        encrypted_content: "enc-content",
+        encrypted_dek: "enc-dek",
+        sharingKey: "share-key",
+      }),
+      encryptMetadata: vi.fn().mockResolvedValue({
+        encrypted_content: "enc-meta",
+        encrypted_dek: "enc-dek",
+      }),
+      decryptMetadata: vi.fn().mockResolvedValue({ recipient: "Test User" }),
+      decryptLetter: vi.fn().mockResolvedValue("{}"),
+      extractSharingKey: vi.fn().mockResolvedValue("share-key"),
     }),
   };
 });
@@ -160,7 +159,7 @@ describe("Editor Page", () => {
     fireEvent.click(secondarySealBtn);
 
     await waitFor(() => {
-      expect(screen.getByText(/Sealed & Ready/i)).toBeInTheDocument();
+      expect(screen.getByText(/Your letter is saved/i)).toBeInTheDocument();
     });
 
     expect(canvas.getAttribute("data-readonly")).toBe("true");

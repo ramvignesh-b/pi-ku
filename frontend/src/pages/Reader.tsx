@@ -65,13 +65,12 @@ export default function Reader() {
   const isAuthor = !!masterKey && !sharingKey;
 
   const handleShare = async () => {
-    if (!encryptedDek || !masterKey || !public_id) return;
+    if (!(encryptedDek && masterKey && public_id)) return;
     const cryptoUtils = new CryptoUtils();
     const key = await cryptoUtils.extractSharingKey(encryptedDek, masterKey);
     try {
       await api.patch(`${endpoints.LETTERS}${public_id}/`, { type: "SENT" });
-    } catch (err) {
-      console.error("Failed to update letter:", err);
+    } catch (_err) {
     } finally {
       setShareLink(`${window.location.origin}${PATHS.read(public_id)}#${key}`);
     }
@@ -145,14 +144,13 @@ export default function Reader() {
   }
 
   const burnLetter = async () => {
-    console.log("Burning letter...");
     if (!public_id || isBurning) return;
     setIsBurning(true);
     try {
       await api.patch(`${endpoints.LETTERS}${public_id}/`, {
         status: "BURNED",
       });
-    } catch (err) {
+    } catch (_err) {
     } finally {
       setIsBurning(false);
       setShowBurnModal(false);
@@ -447,6 +445,7 @@ export default function Reader() {
             </p>
             <div className="divider mx-auto w-24 text-center"></div>
             <button
+              type="button"
               className="btn btn-ghost text-sm text-neutral-content/60 font-sans"
               onClick={() => navigate(ROUTES.DRAWER)}
             >
