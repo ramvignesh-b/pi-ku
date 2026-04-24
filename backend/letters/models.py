@@ -1,4 +1,5 @@
 import uuid
+from datetime import UTC, datetime
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -38,6 +39,16 @@ class Letter(models.Model):
         super().clean()
         if self.type == Letter.Type.VAULT and self.status == Letter.Status.SEALED and not self.unlock_at:
             raise ValidationError("A sealed VAULT letter must have an unlock_date.")
+
+    def save(self, *args, **kwargs):
+        """
+        Override save method to auto set BURNED and SEALED timestamps.
+        """
+        if self.status == Letter.Status.BURNED:
+            self.burned_at = datetime.now(UTC)
+        if self.status == Letter.Status.SEALED:
+            self.sealed_at = datetime.now(UTC)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.type} - {self.status}"

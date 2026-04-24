@@ -66,13 +66,17 @@ class LetterDetailView(generics.RetrieveUpdateDestroyAPIView):
     def patch(self, request, public_id):
         """
         Updates an existing letter.
+        Can update type and status only when sealed, sent and burned.
         """
         letter = Letter.objects.get(public_id=public_id, user=request.user)
 
-        if letter.status == Letter.Status.SEALED and (
-            len(request.data) > 1 or request.data.get("status") != Letter.Status.BURNED
-        ):
-            return Response({"error": "Sealed letters can only be burned."}, status=400)
+        if letter.status == Letter.Status.SEALED:
+            if (
+                len(request.data) > 1
+                or (request.data.get("status") != Letter.Status.BURNED and request.data.get("status") is not None)
+                or (request.data.get("type") != Letter.Type.SENT and request.data.get("type") is not None)
+            ):
+                return Response({"error": "Sealed letters can only be burned or sent."}, status=400)
 
         write_serializer = self.get_serializer(letter, data=request.data, partial=True)
         write_serializer.is_valid(raise_exception=True)

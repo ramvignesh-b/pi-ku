@@ -270,15 +270,43 @@ class LetterAPITest(APITestCase):
                 "encrypted_dek": "enc_dek_new==",
             },
         )
-        response_burn = self.client.patch(self.url + letter.public_id + "/", {"status": "BURNED"})
 
         self.assertEqual(response_update_content.status_code, 400)
-        self.assertEqual(response_update_content.data["error"], "Sealed letters can only be burned.")
+        self.assertEqual(response_update_content.data["error"], "Sealed letters can only be burned or sent.")
         self.assertEqual(Letter.objects.get().encrypted_content, "enc_content==")
 
-        self.assertEqual(response_burn.status_code, 200)
+        from datetime import UTC, datetime
+
+        from freezegun import freeze_time
+
+        current_time = datetime.now(UTC)
+        with freeze_time(current_time):
+            response_burn = self.client.patch(self.url + letter.public_id + "/", {"status": "BURNED"})
+
+            self.assertEqual(response_burn.status_code, 200)
+            self.assertEqual(Letter.objects.count(), 1)
+            self.assertEqual(Letter.objects.get().status, "BURNED")
+            self.assertEqual(Letter.objects.get().burned_at, current_time)
+
+    def test_send_sealed_letter(self):
+        """
+        Test that a sealed letter can be sent.
+        """
+        letter = Letter.objects.create(
+            user=self.user,
+            type="KEPT",
+            status="SEALED",
+            public_id="4281edcc-5459-4ff2-bb5e-669fb44e0757",
+            encrypted_content="enc_content==",
+            encrypted_metadata="enc_meta==",
+            encrypted_dek="enc_dek==",
+        )
+
+        response_sent = self.client.patch(self.url + letter.public_id + "/", {"type": "SENT"})
+
+        self.assertEqual(response_sent.status_code, 200)
         self.assertEqual(Letter.objects.count(), 1)
-        self.assertEqual(Letter.objects.get().status, "BURNED")
+        self.assertEqual(Letter.objects.get().type, "SENT")
 
 
 class LetterImageModelTest(TestCase):
