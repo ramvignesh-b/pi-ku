@@ -129,7 +129,7 @@ export default function Login() {
       {showWelcome && <WelcomeModal setShowWelcome={setShowWelcome} />}
       <div className="glass-card w-full max-w-sm p-2 transition-all duration-500 hover:shadow-2xl fade-zoom">
         <form onSubmit={handleSubmit(onSubmit)} className="card-body gap-4">
-          <h1 className="card-title font-display text-2xl font-bold justify-center text-primary tracking-tight">
+          <h1 className="card-title font-display text-2xl justify-center text-primary/80 tracking-tight">
             Sign in to <Logo />
           </h1>
 

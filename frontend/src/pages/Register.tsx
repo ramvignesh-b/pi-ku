@@ -70,7 +70,7 @@ export default function Register() {
   return (
     <div className="glass-card w-full max-w-sm p-2 transition-all duration-500 hover:shadow-2xl fade-zoom">
       <form onSubmit={handleSubmit(onSubmit)} className="card-body gap-4">
-        <h1 className="card-title font-display text-2xl font-bold justify-center text-primary tracking-tight">
+        <h1 className="card-title font-display text-2xl justify-center text-primary/80 tracking-tight">
           Create a <Logo /> Account
         </h1>
 
@@ -81,7 +81,7 @@ export default function Register() {
         )}
 
         <FormField
-          label="Full Name"
+          label="Pen Name"
           placeholder="Word Smith"
           registration={register("full_name")}
           error={errors.full_name?.message}
@@ -90,7 +90,7 @@ export default function Register() {
         <FormField
           label="Email"
           type="email"
-          placeholder="you@email.com"
+          placeholder="f.kafka@email.com"
           registration={register("email")}
           error={errors.email?.message}
         />
