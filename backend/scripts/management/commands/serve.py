@@ -12,7 +12,8 @@ class Command(BaseCommand):
         If SSL is enabled, use runserver_plus command.
         If SSL is not enabled, use runserver command.
         """
-        ssl_enabled = os.getenv("SSL_ENABLED", "false").lower() == "true"
+        ssl_enabled = os.getenv("SSL_ENABLED", "false").lower().strip() == "true"
+
         domain = os.getenv("BACKEND_DOMAIN", "127.0.0.1")
         port = os.getenv("BACKEND_PORT", "8000")
         addrport = f"{domain}:{port}"
