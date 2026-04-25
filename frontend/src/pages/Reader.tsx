@@ -244,23 +244,27 @@ export default function Reader() {
     <section className="min-h-fit w-full bg-base-100 px-4 py-8 md:py-16 font-serif relative overflow-hidden">
       <div className="fixed inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.5)_100%)] pointer-events-none z-0" />
       <div
-        className={`transition-all duration-1000 relative ${
+        className={`transition-all delay-300 duration-1000 relative ${
           revealState === "revealed"
             ? "opacity-0 w-0 h-0 overflow-hidden invisible"
             : "opacity-100"
         }`}
       >
         {revealState === "sealed" && (
-          <EnvelopeReveal
-            recipient={metadata?.recipient || "Someone dear"}
-            date={
-              metadata?.updated_at
-                ? formatDate(new Date(metadata.updated_at))
-                : undefined
-            }
-            onRevealComplete={() => setRevealState("revealed")}
-            ignite={ignite}
-          />
+          <div className="h-[80vh] mx-auto flex-col items-center flex justify-center">
+            <div className="perspective-distant scale-80 duration-1000 transition-all animate-[pulse_2s_linear_1]">
+              <EnvelopeReveal
+                recipient={metadata?.recipient || "Someone dear"}
+                date={
+                  metadata?.updated_at
+                    ? formatDate(new Date(metadata.updated_at))
+                    : undefined
+                }
+                onRevealComplete={() => setRevealState("revealed")}
+                ignite={ignite}
+              />
+            </div>
+          </div>
         )}
       </div>
 
@@ -275,7 +279,7 @@ export default function Reader() {
       />
 
       {revealState === "revealed" && (
-        <div className="max-w-4xl m-8 mx-auto space-y-8 relative inset-0 z-100">
+        <div className="max-w-4xl m-8 mx-auto space-y-8 h-full relative inset-0 z-100">
           <div className="relative group perspective-1000">
             <div className="absolute inset-0 bg-primary/5 blur-3xl rounded-full scale-75 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none" />
 

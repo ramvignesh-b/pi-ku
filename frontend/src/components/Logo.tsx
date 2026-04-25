@@ -1,26 +1,26 @@
 import { DotIcon } from "@phosphor-icons/react";
 import "@fontsource/knewave/400.css";
 
-export default function Logo() {
+export default function Logo({ scale = 2 }) {
   return (
-    <span
+    <div
       role="img"
       aria-label="Pi Ku"
       className="inline-flex items-baseline justify-center leading-none select-none"
-      style={{ fontFamily: "'Knewave', serif" }}
+      style={{ fontFamily: "'Knewave', serif", scale }}
     >
-      <span className="text-2xl font-light text-accent">&nbsp;Pi</span>
+      <span className={`text-xl font-light text-accent`}>&nbsp;Pi</span>
       <DotIcon
         weight="fill"
-        size={12}
-        className="text-accent translate-y-[0.3em] -mx-px"
+        size={6}
+        className={`text-primary translate-y-1 -mx-px`}
       />
-      <span className="text-2xl font-light text-accent">&nbsp;Ku</span>
+      <span className={`text-xl font-light text-accent`}>&nbsp;Ku</span>
       <DotIcon
         weight="fill"
-        size={12}
-        className="text-accent translate-y-[0.3em] -mx-px"
+        size={6}
+        className={`text-primary translate-y-1 -mx-px`}
       />
-    </span>
+    </div>
   );
 }
