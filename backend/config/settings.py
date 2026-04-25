@@ -25,7 +25,7 @@ env_file = os.environ.get("PIKU_ENV_FILE", os.path.join(BASE_DIR.parent, ".env")
 if os.path.exists(env_file):
     environ.Env.read_env(env_file, overwrite=False)
 
-SSL_ENABLED = env("SSL_ENABLED") == "true"
+SSL_ENABLED = env("SSL_ENABLED", default="false").strip() == "true"
 URI_SCHEME = "https://" if SSL_ENABLED else "http://"
 
 FRONTEND_URLS = []
