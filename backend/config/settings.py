@@ -28,7 +28,7 @@ if os.path.exists(env_file):
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[])
 ALLOWED_HOSTS.append(env("FRONTEND_DOMAIN"))
 
-SSL_ENABLED = env("SSL_ENABLED", default="false").strip() == "true"
+SSL_ENABLED = env.bool("SSL_ENABLED", default=False)
 URI_SCHEME = "https://" if SSL_ENABLED else "http://"
 
 FRONTEND_URLS = []
@@ -46,7 +46,7 @@ else:
 SECRET_KEY = env("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env("DEBUG", default="false").lower().strip() == "true"
+DEBUG = env.bool("DEBUG", default=False)
 
 
 # Application definition
@@ -127,10 +127,11 @@ AUTH_COOKIE = {
 # Email config
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = env("EMAIL_HOST")
-EMAIL_PORT = env("EMAIL_PORT")
+EMAIL_PORT = env.int("EMAIL_PORT")
 EMAIL_HOST_USER = env("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
-EMAIL_USE_TLS = not DEBUG
+EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=False)
+EMAIL_USE_SSL = env.bool("EMAIL_USE_SSL", default=False)
 FROM_EMAIL = env("FROM_EMAIL")
 
 # Password validation
