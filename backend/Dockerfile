@@ -4,9 +4,10 @@ WORKDIR /app
 
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev
-RUN uv run manage.py migrate
 
 COPY . .
+RUN uv run manage.py migrate
+
 EXPOSE 8000
 
 CMD ["uv", "run", "--frozen", "gunicorn", "--bind", "0.0.0.0:8000", "config.wsgi:application"]
