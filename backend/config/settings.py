@@ -25,6 +25,9 @@ env_file = os.environ.get("PIKU_ENV_FILE", os.path.join(BASE_DIR.parent, ".env")
 if os.path.exists(env_file):
     environ.Env.read_env(env_file, overwrite=False)
 
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[])
+ALLOWED_HOSTS.append(env("FRONTEND_DOMAIN"))
+
 SSL_ENABLED = env("SSL_ENABLED", default="false").strip() == "true"
 URI_SCHEME = "https://" if SSL_ENABLED else "http://"
 
@@ -45,7 +48,6 @@ SECRET_KEY = env("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env("DEBUG")
 
-ALLOWED_HOSTS = [env("FRONTEND_DOMAIN")]
 
 # Application definition
 
