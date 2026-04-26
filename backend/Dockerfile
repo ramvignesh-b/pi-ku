@@ -9,9 +9,10 @@ COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev
 
 COPY . .
-RUN uv run manage.py migrate
-RUN mkdir -p /app/logs
+
+# Make the temp log dir writable since server is running rootless
+RUN mkdir -p /app/logs && chmod -R 777 /app/logs
 
 EXPOSE 8000
 
-CMD ["uv", "run", "--frozen", "gunicorn", "--bind", "0.0.0.0:8000", "--access-logfile", "-", "--error-logfile", "-", "--capture-output", "config.wsgi:application"]
+CMD ["sh", "-c", "uv run manage.py migrate && uv run gunicorn --bind 0.0.0.0:8000 --access-logfile - --error-logfile - --capture-output --log-level debug config.wsgi:application"]
