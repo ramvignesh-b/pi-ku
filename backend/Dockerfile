@@ -10,7 +10,7 @@ RUN uv sync --frozen --no-dev
 
 COPY . .
 RUN uv run manage.py migrate
-RUN mkdir -p logs
+RUN mkdir -p /app/logs
 
 EXPOSE 8000
 

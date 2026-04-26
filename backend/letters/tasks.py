@@ -1,13 +1,13 @@
-import logging
 from datetime import UTC, datetime
 
+import structlog
 from apscheduler.schedulers.background import BackgroundScheduler
 from django.core.mail import send_mail
 
 from config import settings
 from letters.models import Letter
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 def get_vault_letters_to_notify():
