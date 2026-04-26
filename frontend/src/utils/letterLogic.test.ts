@@ -152,9 +152,10 @@ describe("letterLogic image helpers", () => {
         crypto,
       );
 
-      expect(api.get).toHaveBeenCalledWith("https://remote/photo.png.bin", {
-        responseType: "blob",
-      });
+      expect(api.get).toHaveBeenCalledWith(
+        "https://remote/photo.png.bin",
+        expect.objectContaining({ responseType: "blob" }),
+      );
       expect(CryptoUtils.prototype.decryptImage).toHaveBeenCalledWith(
         expect.any(Blob),
         "wrapped-dek",
@@ -238,9 +239,10 @@ describe("letterLogic image helpers", () => {
         crypto,
       );
 
-      expect(api.get).toHaveBeenCalledWith("https://remote/photo.png.bin", {
-        responseType: "blob",
-      });
+      expect(api.get).toHaveBeenCalledWith(
+        "https://remote/photo.png.bin",
+        expect.objectContaining({ responseType: "blob" }),
+      );
       expect(
         CryptoUtils.prototype.decryptImageWithSharingKey,
       ).toHaveBeenCalledWith(expect.any(Blob), "raw-sharing-key");
