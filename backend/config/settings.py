@@ -25,8 +25,11 @@ env_file = os.environ.get("PIKU_ENV_FILE", os.path.join(BASE_DIR.parent, ".env")
 if os.path.exists(env_file):
     environ.Env.read_env(env_file, overwrite=False)
 
-ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[])
-ALLOWED_HOSTS.append(env("FRONTEND_DOMAIN"))
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["127.0.0.1"])
+ALLOWED_HOSTS.append(env("FRONTEND_DOMAIN", default="127.0.0.1"))
+ALLOWED_HOSTS.append(env("BACKEND_DOMAIN", default="127.0.0.1"))
+
+CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
 
 SSL_ENABLED = env.bool("SSL_ENABLED", default=False)
 URI_SCHEME = "https://" if SSL_ENABLED else "http://"
@@ -98,6 +101,7 @@ DATABASES = {
 }
 
 CORS_ALLOWED_ORIGINS = FRONTEND_URLS
+CSRF_TRUSTED_ORIGINS += FRONTEND_URLS
 CORS_ALLOW_CREDENTIALS = True
 
 AUTH_USER_MODEL = "users.User"
