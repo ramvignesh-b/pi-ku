@@ -145,3 +145,7 @@ jobs:
           name: playwright-report
           path: frontend/playwright-report/
           retention-days: 10
+
+      - name: Print Backend Logs on Failure
+        if: failure()
+        run: cat tmp/logs/backend.log || true
