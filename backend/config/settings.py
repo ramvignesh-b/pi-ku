@@ -25,8 +25,11 @@ env_file = os.environ.get("PIKU_ENV_FILE", os.path.join(BASE_DIR.parent, ".env")
 if os.path.exists(env_file):
     environ.Env.read_env(env_file, overwrite=False)
 
-ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[])
-ALLOWED_HOSTS.append(env("FRONTEND_DOMAIN"))
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["127.0.0.1"])
+ALLOWED_HOSTS.append(env("FRONTEND_DOMAIN", default="127.0.0.1"))
+ALLOWED_HOSTS.append(env("BACKEND_DOMAIN", default="127.0.0.1"))
+
+CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
 
 SSL_ENABLED = env.bool("SSL_ENABLED", default=False)
 URI_SCHEME = "https://" if SSL_ENABLED else "http://"
@@ -98,6 +101,7 @@ DATABASES = {
 }
 
 CORS_ALLOWED_ORIGINS = FRONTEND_URLS
+CSRF_TRUSTED_ORIGINS += FRONTEND_URLS
 CORS_ALLOW_CREDENTIALS = True
 
 AUTH_USER_MODEL = "users.User"
@@ -172,4 +176,31 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 MEDIA_URL = "/media/"
+
+if env.bool("S3_ENABLED", default=False):
+    MEDIA_URL = f"{env('R2_PUBLIC_URL')}/media/"
+    # HACK: S3 auto pre-pends the url scheme forcefully and this prevents double https
+    R2_HOST = env("R2_PUBLIC_URL").replace("https://", "")
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3.S3Storage",
+            "OPTIONS": {
+                "access_key": env("R2_ACCESS_KEY_ID"),
+                "secret_key": env("R2_SECRET_ACCESS_KEY"),
+                "bucket_name": env("R2_STORAGE_BUCKET_NAME"),
+                "region_name": env("R2_REGION_NAME"),
+                "endpoint_url": env("R2_ENDPOINT_URL"),
+                "location": "media",
+                "signature_version": "s3v4",
+                "file_overwrite": False,
+                "custom_domain": R2_HOST,
+                "querystring_auth": False,
+            },
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
+    DEFAULT_FILE_STORAGE = "storages.backends.s3.S3Storage"
+
 MEDIA_ROOT = BASE_DIR / "media"
