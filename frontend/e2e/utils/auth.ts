@@ -23,7 +23,7 @@ export async function registerAndLogin(
   // 1. Registration
   logger.info(`[Auth] Registering user: ${email}`);
   await page.goto("/onboard");
-  await page.getByLabel(/full name/i).fill(fullName);
+  await page.getByLabel(/pen name/i).fill(fullName);
   await page.getByLabel("Email", { exact: true }).fill(email);
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByLabel(/confirm password/i).fill(password);
