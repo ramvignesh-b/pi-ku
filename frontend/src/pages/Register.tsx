@@ -8,6 +8,7 @@ import { z } from "zod";
 import { publicApi } from "../api/apiClient";
 import Logo from "../components/Logo";
 import FormField from "../components/ui/FormField";
+import Saajan from "../components/ui/Saajan";
 import { endpoints } from "../config/endpoints";
 import { ROUTES } from "../config/routes";
 import { CryptoUtils } from "../utils/crypto";
@@ -31,6 +32,9 @@ export default function Register() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
+  const [saajanMessage, setSaajanMessage] = useState<string>(
+    "I didn't think I'd be here either.\nAnd yet, here we are.",
+  );
 
   const {
     register,
@@ -41,6 +45,7 @@ export default function Register() {
   });
 
   const onSubmit = async (data: RegisterInputs) => {
+    setSaajanMessage("Good. I'll remember that.");
     setIsLoading(true);
     setApiError(null);
     try {
@@ -68,74 +73,96 @@ export default function Register() {
   };
 
   return (
-    <div className="glass-card w-full max-w-sm p-2 transition-all duration-500 hover:shadow-2xl fade-zoom">
-      <form onSubmit={handleSubmit(onSubmit)} className="card-body gap-4">
-        <h1 className="card-title font-display text-2xl justify-center text-primary/80 tracking-tight">
-          Create a <Logo /> Account
-        </h1>
-
-        {apiError && (
-          <div className="alert alert-error text-xs py-2 rounded-md">
-            <span>{apiError}</span>
+    <div className="flex flex-col">
+      <Saajan message={saajanMessage} position="right" />
+      <div className="glass-card w-full max-w-sm p-2 transition-all duration-500 hover:shadow-2xl fade-zoom">
+        <form onSubmit={handleSubmit(onSubmit)} className="card-body gap-4">
+          <div className="card-title font-display text-2xl justify-center text-primary/80 tracking-tight whitespace-nowrap">
+            Create a <Logo /> Account
           </div>
-        )}
 
-        <FormField
-          label="Pen Name"
-          placeholder="Word Smith"
-          registration={register("full_name")}
-          error={errors.full_name?.message}
-        />
+          {apiError && (
+            <div className="alert alert-error text-xs py-2 rounded-md">
+              <span>{apiError}</span>
+            </div>
+          )}
 
-        <FormField
-          label="Email"
-          type="email"
-          placeholder="f.kafka@email.com"
-          registration={register("email")}
-          error={errors.email?.message}
-        />
+          <FormField
+            label="Pen Name"
+            placeholder="Word Smith"
+            registration={register("full_name")}
+            error={errors.full_name?.message}
+            handleFocus={() =>
+              setSaajanMessage("Hello friend. What should I call you?")
+            }
+          />
 
-        <FormField
-          label="Password"
-          type="password"
-          placeholder="••••••••"
-          registration={register("password")}
-          error={errors.password?.message}
-        />
+          <FormField
+            label="Email"
+            type="email"
+            placeholder="f.kafka@email.com"
+            registration={register("email")}
+            error={errors.email?.message}
+            handleFocus={() =>
+              setSaajanMessage(
+                "Where should I send your letters?\nNo empty lunchboxes, please.",
+              )
+            }
+          />
 
-        <FormField
-          label="Confirm Password"
-          type="password"
-          placeholder="••••••••"
-          registration={register("confirm_password")}
-          error={errors.confirm_password?.message}
-        />
+          <FormField
+            label="Password"
+            type="password"
+            placeholder="••••••••"
+            registration={register("password")}
+            error={errors.password?.message}
+            handleFocus={() =>
+              setSaajanMessage(
+                "Something only you know.\nI have one of those too.",
+              )
+            }
+          />
 
-        {/* Warning */}
-        <div className="alert alert-warning items-start text-left p-3 gap-2 rounded-md border-warning/20">
-          <InfoIcon size={20} weight="duotone" className="mt-0.5 shrink-0" />
-          <p className="text-sm font-semibold">
-            Choose a password you won't forget. <br />
-            <span className="underline decoration-2">There is no reset.</span>{" "}
-            If you lose it, your letters cannot be recovered.
-          </p>
-        </div>
+          <FormField
+            label="Confirm Password"
+            type="password"
+            placeholder="••••••••"
+            registration={register("confirm_password")}
+            error={errors.confirm_password?.message}
+            handleFocus={() =>
+              setSaajanMessage(
+                "Just once? Trust me, \nsome things are worth repeating twice.",
+              )
+            }
+          />
 
-        <div className="card-actions mt-4">
-          <button
-            type="submit"
-            disabled={isLoading}
-            aria-label="Register"
-            className="btn btn-primary w-full shadow-lg"
-          >
-            {isLoading ? (
-              <span className="loading loading-spinner loading-sm" />
-            ) : (
-              "Register"
-            )}
-          </button>
-        </div>
-      </form>
+          {/* Warning */}
+          <div className="alert alert-warning items-start text-left p-3 gap-2 rounded-md border-warning/20">
+            <InfoIcon size={20} weight="duotone" className="mt-0.5 shrink-0" />
+            <p className="text-sm font-semibold">
+              Choose a password you won't forget. <br />
+              Just like life,{" "}
+              <span className="underline decoration-2">there is no reset</span>{" "}
+              here. If you lose it, your letters cannot be recovered.
+            </p>
+          </div>
+
+          <div className="card-actions mt-4">
+            <button
+              type="submit"
+              disabled={isLoading}
+              aria-label="Register"
+              className="btn btn-primary w-full shadow-lg"
+            >
+              {isLoading ? (
+                <span className="loading loading-spinner loading-sm" />
+              ) : (
+                "Register"
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
