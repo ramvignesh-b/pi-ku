@@ -1,7 +1,11 @@
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../../config/routes";
 
-export function PostActionOverlay({ revealState }) {
+interface PostActionOverlayProps {
+  revealState: "sealed" | "revealed" | "burning" | "burned";
+}
+
+export function PostActionOverlay({ revealState }: PostActionOverlayProps) {
   const navigate = useNavigate();
   return (
     <div
