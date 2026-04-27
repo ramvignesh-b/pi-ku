@@ -16,8 +16,6 @@ export default function Activate() {
 
   useEffect(() => {
     if (!(uidb64 && token) || hasCalled.current) return;
-
-    // prevent double api calls
     hasCalled.current = true;
 
     const activateAccount = async () => {
@@ -46,7 +44,7 @@ export default function Activate() {
       )}
 
       {status === "success" && (
-        <div className="flex flex-col items-center gap-6 animate-in fade-in zoom-in duration-500">
+        <div className="flex flex-col items-center gap-6 duration-500">
           <div className="bg-success/10 p-4 rounded-full">
             <CheckCircleIcon
               size={64}
@@ -57,13 +55,12 @@ export default function Activate() {
           <h2 className="font-display text-xl text-success">
             Account Activated!
           </h2>
-          <p className="opacity-70 mb-8 leading-relaxed">
-            Welcome to <Logo />
+          <p className="opacity-70 leading-relaxed">
+            Welcome to <Logo scale={1} />
             <br />
             Your identity is now verified and ready for timeless letters.
           </p>
-          <div className="divider opacity-10"></div>
-
+          <div className="divider opacity-10 my-0"></div>
           <button
             type="button"
             className="btn btn-primary w-full shadow-lg"
@@ -85,16 +82,17 @@ export default function Activate() {
             <XCircleIcon size={64} weight="duotone" className="text-error" />
           </div>
           <h2 className="font-display text-xl text-error">Activation Failed</h2>
-          <p className="opacity-70 mb-8 leading-relaxed">
+          <p className="opacity-70 leading-relaxed">
             The link might be expired or already used. Please try registering
             again.
           </p>
+          <div className="divider opacity-10 my-0"></div>
           <button
             type="button"
             className="btn btn-ghost w-full"
             onClick={() => navigate(ROUTES.ONBOARD)}
           >
-            Back to Registration
+            Register Again
           </button>
         </div>
       )}

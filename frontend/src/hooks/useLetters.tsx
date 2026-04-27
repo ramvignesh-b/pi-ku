@@ -86,7 +86,7 @@ export function useLetters() {
     return {
       drafts: letters.filter((l) => l.status === "DRAFT"),
       kept: letters.filter((l) => l.type === "KEPT" && l.status === "SEALED"),
-      vault: letters.filter((l) => l.type === "VAULT"),
+      vault: letters.filter((l) => l.type === "VAULT" && l.status === "SEALED"),
       sent: letters.filter((l) => l.type === "SENT" && l.status === "SEALED"),
     };
   }, [letters]);
