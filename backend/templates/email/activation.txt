@@ -1,0 +1,21 @@
+pi. ku.
+-------------------------------------------
+
+{{pen_name}},
+
+Your destination is one train away.
+
+I've been keeping a place for your words.
+Come when you're ready.
+
+{{ cta.title }} -> {{ cta.link }}
+
+-------------------------------------------
+
+This link expires in 24 hours.
+I'm patient, but not endlessly so.
+
+-------------------------------------------
+
+Didn't write to me? Then someone else did.
+Ignore this. I'll forget you were ever here.

@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
+from django.template.loader import render_to_string
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 
@@ -9,16 +10,18 @@ def send_activation_email(user):
     token = default_token_generator.make_token(user)
     uid = urlsafe_base64_encode(force_bytes(user.public_id))
     activation_url = f"{settings.FRONTEND_URLS[0]}/activate/{uid}/{token}"
-    subject = "Activate Your Piku Account"
-    message = f"""Hi {user.full_name},
-
-        Welcome to Pi Ku.
-
-        Please click the link below to activate your account:
-        >> {activation_url}
-
-        If you did not create this account, please ignore this email."""
-    send_mail(subject, message, settings.FROM_EMAIL, [user.email], fail_silently=False)
+    subject = "Activate your pi. ku. account"
+    context = {
+        "pen_name": user.full_name,
+        "footnote": True,
+        "cta": {
+            "title": "Onboard",
+            "link": activation_url,
+        },
+    }
+    html_content = render_to_string("email/activation.html", context)
+    plain_content = render_to_string("email/activation.txt", context)
+    send_mail(subject, plain_content, settings.FROM_EMAIL, [user.email], fail_silently=False, html_message=html_content)
     return True
 
 

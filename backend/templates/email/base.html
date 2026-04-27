@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>pi. ku.</title>
+</head>
+<body style="margin:0; padding:0; background-color:#1a1712;">
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+       style="background-color:#1a1712;">
+    <tr>
+        <td align="center" style="padding: 48px 16px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+                   style="max-width:480px; width:100%;">
+
+                {# Logo #}
+                <tr>
+                    <td align="left" style="padding-bottom: 36px;">
+                        <img src="https://cdn.jsdelivr.net/gh/ramvignesh-b/cdn@main/pi-ku_logo.png" width="100"
+                             height="50" alt="Pi.Ku"
+                             style="display:block;">
+                    </td>
+                </tr>
+
+                {# Body #}
+                <tr>
+                    <td style="font-family: Lora, Georgia, serif;
+                           font-size: 16px;
+                           line-height: 1.9;
+                           color: #cdccca;
+                           font-style: italic;
+                           padding-bottom: 32px;">
+                        {% block content %}
+                        {% endblock %}
+                    </td>
+                </tr>
+
+                {# CTA #}
+                {% if cta %}
+                    <tr>
+                        <td align="left" style="padding-bottom: 32px;">
+                            <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                                <tr>
+                                    <td style="background-color: #301e19; border-radius: 3px;">
+                                        <a href='{{ cta.link }}'
+                                           style="display: inline-block;
+                                  padding: 12px 28px;
+                                  font-family: Georgia, serif;
+                                  font-size: 14px;
+                                  color: #f5e6c8;
+                                  text-decoration: none;
+                                  letter-spacing: 0.04em;">
+                                            {{ cta.title }}
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                {% endif %}
+
+                {% if footnote %}
+                    <tr>
+                        <td style="font-family: Lora, Georgia, serif;
+                           font-size: 13px;
+                           font-style: italic;
+                           color: #7a7974;
+                           padding-bottom: 40px;
+                           line-height: 1.8;">
+                            {% block footnote %}
+                            {% endblock %}
+                        </td>
+                    </tr>
+                {% endif %}
+
+                {# Footer #}
+                <tr>
+                    <td style="border-top: 1px solid #2e2c29; padding-bottom: 24px; font-size: 0;">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td style="font-family: Lora, serif;
+                           font-size: 13px;
+                           font-style: italic;
+                           color: #5a5957;
+                           line-height: 1.8;">
+                        {% block footer %}
+                        {% endblock %}
+                    </td>
+                </tr>
+
+            </table>
+        </td>
+    </tr>
+</table>
+
+</body>
+</html>
