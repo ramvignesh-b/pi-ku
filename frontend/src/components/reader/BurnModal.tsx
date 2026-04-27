@@ -1,12 +1,19 @@
 import { CampfireIcon, FlameIcon, XCircleIcon } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 
+interface BurnModalProps {
+  burnLetter: () => void;
+  isBurning: boolean;
+  setShowBurnModal: (show: boolean) => void;
+  setRevealState: (state: "sealed" | "revealed" | "burning" | "burned") => void;
+}
+
 export function BurnModal({
   burnLetter,
   isBurning,
   setShowBurnModal,
   setRevealState,
-}) {
+}: BurnModalProps) {
   const [flameOn, setFlameOn] = useState(0);
   const [rotate, setRotate] = useState(0);
   const [burnClicked, setBurnClicked] = useState(false);

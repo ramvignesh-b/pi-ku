@@ -4,7 +4,12 @@ import {
   XCircleIcon,
 } from "@phosphor-icons/react";
 
-export function ShareModal({ shareLink, setShareLink }) {
+interface ShareModalProps {
+  shareLink: string | null;
+  setShareLink: (link: string | null) => void;
+}
+
+export function ShareModal({ shareLink, setShareLink }: ShareModalProps) {
   const copyToClipboard = async () => {
     if (!shareLink) return;
     await navigator.clipboard.writeText(shareLink);
