@@ -102,6 +102,7 @@ export function ToolBar({
       </div>
       <button
         type="button"
+        aria-label="Help"
         onClick={() => setSealBtnClicked(false)}
         className={`bg-transparent cursor-pointer -mt-2 absolute z-1000001 right-0 text-primary  ${sealBtnClicked ? "" : "hidden"}`}
       >
