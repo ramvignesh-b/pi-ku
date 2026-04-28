@@ -30,6 +30,9 @@ export class CryptoUtils {
   private static readonly PBKDF2_ITERATIONS = 100_000;
   private static readonly AES_GCM = { name: "AES-GCM", length: 256 };
 
+  private readonly contentIV = crypto.getRandomValues(new Uint8Array(12));
+  private readonly dekIV = crypto.getRandomValues(new Uint8Array(12));
+
   // Generates a fresh Data Encryption Key (DEK)
   async initialize() {
     this.dek = await crypto.subtle.generateKey(CryptoUtils.AES_GCM, true, [
@@ -91,7 +94,7 @@ export class CryptoUtils {
         hash: "SHA-256",
       },
       baseKey,
-      512, // 512 bits to split
+      512,
     );
 
     // first 256 bits for MasterKey, last 256 bits for AuthHash
@@ -123,26 +126,24 @@ export class CryptoUtils {
     const plainBytes = new Uint8Array(input);
 
     // encrypt the content with the DEK
-    const contentIv = crypto.getRandomValues(new Uint8Array(12));
     const ciphertext = await crypto.subtle.encrypt(
-      { name: "AES-GCM", iv: contentIv },
+      { name: "AES-GCM", iv: this.contentIV },
       this.dek,
       plainBytes,
     );
 
     // wrap the DEK with the Master Key (for self/owner access)
-    const dekIv = crypto.getRandomValues(new Uint8Array(12));
     const wrappedDek = await crypto.subtle.wrapKey("raw", this.dek, masterKey, {
       name: "AES-GCM",
-      iv: dekIv,
+      iv: this.dekIV,
     });
 
     // export raw DEK for the share URL (recipient access, no master key needed)
     const rawDek = await crypto.subtle.exportKey("raw", this.dek);
 
     return {
-      encryptedContent: this.packWithIv(contentIv, ciphertext),
-      encrypted_dek: this.packWithIv(dekIv, wrappedDek),
+      encryptedContent: this.packWithIv(this.contentIV, ciphertext),
+      encrypted_dek: this.packWithIv(this.dekIV, wrappedDek),
       sharingKey: this.toBase64(new Uint8Array(rawDek)),
     };
   }
