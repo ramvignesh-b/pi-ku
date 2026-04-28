@@ -10,9 +10,13 @@ class LettersConfig(AppConfig):
         """
         Start the scheduler only when the server is starting.
         NOTE: If we don't check for RUN_MAIN, the scheduler triggers for all django operations (migration, test etc.)
+        NOTE++: For uvicorn, we make sure to set the env var `UVICORN_MAIN` to `true` in the docker command.
         """
-
-        if not (os.environ.get("RUN_MAIN") == "true" or os.environ.get("WERKZEUG_RUN_MAIN") == "true"):
+        if not (
+            os.environ.get("RUN_MAIN") == "true"
+            or os.environ.get("WERKZEUG_RUN_MAIN") == "true"
+            or os.environ.get("UVICORN_MAIN") == "true"
+        ):
             return
         from .tasks import start_scheduler
 
