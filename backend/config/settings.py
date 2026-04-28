@@ -25,9 +25,12 @@ env_file = os.environ.get("PIKU_ENV_FILE", os.path.join(BASE_DIR.parent, ".env")
 if os.path.exists(env_file):
     environ.Env.read_env(env_file, overwrite=False)
 
+# Security Settings
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["127.0.0.1"])
 ALLOWED_HOSTS.append(env("FRONTEND_DOMAIN", default="127.0.0.1"))
 ALLOWED_HOSTS.append(env("BACKEND_DOMAIN", default="127.0.0.1"))
+# NOTE: Set to forward https when using reverse proxy
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
 
