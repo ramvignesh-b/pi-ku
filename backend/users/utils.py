@@ -21,7 +21,14 @@ def send_activation_email(user):
     }
     html_content = render_to_string("email/activation.html", context)
     plain_content = render_to_string("email/activation.txt", context)
-    send_mail(subject, plain_content, settings.FROM_EMAIL, [user.email], fail_silently=False, html_message=html_content)
+    send_mail(
+        subject=subject,
+        message=plain_content,
+        from_email=settings.FROM_EMAIL,
+        recipient_list=[user.email],
+        fail_silently=False,
+        html_message=html_content,
+    )
     return True
 
 

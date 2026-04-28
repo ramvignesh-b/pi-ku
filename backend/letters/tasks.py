@@ -35,7 +35,7 @@ def notify_unlocked_letter(letter):
         plaint_content = render_to_string("email/vault_unlock.txt", context=context)
         html_content = render_to_string("email/vault_unlock.html", context=context)
         send_mail(
-            subject,
+            subject=subject,
             message=plaint_content,
             from_email=settings.FROM_EMAIL,
             recipient_list=[author],
@@ -45,8 +45,8 @@ def notify_unlocked_letter(letter):
         letter.notified_at = datetime.now(UTC)
         letter.save()
         logger.info(f"Successfully notified {author} of unlocked letter")
-    except Exception as e:
-        logger.exception(f"Failed to notify {author} of unlocked letter", str(e))
+    except Exception:
+        logger.exception(f"Failed to notify {author} of unlocked letter")
 
 
 def vault_unlock_notification_polling_scheduler():

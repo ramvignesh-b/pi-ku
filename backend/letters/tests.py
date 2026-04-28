@@ -396,6 +396,7 @@ class LetterTaskTest(TestCase):
                 from_email=settings.FROM_EMAIL,
                 recipient_list=[self.user.email],
                 fail_silently=False,
+                html_message=ANY,
             )
             self.assertIsNotNone(letter_to_notify1.notified_at)
 
