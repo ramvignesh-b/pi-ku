@@ -1,4 +1,11 @@
+from pathlib import Path
+
 import structlog
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+LOGS_DIR = BASE_DIR / "logs"
+
+LOGS_DIR.mkdir(parents=True, exist_ok=True)
 
 structlog.configure(
     processors=[
@@ -41,22 +48,22 @@ LOGGING = {
         },
         "json_file": {
             "class": "logging.handlers.WatchedFileHandler",
-            "filename": "logs/json.log",
+            "filename": LOGS_DIR / "json.log",
             "formatter": "json_formatter",
         },
         "flat_line_file": {
             "class": "logging.handlers.WatchedFileHandler",
-            "filename": "logs/flat_line.log",
+            "filename": LOGS_DIR / "flat_line.log",
             "formatter": "key_value",
         },
         "letters_log": {
             "class": "logging.handlers.WatchedFileHandler",
-            "filename": "logs/letters.log",
+            "filename": LOGS_DIR / "letters.log",
             "formatter": "key_value",
         },
         "scheduler_log": {
             "class": "logging.handlers.WatchedFileHandler",
-            "filename": "logs/scheduler.log",
+            "filename": LOGS_DIR / "scheduler.log",
             "formatter": "key_value",
         },
     },
