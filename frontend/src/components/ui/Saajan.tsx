@@ -39,7 +39,7 @@ export default function Saajan({ message, position = "right" }: SaajanProps) {
   return (
     <div className={`relative w-full flex ${alignment}`}>
       <div
-        className={`tooltip tooltip-open ${tooltipPosition} before:max-w-xs before:whitespace-pre-line italic before:text-left`}
+        className={`tooltip tooltip-open ${tooltipPosition} before:border before:border-dashed before:border-primary/40 before:max-w-xs before:whitespace-pre-line italic before:text-left`}
         data-tip={message}
       >
         <img
