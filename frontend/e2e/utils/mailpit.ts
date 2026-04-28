@@ -31,8 +31,8 @@ export const MailpitHelper = {
           );
           const details = await detailRes.json();
 
-          const body = details.HTML || details.Text || "";
-          const match = body.match(/https?:\/\/\S+activate\/\S+/);
+          const body = details.Text || "";
+          const match = body.match(/https?:\/\/\S*activate\S*/);
 
           if (match) return match[0];
         }
