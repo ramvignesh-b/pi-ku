@@ -1,5 +1,6 @@
 import { WavesIcon } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
+import candle from "../../assets/envelope/candle.png";
 import stamp from "../../assets/envelope/stamp.png";
 import waxSeal from "../../assets/envelope/waxSeal.png";
 
@@ -133,15 +134,20 @@ export function EnvelopeReveal({
         </button>
       </div>
       {ignite && (
-        <div className="absolute w-115 h-70 z-100 overflow-hidden flex align-baseline -translate-y-70 -translate-x-5">
-          <div
-            className="absolute z-1000 border-2 border-amber-200 -bottom-3 -right-3 w-0 h-0  transition-all duration-500 bg-base-100 rounded-tl-full rounded-bl-full origin-bottom-right"
-            style={{
-              width: 2 * burn.width,
-              height: 2 * burn.height,
-            }}
-          ></div>
-        </div>
+        <>
+          <div className="absolute w-115 h-70 z-100 overflow-hidden flex align-baseline -translate-y-70 -translate-x-5">
+            <div
+              className="absolute z-1000 border-2 border-amber-200 -bottom-3 -right-3 w-0 h-0  transition-all duration-500 bg-base-100 rounded-tl-full rounded-bl-full origin-bottom-right"
+              style={{
+                width: 2 * burn.width,
+                height: 2 * burn.height,
+              }}
+            ></div>
+          </div>
+          <div className="absolute z-1001 bottom-0 right-0 translate-x-15 translate-y-20">
+            <img src={candle} alt="candle" />
+          </div>
+        </>
       )}
     </>
   );
