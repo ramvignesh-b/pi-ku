@@ -213,8 +213,8 @@ export default function Reader() {
 
   if (isDecrypting) {
     return (
-      <div className="flex items-center justify-center bg-base-100 font-serif">
-        <div className="fixed w-screen h-screen inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.4)_100%)] pointer-events-none z-0" />
+      <div className="flex items-center h-screen w-screen justify-center bg-base-100 font-sans">
+        <div className="fixed inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.4)_100%)] pointer-events-none z-0" />
         <div className="text-center space-y-6 z-10">
           <Logo />
           <div className="flex flex-col items-center gap-2">
