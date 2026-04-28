@@ -12,6 +12,7 @@ import { z } from "zod";
 import { api, publicApi } from "../api/apiClient";
 import Logo from "../components/Logo";
 import FormField from "../components/ui/FormField";
+import { Modal } from "../components/ui/Modal";
 import Saajan from "../components/ui/Saajan";
 import { endpoints } from "../config/endpoints";
 import { ROUTES } from "../config/routes";
@@ -31,13 +32,8 @@ function WelcomeModal({
   setShowWelcome: (show: boolean) => void;
 }) {
   return (
-    <div className="modal modal-open backdrop-blur-sm transition-all duration-1000">
-      <div className="absolute bottom-1">
-        <Saajan
-          message={"I've lost words before.\nI know what it feels like."}
-        />
-      </div>
-      <div className="modal-box border bg-base-100/20 border-primary/20 shadow-2xl p-8">
+    <>
+      <Modal isOpen={true}>
         <div className="flex flex-col items-center text-center gap-4">
           <div className="bg-primary/10 p-4 rounded-full animate-pulse">
             <ShieldCheckIcon
@@ -96,8 +92,14 @@ function WelcomeModal({
             </button>
           </div>
         </div>
+      </Modal>
+      <div className="absolute bottom-0 z-1000 font-sans w-full">
+        <Saajan
+          position="top"
+          message={"I've lost words before.\nI know what it feels like."}
+        />
       </div>
-    </div>
+    </>
   );
 }
 

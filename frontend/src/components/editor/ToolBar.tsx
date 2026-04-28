@@ -6,6 +6,7 @@ import {
   TrayIcon,
   VaultIcon,
 } from "@phosphor-icons/react";
+import { Modal } from "../ui/Modal";
 
 interface ToolBarProps {
   fileInputRef: React.RefObject<HTMLInputElement | null>;
@@ -150,65 +151,62 @@ export function VaultConfirmModal({
   setUnlockDate,
 }: VaultConfirmModalProps) {
   return (
-    <div className={"modal modal-open bg-base-100/10 backdrop-blur-md"}>
-      <div className="modal-box p-12 flex flex-col items-center bg-base-100/90">
-        <VaultIcon
-          size={48}
-          className="text-primary mx-auto mb-8 animate-pulse"
+    <Modal isOpen={true}>
+      <VaultIcon
+        size={48}
+        className="text-primary mx-auto mb-8 animate-pulse"
+      />
+      <h3 className="font-serif text-3xl">Take it away, then?</h3>
+      <p className="text-base-content/60 text-sm text-center mt-4">
+        By vaulting this letter, you ask me to hold on to this.
+        <br />
+        I'll remember to mail you this on the unlock date.
+        <br />
+        <span className={"font-bold text-primary"}>
+          {" "}
+          But I won't let you read or rewrite this letter until then.
+        </span>
+        <br />
+      </p>
+      <form
+        onSubmit={async (e) => {
+          e.preventDefault();
+          const formData = new FormData(e.currentTarget);
+          const unlockDateStr = formData.get("vault-date") as string;
+          const newUnlockDate = new Date(unlockDateStr);
+          setUnlockDate(newUnlockDate);
+          await onSave("VAULT", newUnlockDate);
+          setConfirmModal(null);
+        }}
+        id="vault-form"
+        className="min-w-75"
+      >
+        <div className={"divider tracking-tightest font-display text-sm"}>
+          Set an unlock date
+        </div>
+        <input
+          required
+          type="date"
+          className="input input-bordered w-full"
+          name="vault-date"
         />
-        <h3 className="font-serif text-3xl">Take it away, then?</h3>
-        <p className="text-base-content/60 text-sm text-center mt-4">
-          By vaulting this letter, you ask me to hold on to this.
-          <br />
-          I'll remember to mail you this on the unlock date.
-          <br />
-          <span className={"font-bold text-primary"}>
-            {" "}
-            But I won't let you read or rewrite this letter until then.
-          </span>
-          <br />
-        </p>
-        <form
-          onSubmit={async (e) => {
-            e.preventDefault();
-            const formData = new FormData(e.currentTarget);
-            const unlockDateStr = formData.get("vault-date") as string;
-            const newUnlockDate = new Date(unlockDateStr);
-            console.log(newUnlockDate);
-            setUnlockDate(newUnlockDate);
-            await onSave("VAULT", newUnlockDate);
-            setConfirmModal(null);
-          }}
-          id="vault-form"
-          className="min-w-75"
-        >
-          <div className={"divider tracking-tightest font-display text-sm"}>
-            Set an unlock date
-          </div>
-          <input
-            required
-            type="date"
-            className="input input-bordered w-full"
-            name="vault-date"
-          />
-          <div className="w-full flex justify-center gap-8 mt-4">
-            <button
-              type="button"
-              className="btn btn-ghost btn-sm mt-4"
-              onClick={() => setConfirmModal(null)}
-            >
-              I need time
-            </button>
-            <button
-              className="btn btn-primary btn-sm mt-4"
-              type="submit"
-              form="vault-form"
-            >
-              Take it
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <div className="w-full flex justify-center gap-8 mt-4">
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm mt-4"
+            onClick={() => setConfirmModal(null)}
+          >
+            I need time
+          </button>
+          <button
+            className="btn btn-primary btn-sm mt-4"
+            type="submit"
+            form="vault-form"
+          >
+            Take it
+          </button>
+        </div>
+      </form>
+    </Modal>
   );
 }

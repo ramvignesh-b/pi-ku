@@ -1,8 +1,6 @@
-import {
-  EyeSlashIcon,
-  PaperPlaneTiltIcon,
-  XCircleIcon,
-} from "@phosphor-icons/react";
+import { EyeSlashIcon, PaperPlaneTiltIcon } from "@phosphor-icons/react";
+import { Modal } from "../ui/Modal";
+import Saajan from "../ui/Saajan";
 
 interface ShareModalProps {
   shareLink: string | null;
@@ -15,16 +13,8 @@ export function ShareModal({ shareLink, setShareLink }: ShareModalProps) {
     await navigator.clipboard.writeText(shareLink);
   };
   return (
-    <div className="modal modal-open modal-middle bg-base-100/20 backdrop-blur-md z-100">
-      <div className="modal-box bg-base-100 border border-base-content/5 shadow-2xl relative">
-        <button
-          type="button"
-          className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
-          onClick={() => setShareLink(null)}
-          aria-label="Close"
-        >
-          <XCircleIcon size={18} weight="bold" />
-        </button>
+    <>
+      <Modal isOpen={!!shareLink} onClose={() => setShareLink(null)}>
         <div className="flex flex-col items-center justify-center text-center gap-6 py-4">
           <div className="space-y-2">
             <PaperPlaneTiltIcon
@@ -34,14 +24,17 @@ export function ShareModal({ shareLink, setShareLink }: ShareModalProps) {
             />
             <h3 className="font-serif text-3xl">Send this letter</h3>
             <p className="text-base-content/80 text-sm font-sans mt-4">
-              You've carried these words long enough. Send your letter now, and
-              let the <span className="text-accent font-display">unsaid</span>{" "}
-              finally find its home.
+              You've carried these words long enough.
+              <br />
+              Send your letter now, and let the{" "}
+              <span className="text-accent font-display">unsaid</span> finally
+              find its home.
             </p>
             <div className="divider mx-auto" />
             <blockquote className="text-sm info text-neutral-content/60 font-sans">
-              The recipient will have the same viewing experience like you do
-              now.
+              They'll receive it exactly as you're seeing it now.
+              <br />
+              Nothing more, nothing less.
             </blockquote>
           </div>
           <div className="w-full flex items-center gap-2 bg-base-300 p-2 rounded-xl">
@@ -69,7 +62,13 @@ export function ShareModal({ shareLink, setShareLink }: ShareModalProps) {
             </p>
           </div>
         </div>
+      </Modal>
+      <div className="absolute bottom-0 z-1000 font-sans w-full">
+        <Saajan
+          position="top"
+          message={`Someone once said,\n"To send a letter is a good way to go somewhere without moving anything but your heart."\nThey were not wrong.`}
+        />
       </div>
-    </div>
+    </>
   );
 }

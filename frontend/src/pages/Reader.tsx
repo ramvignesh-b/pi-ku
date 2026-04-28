@@ -33,6 +33,7 @@ interface LetterMetadata {
   updated_at?: string;
 }
 
+const WAIT_FOR_BURN_MS = 18000;
 export default function Reader() {
   const { public_id } = useParams();
   const location = useLocation();
@@ -44,13 +45,10 @@ export default function Reader() {
 
   const [isDecrypting, setIsDecrypting] = useState(true);
   const [revealState, setRevealState] = useState<
-    "sealed" | "revealed" | "burned" | "burning"
-  >("sealed");
-  const [error, setError] = useState<{
-    message: string;
-    log: string;
-  } | null>(null);
-  const [warning, setWarning] = useState<{
+    "SEALED" | "REVEALED" | "BURNED" | "BURNING"
+  >("SEALED");
+  const [logTrace, setLogTrace] = useState<{
+    type: "WARN" | "ERROR";
     message: string;
     log: string;
   } | null>(null);
@@ -92,8 +90,8 @@ export default function Reader() {
       setShowBurnModal(false);
       setIgnite(true);
       setTimeout(() => {
-        setRevealState("burned");
-      }, 13000);
+        setRevealState("BURNED");
+      }, WAIT_FOR_BURN_MS);
     }
   };
 
@@ -180,17 +178,19 @@ export default function Reader() {
                 );
           }
         } catch (err) {
-          setWarning({
+          setLogTrace({
             message:
               "Failed to decrypt elements. Images might not render in the letter as intended.",
             log: err instanceof Error ? err.message : "Unknown error",
+            type: "WARN",
           });
         }
         setDecryptedCanvasData(canvasData);
       } catch (err) {
-        setError({
-          message: `Failed to load letter :(`,
+        setLogTrace({
+          message: `Failed to load letter ☹`,
           log: err instanceof Error ? err.message : "Unknown error",
+          type: "ERROR",
         });
       } finally {
         setIsDecrypting(false);
@@ -203,7 +203,7 @@ export default function Reader() {
   useEffect(() => {
     if (
       !isDecrypting &&
-      revealState === "revealed" &&
+      revealState === "REVEALED" &&
       decryptedCanvasData &&
       canvasRef.current
     ) {
@@ -214,12 +214,12 @@ export default function Reader() {
   if (isDecrypting) {
     return (
       <div className="flex items-center justify-center bg-base-100 font-serif">
-        <div className="fixed inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.4)_100%)] pointer-events-none z-0" />
+        <div className="fixed w-screen h-screen inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.4)_100%)] pointer-events-none z-0" />
         <div className="text-center space-y-6 z-10">
           <Logo />
           <div className="flex flex-col items-center gap-2">
             <span className="loading loading-ring loading-md text-primary/40"></span>
-            <p className="text-[10px] uppercase tracking-[0.4em] text-base-content/20 animate-pulse">
+            <p className="text-xs uppercase tracking-widest text-base-content/20 animate-pulse">
               Breaking the seal...
             </p>
           </div>
@@ -228,14 +228,17 @@ export default function Reader() {
     );
   }
 
-  if (error) {
+  if (logTrace) {
     return (
       <LogModal
-        isOpen={!!error}
-        onClose={() => (window.location.href = "/")}
-        message={error.message}
-        log={error.log}
-        status="ERROR"
+        isOpen={!!logTrace}
+        onClose={() => {
+          if (logTrace.type === "ERROR") window.location.href = "/";
+          setLogTrace(null);
+        }}
+        message={logTrace.message}
+        log={logTrace.log}
+        status={logTrace.type}
       />
     );
   }
@@ -245,12 +248,12 @@ export default function Reader() {
       <div className="fixed inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.5)_100%)] pointer-events-none z-0" />
       <div
         className={`transition-all delay-300 duration-1000 relative ${
-          revealState === "revealed"
+          revealState === "REVEALED"
             ? "opacity-0 w-0 h-0 overflow-hidden invisible"
             : "opacity-100"
         }`}
       >
-        {revealState === "sealed" && (
+        {revealState === "SEALED" && (
           <div className="h-[80vh] mx-auto flex-col items-center flex justify-center">
             <div className="perspective-distant scale-80 duration-1000 transition-all animate-[pulse_2s_linear_1]">
               <EnvelopeReveal
@@ -260,7 +263,7 @@ export default function Reader() {
                     ? formatDate(new Date(metadata.updated_at))
                     : undefined
                 }
-                onRevealComplete={() => setRevealState("revealed")}
+                onRevealComplete={() => setRevealState("REVEALED")}
                 ignite={ignite}
               />
             </div>
@@ -270,15 +273,7 @@ export default function Reader() {
 
       {ignite && <PostActionOverlay revealState={revealState} />}
 
-      <LogModal
-        isOpen={!!warning}
-        onClose={() => setWarning(null)}
-        message={warning?.message || ""}
-        log={warning?.log || ""}
-        status="WARN"
-      />
-
-      {revealState === "revealed" && (
+      {revealState === "REVEALED" && (
         <div className="max-w-4xl m-8 mx-auto space-y-8 h-full relative inset-0 z-100">
           <div className="relative group perspective-1000">
             <div className="absolute inset-0 bg-primary/5 blur-3xl rounded-full scale-75 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none" />
@@ -309,7 +304,7 @@ export default function Reader() {
         />
       )}
 
-      {isAuthor && revealState !== "burned" && (
+      {isAuthor && revealState !== "BURNED" && (
         <div className="flex justify-center gap-2 mt-8 z-10 relative">
           <button
             id="share-letter-btn"

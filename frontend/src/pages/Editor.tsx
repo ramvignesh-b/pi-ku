@@ -23,6 +23,7 @@ import {
 } from "../components/editor/ToolBar";
 import DateDisplay from "../components/ui/DateDisplay";
 import { LogModal } from "../components/ui/LogModal";
+import { Modal } from "../components/ui/Modal";
 import { Navbar } from "../components/ui/Navbar";
 
 import { endpoints } from "../config/endpoints";
@@ -356,59 +357,53 @@ export default function Editor() {
         )}
 
         {saveOverlay !== "idle" && (
-          <div
-            className={`modal modal-open bg-base-100/20 backdrop-blur-md transition-opacity duration-300 ${
-              showSaveOverlay ? "opacity-100" : "opacity-0"
-            }`}
-          >
-            <div className="modal-box p-0 bg-transparent shadow-none transition-all duration-300">
-              {saveOverlay === "saving" && (
-                <div
-                  role="alert"
-                  className={`alert text-center alert-neutral shadow-lg transition-all ease-in-out duration-2000 ${
-                    showSaveOverlay
-                      ? "opacity-100 scale-100 translate-y-0"
-                      : "opacity-0 scale-95 translate-y-1"
-                  }`}
-                >
-                  <SpinnerGapIcon
-                    size={18}
-                    weight="bold"
-                    className="animate-spin"
-                  />
-                  <span className="font-bold">Securing your letter...</span>
-                </div>
-              )}
+          <Modal isOpen={showSaveOverlay}>
+            {saveOverlay === "saving" && (
+              <div
+                role="alert"
+                className={`alert text-center alert-neutral shadow-lg transition-all ease-in-out duration-2000 ${
+                  showSaveOverlay
+                    ? "opacity-100 scale-100 translate-y-0"
+                    : "opacity-0 scale-95 translate-y-1"
+                }`}
+              >
+                <SpinnerGapIcon
+                  size={18}
+                  weight="bold"
+                  className="animate-spin"
+                />
+                <span className="font-bold">Securing your letter...</span>
+              </div>
+            )}
 
-              {saveOverlay === "saved" && (
-                <div
-                  role="alert"
-                  className={`alert alert-success shadow-lg transition-all ease-in-out duration-2000 ${
-                    showSaveOverlay
-                      ? "opacity-100 scale-100 translate-y-0"
-                      : "opacity-0 scale-95 translate-y-1"
-                  }`}
-                >
-                  <DownloadSimpleIcon size={18} weight="bold" />
-                  <span className="font-bold">Your letter is saved!</span>
-                </div>
-              )}
+            {saveOverlay === "saved" && (
+              <div
+                role="alert"
+                className={`alert alert-success shadow-lg transition-all ease-in-out duration-2000 ${
+                  showSaveOverlay
+                    ? "opacity-100 scale-100 translate-y-0"
+                    : "opacity-0 scale-95 translate-y-1"
+                }`}
+              >
+                <DownloadSimpleIcon size={18} weight="bold" />
+                <span className="font-bold">Your letter is saved!</span>
+              </div>
+            )}
 
-              {saveOverlay === "error" && (
-                <div
-                  role="alert"
-                  className={`alert alert-error shadow-lg transition-all duration-300 ${
-                    showSaveOverlay
-                      ? "opacity-100 scale-100 translate-y-0"
-                      : "opacity-0 scale-95 translate-y-1"
-                  }`}
-                >
-                  <XIcon size={18} weight="bold" />
-                  <span className="font-bold">Failed to save letter</span>
-                </div>
-              )}
-            </div>
-          </div>
+            {saveOverlay === "error" && (
+              <div
+                role="alert"
+                className={`alert alert-error shadow-lg transition-all duration-300 ${
+                  showSaveOverlay
+                    ? "opacity-100 scale-100 translate-y-0"
+                    : "opacity-0 scale-95 translate-y-1"
+                }`}
+              >
+                <XIcon size={18} weight="bold" />
+                <span className="font-bold">Failed to save letter</span>
+              </div>
+            )}
+          </Modal>
         )}
 
         {confirmModal === "VAULT" && (

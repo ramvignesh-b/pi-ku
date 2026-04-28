@@ -1,11 +1,12 @@
-import { CampfireIcon, FlameIcon, XCircleIcon } from "@phosphor-icons/react";
+import { CampfireIcon, FlameIcon } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
+import { Modal } from "../ui/Modal";
 
 interface BurnModalProps {
   burnLetter: () => void;
   isBurning: boolean;
   setShowBurnModal: (show: boolean) => void;
-  setRevealState: (state: "sealed" | "revealed" | "burning" | "burned") => void;
+  setRevealState: (state: "SEALED" | "REVEALED" | "BURNING" | "BURNED") => void;
 }
 
 export function BurnModal({
@@ -20,7 +21,7 @@ export function BurnModal({
   useEffect(() => {
     if (!burnClicked) return;
     if (flameOn === 100) {
-      setRevealState("sealed");
+      setRevealState("SEALED");
       burnLetter();
     }
     const interval = setInterval(() => {
@@ -33,23 +34,15 @@ export function BurnModal({
   const burnStyle = flameOn < 30 ? "" : `contrast(${flameOn / 30})`;
 
   return (
-    <div className="modal modal-open modal-middle bg-base-100/20 backdrop-blur-md">
+    <Modal isOpen={true} onClose={() => setShowBurnModal(false)}>
       <div
-        className={`modal-box flex flex-col items-center gap-4 py-8 text-center transition-all duration-200 ease-in-out ${burnClicked ? "animate-[pulse_15s_linear_infinite]" : ""}`}
+        className={`flex flex-col items-center gap-4 text-center transition-all duration-200 ease-in-out ${burnClicked ? "animate-[pulse_15s_linear_infinite]" : ""}`}
         style={
           {
             transform: `rotate(${rotate}deg)`,
           } as React.CSSProperties
         }
       >
-        <button
-          type="button"
-          className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
-          onClick={() => setShowBurnModal(false)}
-          aria-label="Close"
-        >
-          <XCircleIcon size={18} weight="bold" />
-        </button>
         <CampfireIcon
           size={48}
           weight="duotone"
@@ -101,6 +94,6 @@ export function BurnModal({
           </button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }
