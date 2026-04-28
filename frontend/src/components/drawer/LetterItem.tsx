@@ -2,6 +2,15 @@ import { LockIcon, LockKeyOpenIcon } from "@phosphor-icons/react";
 import { useNavigate } from "react-router-dom";
 import { PATHS } from "../../config/routes";
 
+interface LetterItemProps {
+  preview: string;
+  timestamp: string;
+  id: string;
+  status: "DRAFT" | "SEALED" | "BURNED";
+  unlock_at?: string;
+  isLocked?: boolean;
+}
+
 export function LetterItem({
   preview,
   timestamp,
@@ -9,14 +18,7 @@ export function LetterItem({
   status,
   unlock_at,
   isLocked = false,
-}: {
-  preview: string;
-  timestamp: string;
-  id: string;
-  status: "DRAFT" | "SEALED" | "BURNED";
-  unlock_at?: string;
-  isLocked?: boolean;
-}) {
+}: LetterItemProps) {
   const navigate = useNavigate();
   function handleNavigate(): void {
     if (isLocked) return;

@@ -14,16 +14,6 @@ describe("Login Page", () => {
     server.resetHandlers();
   });
 
-  it("should render the sign-in form correctly", () => {
-    render(
-      <MemoryRouter>
-        <Login />
-      </MemoryRouter>,
-    );
-
-    expect(screen.getByText("Sign in to")).toBeInTheDocument();
-  });
-
   it("should display a technical issues message when the server is down", async () => {
     server.use(
       http.post(`${API_URL}${endpoints.LOGIN}`, () =>

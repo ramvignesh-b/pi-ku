@@ -9,6 +9,7 @@ export interface EnvelopeRevealProps {
   onRevealComplete: () => void;
   ignite: boolean;
   isFlip?: boolean;
+  isInteractive?: boolean;
 }
 
 export function EnvelopeReveal({
@@ -17,6 +18,7 @@ export function EnvelopeReveal({
   onRevealComplete,
   ignite,
   isFlip,
+  isInteractive = true,
 }: EnvelopeRevealProps) {
   const [revealLetter, setRevealLetter] = useState(false);
   const [isFlipped, setIsFlipped] = useState(!!isFlip);
@@ -67,6 +69,7 @@ export function EnvelopeReveal({
               type="checkbox"
               className="transition checkbox absolute h-full w-full text-transparent bg-transparent z-100"
               ref={flapCheckbox}
+              disabled={!isInteractive}
             />
           </div>
           <img
@@ -103,6 +106,7 @@ export function EnvelopeReveal({
         <button
           id="env-front"
           type="button"
+          disabled={!isInteractive}
           className={`text-left p-10 absolute inset-0 backface-hidden w-110 bg-base-200 z-99 rounded-md -translate-x-2 ${isFlipped ? "pointer-events-none" : ""}`}
           onClick={() => setIsFlipped((prev) => !prev)}
         >

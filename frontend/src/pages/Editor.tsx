@@ -293,7 +293,7 @@ export default function Editor() {
       setLetterStatus(status);
       setLastSavedPulseTick((prev) => prev + 1);
 
-      if (status === "SEALED") {
+      if (status === "SEALED" || status === "VAULT") {
         setSealedTargetId(targetId);
       }
       setSaveOverlay("saved");
@@ -419,7 +419,11 @@ export default function Editor() {
           />
         )}
         {sealedTargetId && (
-          <PostSealModal sealedTargetId={sealedTargetId} navigate={navigate} />
+          <PostSealModal
+            sealedTargetId={sealedTargetId}
+            navigate={navigate}
+            type={status === "VAULT" ? "VAULT" : "KEPT"}
+          />
         )}
 
         <div className="max-w-180 mx-auto px-1 md:px-0">

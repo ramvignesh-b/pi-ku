@@ -102,10 +102,24 @@ export function ToolBar({
       </div>
       <button
         type="button"
+        aria-label="Help"
         onClick={() => setSealBtnClicked(false)}
         className={`bg-transparent cursor-pointer -mt-2 absolute z-1000001 right-0 text-primary  ${sealBtnClicked ? "" : "hidden"}`}
       >
-        <QuestionIcon weight="duotone" size={20} className={""} />
+        <div className="tooltip tooltip-left">
+          <div className="tooltip-content -translate-x-38 text-left">
+            <span className="font-bold text-accent">Seal</span> puts the letter
+            in an envelope, ready to be read right away.
+            <div className="divider my-0"></div>
+            <span className="font-bold text-success">Vault</span> keeps it
+            locked away until the right moment, even from yourself.
+          </div>
+          <QuestionIcon
+            weight="duotone"
+            size={20}
+            className={"absolute -translate-x-38 -translate-y-3"}
+          />
+        </div>
       </button>
     </div>
   );
@@ -136,21 +150,23 @@ export function VaultConfirmModal({
   setUnlockDate,
 }: VaultConfirmModalProps) {
   return (
-    <div className={"modal modal-open bg-base-100/20 backdrop-blur-md"}>
-      <div className="modal-box p-12 flex flex-col items-center">
+    <div className={"modal modal-open bg-base-100/10 backdrop-blur-md"}>
+      <div className="modal-box p-12 flex flex-col items-center bg-base-100/90">
         <VaultIcon
           size={48}
           className="text-primary mx-auto mb-8 animate-pulse"
         />
-        <h3 className="font-serif text-3xl">Vault this letter?</h3>
+        <h3 className="font-serif text-3xl">Take it away, then?</h3>
         <p className="text-base-content/60 text-sm text-center mt-4">
-          Vaulting locks the letter permanently and will be{" "}
-          <span className={"font-bold text-primary"}>mailed</span> to you
-          automatically on the unlock date.
+          By vaulting this letter, you ask me to hold on to this.
           <br />
-          <span className={"underline"}>
-            You cannot edit or view the contents of the letter until then.
+          I'll remember to mail you this on the unlock date.
+          <br />
+          <span className={"font-bold text-primary"}>
+            {" "}
+            But I won't let you read or rewrite this letter until then.
           </span>
+          <br />
         </p>
         <form
           onSubmit={async (e) => {
@@ -158,11 +174,13 @@ export function VaultConfirmModal({
             const formData = new FormData(e.currentTarget);
             const unlockDateStr = formData.get("vault-date") as string;
             const newUnlockDate = new Date(unlockDateStr);
+            console.log(newUnlockDate);
             setUnlockDate(newUnlockDate);
             await onSave("VAULT", newUnlockDate);
             setConfirmModal(null);
           }}
           id="vault-form"
+          className="min-w-75"
         >
           <div className={"divider tracking-tightest font-display text-sm"}>
             Set an unlock date
@@ -173,21 +191,22 @@ export function VaultConfirmModal({
             className="input input-bordered w-full"
             name="vault-date"
           />
-          <button
-            className="btn btn-primary mt-4"
-            type="submit"
-            form="vault-form"
-          >
-            Vault
-          </button>
-
-          <button
-            type="button"
-            className="btn btn-ghost mt-4"
-            onClick={() => setConfirmModal(null)}
-          >
-            Cancel
-          </button>
+          <div className="w-full flex justify-center gap-8 mt-4">
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm mt-4"
+              onClick={() => setConfirmModal(null)}
+            >
+              I need time
+            </button>
+            <button
+              className="btn btn-primary btn-sm mt-4"
+              type="submit"
+              form="vault-form"
+            >
+              Take it
+            </button>
+          </div>
         </form>
       </div>
     </div>

@@ -14,13 +14,13 @@ const logger = pino({
 /**
  * Completes the full registration -> activation -> login cycle.
  */
-export async function registerAndLogin(
+async function registerAndLogin(
   page: Page,
   email: string,
   fullName: string,
   password: string,
 ) {
-  // 1. Registration
+  // Register the User
   logger.info(`[Auth] Registering user: ${email}`);
   await page.goto("/onboard");
   await page.getByLabel(/pen name/i).fill(fullName);
@@ -31,7 +31,7 @@ export async function registerAndLogin(
 
   await expect(page).toHaveURL(/\/verify-email/);
 
-  // 2. Activation via Mailpit
+  // Get activation URL from Mailpit and activate user
   logger.info(`[Auth] Polling Mailpit for activation email...`);
   const activationLink = await MailpitHelper.getActivationLink(email);
 
@@ -40,11 +40,11 @@ export async function registerAndLogin(
   await expect(page.getByText(/account activated/i)).toBeVisible();
   await page.getByRole("button", { name: /start writing/i }).click();
 
-  // 3. Login
+  // Dismiss the Welcom Modal and Perform Login
   logger.info(`[Auth] Logging in...`);
   await expect(page).toHaveURL(/\/login/);
 
-  const welcomeButton = page.getByRole("button", { name: /i understand/i });
+  const welcomeButton = page.getByRole("button", { name: /I'll remember/i });
   await welcomeButton.waitFor({ state: "visible", timeout: 10000 });
   await welcomeButton.click();
   await expect(welcomeButton).toBeHidden();
@@ -56,6 +56,4 @@ export async function registerAndLogin(
   await expect(page).toHaveURL(/\/drawer/);
   logger.info(`[Auth] Successfully authenticated ${email}`);
 }
-
-// Maintain backward compatibility if needed, or update callers
 export const AuthHelper = { registerAndLogin };

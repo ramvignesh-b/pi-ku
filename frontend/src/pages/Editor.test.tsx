@@ -83,11 +83,9 @@ describe("Editor Page", () => {
       expect(screen.queryByText(/Opening your draft/i)).not.toBeInTheDocument();
     });
 
-    // Initial state: DRAFT (not read-only)
     const canvas = screen.getByTestId("canvas");
     expect(canvas.getAttribute("data-readonly")).toBe("false");
 
-    // Click Seal in the main toolbar (it's in the div with id="writer-toolbar")
     const toolbar = container.querySelector("#writer-toolbar");
     const sealBtn = toolbar?.querySelector(".btn-primary");
     if (!sealBtn) throw new Error("Seal button not found");

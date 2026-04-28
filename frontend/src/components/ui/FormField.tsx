@@ -6,6 +6,7 @@ interface FormFieldProps {
   placeholder?: string;
   registration: UseFormRegisterReturn;
   error?: string;
+  handleFocus?: () => void;
 }
 
 export default function FormField({
@@ -14,6 +15,7 @@ export default function FormField({
   placeholder,
   registration,
   error,
+  handleFocus,
 }: FormFieldProps) {
   return (
     <div className="form-control">
@@ -31,6 +33,7 @@ export default function FormField({
         className={`input input-bordered focus:input-primary ${
           error ? "input-error" : ""
         }`}
+        onFocus={handleFocus}
       />
       {error && <p className="text-error">{error}</p>}
     </div>

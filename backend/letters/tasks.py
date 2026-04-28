@@ -3,8 +3,10 @@ from datetime import UTC, datetime
 import structlog
 from apscheduler.schedulers.background import BackgroundScheduler
 from django.core.mail import send_mail
+from django.template.loader import render_to_string
 
 from config import settings
+from config.settings import FRONTEND_URLS
 from letters.models import Letter
 
 logger = structlog.get_logger(__name__)
@@ -23,9 +25,26 @@ def notify_unlocked_letter(letter):
     """
     author = letter.user.get_username()
     try:
-        send_mail(subject="", message="", from_email=settings.FROM_EMAIL, recipient_list=[author], fail_silently=False)
+        letter_link = f"{FRONTEND_URLS[0]}/read/{letter.public_id}"
+        subject = "A letter. Written for this exact moment."
+        context = {
+            "pen_name": letter.user.first_name,
+            "cta": {"title": "View what you wrote", "link": letter_link},
+            "footnote": True,
+        }
+        plaint_content = render_to_string("email/vault_unlock.txt", context=context)
+        html_content = render_to_string("email/vault_unlock.html", context=context)
+        send_mail(
+            subject=subject,
+            message=plaint_content,
+            from_email=settings.FROM_EMAIL,
+            recipient_list=[author],
+            fail_silently=False,
+            html_message=html_content,
+        )
         letter.notified_at = datetime.now(UTC)
         letter.save()
+        logger.info(f"Successfully notified {author} of unlocked letter")
     except Exception:
         logger.exception(f"Failed to notify {author} of unlocked letter")
 

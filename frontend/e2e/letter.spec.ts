@@ -185,7 +185,7 @@ test.describe("Letter Drafting (Real Backend)", () => {
     await expect(page.getByText(/your letter is sealed/i)).toBeVisible({
       timeout: 10000,
     });
-    await page.getByRole("button", { name: /keep it/i }).click();
+    await page.getByRole("button", { name: /keep it to myself/i }).click();
 
     // Open "Kept" section - search for the section with id='kept' and click its toggle button
     logger.info(">> [Drawer] Opening Kept section...");

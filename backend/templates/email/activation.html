@@ -1,0 +1,22 @@
+{% extends 'email/base.html' %}
+
+{% block content %}
+    <div style="padding: 15px; font-style: italic">
+        <p>{{ pen_name }},</p>
+        <p>
+            Your destination is one train away.
+        </p>
+        <p>I've been keeping a place for your words.<br/>
+            Come when you're ready.</p>
+    </div>
+{% endblock %}
+
+{% block footnote %}
+    This link expires in 24 hours.<br/>
+    I'm patient, but not endlessly so.
+{% endblock %}
+
+{% block footer %}
+    Didn't write to me? Then someone else did.<br/>
+    Ignore this. I'll forget you were ever here.
+{% endblock %}

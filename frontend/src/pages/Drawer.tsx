@@ -5,6 +5,7 @@ import { DrawerSection } from "../components/drawer/DrawerSection.tsx";
 import { LetterItem } from "../components/drawer/LetterItem.tsx";
 import { PasskeyModal } from "../components/drawer/PasskeyModal.tsx";
 import Logo from "../components/Logo";
+import Saajan from "../components/ui/Saajan.tsx";
 import { PATHS } from "../config/routes";
 import { useAuth } from "../hooks/useAuth";
 import { useLetters } from "../hooks/useLetters";
@@ -165,6 +166,12 @@ export default function Drawer() {
       <footer className="mt-25 font-sans text-[0.6rem] tracking-[0.2em] uppercase text-base-content/10 z-10">
         For your unsaid.
       </footer>
+      <div className="absolute bottom-0 z-50 font-sans">
+        <Saajan
+          message={`Good to see you again, ${user.full_name}.\nWhat's on your mind today?`}
+          position="top"
+        />
+      </div>
     </div>
   );
 }

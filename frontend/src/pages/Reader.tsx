@@ -44,7 +44,7 @@ export default function Reader() {
 
   const [isDecrypting, setIsDecrypting] = useState(true);
   const [revealState, setRevealState] = useState<
-    "sealed" | "revealed" | "burned"
+    "sealed" | "revealed" | "burned" | "burning"
   >("sealed");
   const [error, setError] = useState<{
     message: string;
