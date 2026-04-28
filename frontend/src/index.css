@@ -2,57 +2,57 @@
 @plugin "daisyui";
 
 @plugin "daisyui/theme" {
-    name: "piku";
-    default: true;
-    prefersdark: true;
-    color-scheme: dark;
+  name: "piku";
+  default: true;
+  prefersdark: true;
+  color-scheme: dark;
 
-    --color-base-100: oklch(14% 0.012 35);
-    --color-base-200: oklch(18% 0.014 33);
-    --color-base-300: oklch(22% 0.016 32);
-    --color-base-content: oklch(82% 0.02 70);
+  --color-base-100: oklch(14% 0.012 35);
+  --color-base-200: oklch(18% 0.014 33);
+  --color-base-300: oklch(22% 0.016 32);
+  --color-base-content: oklch(82% 0.02 70);
 
-    --color-primary: oklch(67% 0.11 78);
-    --color-primary-content: oklch(15% 0.03 70);
+  --color-primary: oklch(67% 0.11 78);
+  --color-primary-content: oklch(15% 0.03 70);
 
-    --color-secondary: oklch(48% 0.08 305);
-    --color-secondary-content: oklch(92% 0.01 305);
+  --color-secondary: oklch(48% 0.08 305);
+  --color-secondary-content: oklch(92% 0.01 305);
 
-    --color-accent: oklch(55% 0.06 325);
-    --color-accent-content: oklch(18% 0.03 295);
+  --color-accent: oklch(55% 0.06 325);
+  --color-accent-content: oklch(18% 0.03 295);
 
-    --color-neutral: oklch(28% 0.02 45);
-    --color-neutral-content: oklch(80% 0.015 60);
+  --color-neutral: oklch(28% 0.02 45);
+  --color-neutral-content: oklch(80% 0.015 60);
 
-    --color-info: oklch(60% 0.07 240);
-    --color-info-content: oklch(95% 0.01 240);
-    --color-success: oklch(60% 0.08 150);
-    --color-success-content: oklch(16% 0.03 150);
-    --color-warning: oklch(68% 0.08 72);
-    --color-warning-content: oklch(18% 0.03 60);
-    --color-error: oklch(55% 0.1 22);
-    --color-error-content: oklch(92% 0.01 22);
+  --color-info: oklch(60% 0.07 240);
+  --color-info-content: oklch(95% 0.01 240);
+  --color-success: oklch(60% 0.08 150);
+  --color-success-content: oklch(16% 0.03 150);
+  --color-warning: oklch(68% 0.08 72);
+  --color-warning-content: oklch(18% 0.03 60);
+  --color-error: oklch(55% 0.1 22);
+  --color-error-content: oklch(92% 0.01 22);
 
-    --radius-selector: 0.5rem;
-    --radius-field: 0.375rem;
-    --radius-box: 0.5rem;
+  --radius-selector: 0.5rem;
+  --radius-field: 0.375rem;
+  --radius-box: 0.5rem;
 
-    --depth: 1;
-    --noise: 0.03;
+  --depth: 1;
+  --noise: 0.03;
 
-    --border: 1px;
+  --border: 1px;
 }
 
 @theme {
-    --font-display: "Playwrite HR Lijeva Variable", cursive;
-    --font-sans: "Jost Variable", sans-serif;
-    --font-serif: "Playfair Display Variable", serif;
-    --color-glass-bg: rgba(28, 22, 16, 0.45);
-    --shadow-warm: 0 20px 50px -12px rgba(30, 20, 12, 0.6);
-    --radius-xl: 1.5rem;
-    --color-paper: oklch(97% 0.008 80);
+  --font-display: "Playwrite HR Lijeva Variable", cursive;
+  --font-sans: "Jost Variable", sans-serif;
+  --font-serif: "Playfair Display Variable", serif;
+  --color-glass-bg: rgba(28, 22, 16, 0.45);
+  --shadow-warm: 0 20px 50px -12px rgba(30, 20, 12, 0.6);
+  --radius-xl: 1.5rem;
+  --color-paper: oklch(97% 0.008 80);
 }
 
 .glass-card {
-    @apply bg-glass-bg backdrop-blur-xl border border-white/5 shadow-warm rounded-xl;
+  @apply bg-glass-bg backdrop-blur-xl border border-white/5 shadow-warm rounded-xl;
 }
