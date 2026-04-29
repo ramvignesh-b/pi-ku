@@ -17,7 +17,7 @@ describe("deriveKeyBundle", () => {
 
     expect(masterKey.type).toBe("secret");
     expect(masterKey).toBeInstanceOf(CryptoKey);
-    expect(authHash).toHaveLength(64); // SHA-256 hex
+    expect(authHash).toHaveLength(64);
     expect(typeof authHash).toBe("string");
   });
 
@@ -216,7 +216,7 @@ describe("extractSharingKey", () => {
   });
 
   it("extracted key should decrypt the ciphertext produced by encryptLetter", async () => {
-    const plaintext = "hello from the owner";
+    const plaintext = "hello";
     const encrypted = await utils.encryptLetter(plaintext, masterKey);
 
     const extracted = await utils.extractSharingKey(
