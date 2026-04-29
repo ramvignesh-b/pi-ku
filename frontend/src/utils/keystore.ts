@@ -1,6 +1,6 @@
 import { openDB } from "idb";
 
-// we use this to store master key in browser - secure and good UX
+// we use indexedDB to securely store master key for easier access across tabs (better UX than having to store in session)
 const db = openDB("piku-keys", 1, {
   upgrade(db) {
     db.createObjectStore("master-key");

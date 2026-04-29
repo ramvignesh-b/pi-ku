@@ -25,14 +25,18 @@ export const LogModal = ({
           <WarningIcon className="text-warning" size={16} weight="duotone" />
         )}
         {message}
-        <div className="divider text-primary-content text-xs uppercase tracking-widest">
-          Error Stack
-        </div>
-        <div className="mockup-code bg-base-100 text-error w-full">
-          <pre>
-            <code>{String(log)}</code>
-          </pre>
-        </div>
+        {log && (
+          <>
+            <div className="divider text-primary-content text-xs uppercase tracking-widest">
+              Error Stack
+            </div>
+            <div className="mockup-code bg-base-100 text-error w-full">
+              <pre>
+                <code>{String(log)}</code>
+              </pre>
+            </div>
+          </>
+        )}
       </div>
     </Modal>
   );

@@ -13,7 +13,6 @@ import { endpoints } from "../config/endpoints";
 import { ROUTES } from "../config/routes";
 import { CryptoUtils } from "../utils/crypto";
 
-// validation logic
 const registerSchema = z
   .object({
     full_name: z.string().min(2, "Name must be at least 2 characters"),
@@ -49,7 +48,7 @@ export default function Register() {
     setIsLoading(true);
     setApiError(null);
     try {
-      // We generate the key bundle here to get the authHash (password) for the server.
+      // we generate the key bundle here to get the authHash (password) to be haSHed and stored in the db.
       const { authHash } = await CryptoUtils.deriveKeyBundle(
         data.password,
         data.email,
@@ -136,7 +135,6 @@ export default function Register() {
             }
           />
 
-          {/* Warning */}
           <div className="alert alert-warning items-start text-left p-3 gap-2 rounded-md border-warning/20">
             <InfoIcon size={20} weight="duotone" className="mt-0.5 shrink-0" />
             <p className="text-sm font-semibold">
