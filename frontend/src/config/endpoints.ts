@@ -9,14 +9,14 @@ export const endpoints = {
   LETTERS: "/api/letters/",
 };
 
-// simple utility to handle path params
+// constructs dynamic path params for activate flow
 export const replacePathParams = (
   url: string,
   params: Record<string, string>,
 ): string => {
-  let result = url;
+  let constructedUrl = url;
   for (const [key, value] of Object.entries(params)) {
-    result = result.replace(`:${key}`, value);
+    constructedUrl = constructedUrl.replace(`:${key}`, value);
   }
-  return result;
+  return constructedUrl;
 };

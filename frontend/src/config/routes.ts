@@ -1,4 +1,4 @@
-// Route PATTERNS
+// Page Route PATTERNS
 export const ROUTES = {
   HOME: "/",
   ONBOARD: "/onboard",
@@ -6,13 +6,12 @@ export const ROUTES = {
   ACTIVATE: "/activate/:uidb64/:token",
   LOGIN: "/login",
   DRAWER: "/drawer",
-  WRITE: "/quill/:public_id?", // ← static pattern
+  WRITE: "/quill/:public_id?",
   READ: "/read/:public_id",
 };
 
-// Path BUILDERS
+// Dynamic path BUILDERS
 export const PATHS = {
   write: (public_id?: string) => `/quill/${public_id ?? ""}`,
   read: (public_id: string) => `/read/${public_id}`,
-  activate: (uidb64: string, token: string) => `/activate/${uidb64}/${token}`,
 };

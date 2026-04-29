@@ -4,8 +4,9 @@ import { useAuth } from "../hooks/useAuth";
 import SplashScreen from "./SplashScreen";
 
 /**
- * Post-login routes.
- * Redirects to /login if not already authenticated.
+ * Private route guard.
+ * If not authenticated, capture the current url in route
+ * state so the Login component can link them back after sign-in
  */
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isInitializing } = useAuth();
@@ -14,7 +15,6 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (isInitializing) return <SplashScreen />;
 
   if (!isAuthenticated) {
-    // Save the intended location to redirect back after login
     return <Navigate to={ROUTES.LOGIN} state={{ from: location }} replace />;
   }
 
@@ -22,8 +22,8 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 /**
- * Pre-login flows.
- * Redirects to /drawer if already authenticated.
+ * Public - auth route guard.
+ * If authenticated, redirect all the auth related flows to the drawer
  */
 export function PublicRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isInitializing } = useAuth();
