@@ -78,18 +78,18 @@ LOGGING = {
             "level": "DEBUG",
             "propagate": False,
         },
+        "letters.tasks": {
+            "handlers": ["console", "scheduler_log"],
+            "level": "INFO",
+            "propagate": False,
+        },
         "letters": {
             "handlers": ["console", "flat_line_file", "json_file", "letters_log"],
             "level": "INFO",
             "propagate": False,
         },
-        "scheduler": {
-            "handlers": ["console", "scheduler_log"],
-            "level": "INFO",
-            "propagate": False,
-        },
         "": {
-            "handlers": ["console", "flat_line_file", "json_file"],
+            "handlers": ["console"],
             "level": "INFO",
         },
     },
