@@ -12,6 +12,7 @@ import {
 } from "react-router-dom";
 import { api } from "../api/apiClient";
 import {
+  type CanvasStyle,
   type CanvasTools,
   ComposeCanvas,
 } from "../components/editor/ComposeCanvas";
@@ -88,6 +89,10 @@ export default function Editor() {
   const [recipient, setRecipient] = useState("");
   const [unlockDate, setUnlockDate] = useState<Date | null>(null);
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
+  const [canvasFontStyle, setCanvasFontStyle] = useState<CanvasStyle>({
+    fontColor: "",
+    fontFamily: "",
+  });
 
   const { masterKey } = useKeyStore();
 
@@ -181,7 +186,11 @@ export default function Editor() {
         setIsInitialLoading(false);
       }
     };
-    loadExistingLetter();
+    loadExistingLetter().then((_) => {
+      if (canvasRef.current) {
+        setCanvasFontStyle(canvasRef.current.getStyle());
+      }
+    });
   }, [public_id, masterKey]);
 
   // to trigger short pulse animation for Last Saved AT element
@@ -466,6 +475,18 @@ export default function Editor() {
               setSealBtnClicked={setSealBtnClicked}
               onSave={handleSave}
               setConfirmModal={setConfirmModal}
+              onFontChange={(style) => {
+                setCanvasFontStyle({
+                  fontFamily: style.fontFamily,
+                  fontColor: style.fontColor,
+                });
+                if (canvasRef?.current?.setStyle)
+                  canvasRef.current.setStyle({
+                    fontFamily: style.fontFamily,
+                    fontColor: style.fontColor,
+                  });
+              }}
+              latestFontStyle={canvasFontStyle}
             />
           ) : (
             <LetterHead />

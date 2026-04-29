@@ -1,15 +1,13 @@
+import type { FabricText } from "fabric";
 import * as fabric from "fabric";
-import {
-  forwardRef,
-  useCallback,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-} from "react";
+import type * as React from "react";
+import { useCallback, useEffect, useImperativeHandle, useRef } from "react";
 
 const PAD = 36;
 const BASE_WIDTH = 680;
 const DEFAULT_LOGICAL_HEIGHT = 900;
+const DEFAULT_FONT_FAMILY = "Playfair Display Variable";
+const DEFAULT_FONT_COLOR = "#000";
 
 export interface FabricObjectJSON {
   type: string;
@@ -18,6 +16,7 @@ export interface FabricObjectJSON {
   left: number;
   width: number;
   height: number;
+
   [key: string]: unknown;
 }
 
@@ -33,121 +32,27 @@ export interface CanvasJSON {
   canvasHeight?: number;
 }
 
+export interface CanvasStyle {
+  fontFamily: string;
+  fontColor: string;
+}
+
 export type CanvasTools = {
   addImage: (url: string, file: File) => void;
   getData: () => CanvasJSON;
-  getJsonData: () => string;
   getImages: () => { src: string; file: File }[];
   loadData: (data: CanvasJSON) => Promise<void>;
+  setStyle: (style: CanvasStyle) => void;
+  getStyle: () => CanvasStyle;
 };
 
 export interface FabricImageWithFile extends fabric.FabricImage {
   _customRawFile: File;
 }
 
-const waitForLayout = (wrapper: HTMLDivElement): Promise<number> => {
-  return new Promise((resolve) => {
-    const check = () => {
-      const width = wrapper.clientWidth || 0;
-      if (width > 0) resolve(width);
-      else requestAnimationFrame(check);
-    };
-    check();
-  });
-};
-
-const createMainTextbox = (
-  text: string,
-  isReadOnly = false,
-): fabric.Textbox => {
-  return new fabric.Textbox(text, {
-    name: "main-textbox",
-    originX: "left",
-    originY: "top",
-    left: PAD,
-    top: PAD,
-    width: BASE_WIDTH - PAD * 2,
-    fontSize: 18,
-    fontWeight: 500,
-    fontFamily: "Playfair Display Variable",
-    fill: "#000",
-    lineHeight: 1.5,
-    editable: !isReadOnly,
-    selectable: false,
-    evented: !isReadOnly,
-    hasControls: false,
-    hasBorders: false,
-    objectCaching: false,
-    splitByGrapheme: false,
-    lockMovementX: true,
-    lockMovementY: true,
-    lockScalingX: true,
-    lockScalingY: true,
-    lockRotation: true,
-  });
-};
-
-const fixFabricA11y = () => {
-  const textAreas = document.querySelectorAll(
-    'textarea[data-fabric="textarea"]',
-  );
-  for (const area of textAreas) {
-    if (!area.getAttribute("aria-label")) {
-      area.setAttribute("aria-label", "Canvas text input");
-    }
-  }
-};
-
-const initializeCanvas = (
-  el: HTMLCanvasElement,
-  width: number,
-  height: number,
-  readOnly: boolean,
-) => {
-  const canvas = new fabric.Canvas(el, {
-    width,
-    height,
-    selection: !readOnly,
-    preserveObjectStacking: true,
-    allowTouchScrolling: true,
-    enableRetinaScaling: true,
-    objectCaching: false,
-  });
-
-  const wrapperEl = canvas.getElement().parentElement;
-  if (wrapperEl) wrapperEl.style.background = "transparent";
-
-  return canvas;
-};
-
-const getLogicalSize = (data: CanvasJSON | null) => {
-  return {
-    width: data?.canvasWidth ?? BASE_WIDTH,
-    height: data?.canvasHeight ?? DEFAULT_LOGICAL_HEIGHT,
-  };
-};
-
-const getObjectBottom = (obj: fabric.FabricObject) => {
-  const top = obj.top ?? 0;
-  const height =
-    typeof obj.getScaledHeight === "function"
-      ? obj.getScaledHeight()
-      : (obj.height ?? 0) * (obj.scaleY ?? 1);
-
-  return top + height;
-};
-
-const measureLogicalContentHeight = (
-  canvas: fabric.Canvas,
-  minimumHeight = DEFAULT_LOGICAL_HEIGHT,
-) => {
-  const maxBottom = canvas
-    .getObjects()
-    .reduce((max, obj) => Math.max(max, getObjectBottom(obj)), 0);
-
-  return Math.max(minimumHeight, maxBottom + PAD);
-};
-
+// NOTE: We use the same canvasData to render on both mobile and desktop viewports.
+// Instead of calculating the entire objects pad again, we apply a zoom multiplier (scale down or up)
+// over the last saved canvas size.
 const applyResponsiveViewport = (
   canvas: fabric.Canvas,
   wrapper: HTMLDivElement,
@@ -155,8 +60,8 @@ const applyResponsiveViewport = (
   logicalHeight: number,
 ) => {
   const physicalWidth = wrapper.clientWidth || logicalWidth;
-  const zoom = physicalWidth / logicalWidth;
-  const physicalHeight = Math.max(1, logicalHeight * zoom);
+  const zoomMultiplier = physicalWidth / logicalWidth;
+  const physicalHeight = Math.max(1, logicalHeight * zoomMultiplier);
 
   canvas.setDimensions({
     width: physicalWidth,
@@ -164,41 +69,43 @@ const applyResponsiveViewport = (
   });
 
   wrapper.style.height = `${physicalHeight}px`;
-  canvas.setViewportTransform([zoom, 0, 0, zoom, 0, 0]);
+  canvas.setViewportTransform([zoomMultiplier, 0, 0, zoomMultiplier, 0, 0]);
   canvas.requestRenderAll();
 };
 
-const focusTextbox = (
-  fCanvas: fabric.Canvas,
-  textbox: fabric.Textbox,
-  readOnly: boolean,
+// to find the maximum height of the content to dynamically resize the canvas
+// would've been wayyy easier only if canvas supported fit-content like CSS property :)
+const measureLogicalContentHeight = (
+  canvas: fabric.Canvas,
+  minimumHeight = DEFAULT_LOGICAL_HEIGHT,
 ) => {
-  if (readOnly) return;
+  const maxBottom = canvas.getObjects().reduce((maxHeight, currObj) => {
+    const top = currObj.top;
+    const height = currObj.getScaledHeight();
+    return Math.max(maxHeight, top + height);
+  }, 0);
 
-  fCanvas.setActiveObject(textbox);
-  textbox.enterEditing();
-
-  const end = textbox.text?.length ?? 0;
-  textbox.selectionStart = end;
-  textbox.selectionEnd = end;
-
-  fCanvas.requestRenderAll();
-  fixFabricA11y();
+  return Math.max(minimumHeight, maxBottom + PAD);
 };
 
-const findMainTextbox = (canvas: fabric.Canvas): fabric.Textbox | null => {
-  const textbox = canvas.getObjects("Textbox")[0];
+const DEFAULT_INIT_TEXT = "Take a deep breath...";
 
-  return (textbox as fabric.Textbox) ?? null;
-};
+interface ComposeCanvasProps {
+  readOnly?: boolean;
+  initialData?: CanvasJSON | null;
+  ref?: React.Ref<CanvasTools>;
+}
 
-export const ComposeCanvas = forwardRef<
-  CanvasTools,
-  { readOnly?: boolean; initialData?: CanvasJSON | null }
->(({ readOnly = false, initialData = null }, ref) => {
+export function ComposeCanvas({
+  readOnly = false,
+  initialData = null,
+  ref,
+}: ComposeCanvasProps) {
+  // wrapper is the parent div box
   const wrapperRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fabricRef = useRef<fabric.Canvas | null>(null);
+
   const textboxRef = useRef<fabric.Textbox | null>(null);
   const deferredDataRef = useRef<CanvasJSON | null>(null);
   const logicalSizeRef = useRef({
@@ -206,8 +113,15 @@ export const ComposeCanvas = forwardRef<
     height: DEFAULT_LOGICAL_HEIGHT,
   });
 
+  // re-calculates height based on content and applies the zoom transform
   const syncViewport = useCallback(() => {
     if (!(fabricRef.current && wrapperRef.current)) return;
+
+    const minHeight = initialData?.canvasHeight ?? DEFAULT_LOGICAL_HEIGHT;
+    logicalSizeRef.current.height = measureLogicalContentHeight(
+      fabricRef.current,
+      minHeight,
+    );
 
     applyResponsiveViewport(
       fabricRef.current,
@@ -215,177 +129,173 @@ export const ComposeCanvas = forwardRef<
       logicalSizeRef.current.width,
       logicalSizeRef.current.height,
     );
-  }, []);
+  }, [initialData]);
 
-  const updateLogicalHeightFromContent = useCallback(() => {
-    if (!fabricRef.current) return;
+  // auto focus the cursor into the main textbox no matter the latest element added
+  const focusTextbox = useCallback(
+    (textbox: fabric.Textbox) => {
+      if (readOnly || !fabricRef.current) return;
 
-    logicalSizeRef.current.height = measureLogicalContentHeight(
-      fabricRef.current,
-      logicalSizeRef.current.height,
-    );
+      fabricRef.current.setActiveObject(textbox);
+      textbox.enterEditing();
 
-    syncViewport();
-  }, [syncViewport]);
+      // move the cursor to the end of the text
+      const textLength = textbox.text?.length ?? 0;
+      textbox.selectionStart = textLength;
+      textbox.selectionEnd = textLength;
 
-  const setupTextboxInteractions = useCallback(
-    (fCanvas: fabric.Canvas, textbox: fabric.Textbox) => {
-      textbox.on("changed", () => {
-        updateLogicalHeightFromContent();
-      });
-
-      fCanvas.on("mouse:down", (opt) => {
-        if (!opt.target || opt.target === textbox) {
-          focusTextbox(fCanvas, textbox, readOnly);
-        }
-      });
-
-      if (!readOnly) {
-        setTimeout(() => {
-          focusTextbox(fCanvas, textbox, readOnly);
-        }, 200);
-      }
-    },
-    [readOnly, updateLogicalHeightFromContent],
-  );
-
-  const loadContent = useCallback(
-    async (
-      canvas: fabric.Canvas,
-      data: CanvasJSON | null,
-      wrapper: HTMLDivElement,
-    ): Promise<fabric.Textbox | null> => {
-      const logicalSize = getLogicalSize(data);
-      logicalSizeRef.current = logicalSize;
-
-      canvas.clear();
-
-      let textbox: fabric.Textbox | null = null;
-
-      if (data?.objects?.length) {
-        await canvas.loadFromJSON(data);
-        textbox = findMainTextbox(canvas);
-      } else {
-        textbox = createMainTextbox("Take a deep breath...", readOnly);
-        canvas.add(textbox);
-      }
-
-      if (!textbox) return null;
-
-      textbox.selectable = !readOnly;
-      textbox.evented = !readOnly;
-      textbox.editable = !readOnly;
-      textbox.hasBorders = false;
-      textbox.lockMovementX = true;
-      textbox.lockMovementY = true;
-      textbox.lockScalingX = true;
-      textbox.lockScalingY = true;
-      textbox.lockRotation = true;
-      textbox.objectCaching = false;
-
-      logicalSizeRef.current.height = measureLogicalContentHeight(
-        canvas,
-        logicalSize.height,
-      );
-
-      applyResponsiveViewport(
-        canvas,
-        wrapper,
-        logicalSizeRef.current.width,
-        logicalSizeRef.current.height,
-      );
-
-      if (!(readOnly || data)) {
-        focusTextbox(canvas, textbox, readOnly);
-      }
-
-      return textbox;
+      fabricRef.current.requestRenderAll();
     },
     [readOnly],
   );
 
+  const loadContent = useCallback(
+    async (data: CanvasJSON | null) => {
+      const canvas = fabricRef.current;
+      const wrapper = wrapperRef.current;
+      if (!(canvas && wrapper)) return;
+
+      // clean the canvas everytime and set fresh
+      canvas.clear();
+      let textbox: fabric.Textbox | null = null;
+
+      // restore logical size from prev saved data if available (in case of existing letter)
+      logicalSizeRef.current = {
+        width: data?.canvasWidth ?? BASE_WIDTH,
+        height: data?.canvasHeight ?? DEFAULT_LOGICAL_HEIGHT,
+      };
+
+      if (data?.objects?.length) {
+        await canvas.loadFromJSON(data);
+        textbox = canvas.getObjects("Textbox")[0] as fabric.Textbox;
+      } else {
+        // Create a fresh letter if no data exists
+        textbox = new fabric.Textbox(DEFAULT_INIT_TEXT, {
+          name: "main-textbox",
+          originX: "left",
+          originY: "top",
+          left: PAD,
+          top: PAD,
+          width: BASE_WIDTH - PAD * 2,
+          fontSize: 18,
+          fontWeight: 500,
+          fontFamily: DEFAULT_FONT_FAMILY,
+          fill: DEFAULT_FONT_COLOR,
+          lineHeight: 1.5,
+          // NOTE: splitByGrapheme is required for word wrap and re-low
+          // but fabric asks to disable this for clear font??
+          splitByGrapheme: true,
+          lockMovementX: true,
+          lockMovementY: true,
+          lockScalingX: true,
+          lockScalingY: true,
+          lockRotation: true,
+          hasControls: false,
+          hasBorders: false,
+          objectCaching: false,
+        });
+        canvas.add(textbox);
+      }
+
+      if (!textbox) return;
+
+      // readonly contraints applicable for post seal view
+      textbox.selectable = !readOnly;
+      textbox.evented = !readOnly;
+      textbox.editable = !readOnly;
+
+      textboxRef.current = textbox;
+
+      // observe and auto-resize the canvas height whenever typed
+      textbox.on("changed", syncViewport);
+
+      // trapping the focus into the textbox wherever clicked on canvas (except images)
+      canvas.on("mouse:down", (e) => {
+        if (!e.target || e.target === textbox) {
+          focusTextbox(textbox);
+        }
+      });
+
+      syncViewport();
+
+      // Hack: Fabric needs a small initial delay to mount before it will accept focus.
+      // otherwise it goes to the front
+      if (!(readOnly || data)) {
+        setTimeout(() => focusTextbox(textbox), 200);
+      }
+    },
+    [readOnly, syncViewport, focusTextbox],
+  );
+
   useEffect(() => {
     let isMounted = true;
-    let canvas: fabric.Canvas | null = null;
     let resizeObserver: ResizeObserver | null = null;
     let lastWidth = 0;
 
-    const init = async () => {
+    const initCanvas = async () => {
+      // HACK: actual font may change the text-width - small ux improvement
       await document.fonts.ready;
+
       if (!(wrapperRef.current && canvasRef.current && isMounted)) return;
 
-      const finalWidth = await waitForLayout(wrapperRef.current);
-      if (!(isMounted && canvasRef.current && wrapperRef.current)) return;
+      let width = wrapperRef.current.clientWidth;
+      if (width === 0) {
+        await new Promise((resolve) => requestAnimationFrame(resolve));
+        width = wrapperRef.current?.clientWidth || BASE_WIDTH;
+      }
 
-      canvas = initializeCanvas(
-        canvasRef.current,
-        finalWidth,
-        DEFAULT_LOGICAL_HEIGHT,
-        readOnly,
-      );
+      // init the fabric instance
+      const canvas = new fabric.Canvas(canvasRef.current, {
+        width,
+        height: DEFAULT_LOGICAL_HEIGHT,
+        selection: !readOnly,
+        preserveObjectStacking: true,
+        allowTouchScrolling: true,
+        enableRetinaScaling: true,
+        objectCaching: false,
+      });
+
+      // remove default fabric background to let our CSS show through
+      // TODO: provision custom bg (color in scope, but how does img fit?)
+      const wrapperEl = canvas.getElement().parentElement;
+      if (wrapperEl) wrapperEl.style.background = "transparent";
 
       fabricRef.current = canvas;
 
-      const textbox = await loadContent(
-        canvas,
-        initialData,
-        wrapperRef.current,
-      );
+      await loadContent(initialData);
 
-      if (textbox) {
-        textboxRef.current = textbox;
-        setupTextboxInteractions(canvas, textbox);
+      // sometimes loadData() may be called before the canvas finished the init render
+      // so we retry that stashed render right after the init
+      if (deferredDataRef.current) {
+        await loadContent(deferredDataRef.current);
+        deferredDataRef.current = null;
       }
 
-      canvas.requestRenderAll();
-      fixFabricA11y();
-
+      // auto window resizing based width
       lastWidth = wrapperRef.current.clientWidth;
-
       resizeObserver = new ResizeObserver(() => {
-        if (!(fabricRef.current && wrapperRef.current)) return;
-
-        const nextWidth = wrapperRef.current.clientWidth;
+        const nextWidth = wrapperRef.current?.clientWidth;
         if (!nextWidth || nextWidth === lastWidth) return;
-
         lastWidth = nextWidth;
         syncViewport();
       });
-
-      resizeObserver.observe(wrapperRef.current);
-
-      if (deferredDataRef.current) {
-        const data = deferredDataRef.current;
-        deferredDataRef.current = null;
-
-        const textbox = await loadContent(canvas, data, wrapperRef.current);
-        if (textbox) {
-          textboxRef.current = textbox;
-          setupTextboxInteractions(canvas, textbox);
-        }
-
-        canvas.requestRenderAll();
-        fixFabricA11y();
-      }
+      resizeObserver.observe(wrapperRef.current!);
     };
 
-    init();
+    initCanvas().then();
 
     return () => {
       isMounted = false;
       resizeObserver?.disconnect();
-      canvas?.dispose();
+      fabricRef.current?.dispose();
       fabricRef.current = null;
       textboxRef.current = null;
     };
-  }, [
-    initialData,
-    loadContent,
-    readOnly,
-    setupTextboxInteractions,
-    syncViewport,
-  ]);
+  }, [initialData, loadContent, readOnly, syncViewport]);
 
+  // WHY?: fabric doesn't work like react with state and props based optimized re-renders.
+  // everytime we there's a change in the data, we should force the render,
+  // so we let the parent Editor component take control of this.
   useImperativeHandle(ref, () => ({
     addImage: (url: string, file: File) => {
       if (!fabricRef.current) return;
@@ -395,69 +305,38 @@ export const ComposeCanvas = forwardRef<
         img.set({
           originX: "left",
           originY: "top",
-          _customRawFile: file,
           left: PAD,
           top: PAD,
           objectCaching: false,
+          // WHY?: after image object clean-up, its src becomes local blob://
+          // but browser won't let us parse this blob:// into file afterwards. so we hold a local copy
+          _customRawFile: file,
         } as Partial<FabricImageWithFile>);
 
         fabricRef.current?.add(img);
         fabricRef.current?.setActiveObject(img);
 
-        if (!fabricRef.current) return;
-
-        logicalSizeRef.current.height = measureLogicalContentHeight(
-          fabricRef.current,
-          logicalSizeRef.current.height,
-        );
-
-        if (wrapperRef.current) {
-          applyResponsiveViewport(
-            fabricRef.current,
-            wrapperRef.current,
-            logicalSizeRef.current.width,
-            logicalSizeRef.current.height,
-          );
-        } else {
-          fabricRef.current?.requestRenderAll();
-        }
-
+        syncViewport();
+        // clean up memory
         URL.revokeObjectURL(url);
       });
     },
 
     getData: () => {
       if (!fabricRef.current) return { objects: [] };
-
-      logicalSizeRef.current.height = measureLogicalContentHeight(
-        fabricRef.current,
-        logicalSizeRef.current.height,
-      );
+      syncViewport();
 
       const json = fabricRef.current.toJSON() as CanvasJSON;
       json.canvasWidth = logicalSizeRef.current.width;
       json.canvasHeight = logicalSizeRef.current.height;
-
       return json;
-    },
-
-    getJsonData: () => {
-      if (!fabricRef.current) return "";
-
-      const json = fabricRef.current.toJSON() as CanvasJSON;
-      json.canvasWidth = logicalSizeRef.current.width;
-      json.canvasHeight = logicalSizeRef.current.height;
-
-      return JSON.stringify(json);
     },
 
     getImages: () => {
       if (!fabricRef.current) return [];
-
       const images = fabricRef.current.getObjects(
         "Image",
       ) as FabricImageWithFile[];
-
       return images.map((img) => ({
         src: img.getSrc(),
         file: img._customRawFile,
@@ -465,24 +344,38 @@ export const ComposeCanvas = forwardRef<
     },
 
     loadData: async (data: CanvasJSON) => {
-      if (!(fabricRef.current && wrapperRef.current)) {
+      // if canvas isn't ready yet, stash the data and let the useEffect pick it up
+      if (!fabricRef.current) {
         deferredDataRef.current = data;
         return;
       }
+      await loadContent(data);
+    },
 
-      const textbox = await loadContent(
-        fabricRef.current,
-        data,
-        wrapperRef.current,
-      );
+    setStyle: (style: CanvasStyle) => {
+      if (!fabricRef.current) return;
+      const textBoxes = fabricRef.current.getObjects("Textbox") as FabricText[];
 
-      if (textbox) {
-        textboxRef.current = textbox;
-        setupTextboxInteractions(fabricRef.current, textbox);
+      for (const textBox of textBoxes) {
+        textBox.fontFamily = style.fontFamily || textBox.fontFamily;
+        textBox.fill = style.fontColor || textBox.fill;
       }
 
-      fabricRef.current.requestRenderAll();
-      fixFabricA11y();
+      syncViewport();
+    },
+
+    getStyle: () => {
+      if (!fabricRef.current)
+        return {
+          fontColor: DEFAULT_FONT_COLOR,
+          fontFamily: DEFAULT_FONT_FAMILY,
+        };
+      const textBox = fabricRef.current.getObjects("Textbox")[0] as FabricText;
+
+      return {
+        fontFamily: textBox?.fontFamily || DEFAULT_FONT_FAMILY,
+        fontColor: (textBox?.fill as string) || DEFAULT_FONT_COLOR,
+      };
     },
   }));
 
@@ -498,6 +391,6 @@ export const ComposeCanvas = forwardRef<
       />
     </div>
   );
-});
+}
 
 ComposeCanvas.displayName = "ComposeCanvas";
