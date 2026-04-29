@@ -33,11 +33,12 @@ import { CryptoUtils } from "../utils/crypto";
 import { formatRelativeDate } from "../utils/dateFormat";
 import { decryptCanvasImages, encryptCanvasImages } from "../utils/letterLogic";
 
-type SaveOverlay = "idle" | "saving" | "saved" | "error";
+type SaveOverlay = "IDLE" | "SAVING" | "SAVED" | "ERROR";
 
 const OVERLAY_FADE_MS = 250;
 const SAVED_VISIBLE_MS = 1400;
 const ERROR_VISIBLE_MS = 2400;
+const STOP_SAVE_DATE_PULSE_AFTER_MS = 10000;
 
 const toPlaceholderList = [
   "Someone dear...",
@@ -45,6 +46,7 @@ const toPlaceholderList = [
   "Something to bear...",
 ];
 
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
 export default function Editor() {
   const navigate = useNavigate();
   const navigateRef = useRef<NavigateFunction>(navigate);
@@ -70,7 +72,14 @@ export default function Editor() {
   const [lastSavedPulseTick, setLastSavedPulseTick] = useState(0);
   const [sealBtnClicked, setSealBtnClicked] = useState<boolean>(false);
 
-  const [saveOverlay, setSaveOverlay] = useState<SaveOverlay>("idle");
+  const [saveOverlay, setSaveOverlay] = useState<SaveOverlay>("IDLE");
+  const [logStatus, setLogStatus] = useState<{
+    status: "WARN" | "ERROR" | "RESET";
+    message: string;
+  }>({
+    status: "RESET",
+    message: "",
+  });
   const [showSaveOverlay, setShowSaveOverlay] = useState(false);
   const [confirmModal, setConfirmModal] = useState<"VAULT" | "SEAL" | null>(
     null,
@@ -85,7 +94,7 @@ export default function Editor() {
   const canvasRef = useRef<CanvasTools>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Placeholder rotation
+  // to continuously rotate placeholder text of the recipient input
   useEffect(() => {
     const interval = setInterval(() => {
       setPlaceholderIndex((prev) => (prev + 1) % toPlaceholderList.length);
@@ -94,13 +103,14 @@ export default function Editor() {
     return () => clearInterval(interval);
   }, []);
 
+  // to load existing letter when public_id param and masterKey is available
+  // NOTE: this has to trigger just once after each save
   useEffect(() => {
     if (!(public_id && masterKey)) return;
     if (justSavedRef.current) {
       justSavedRef.current = false;
       return;
     }
-
     const loadExistingLetter = async () => {
       setIsInitialLoading(true);
       const cryptoUtils = new CryptoUtils();
@@ -139,26 +149,27 @@ export default function Editor() {
         );
         const canvasData = JSON.parse(decryptedJsonStr);
 
-        const { isDecryptionPartialFailure, error } = await decryptCanvasImages(
-          canvasData,
-          letterData.images ?? [],
-          letterData.encrypted_dek,
-          masterKey,
-          cryptoUtils,
-          true,
-        );
+        const { errors, isPartialFailure, canvasDataWithDecryptedImages } =
+          await decryptCanvasImages(
+            canvasData,
+            letterData.images ?? [],
+            letterData.encrypted_dek,
+            masterKey,
+            cryptoUtils,
+            true,
+          );
 
-        if (isDecryptionPartialFailure) {
+        if (isPartialFailure) {
           setDecryptionStatus({
             status: "WARN",
             message:
               "Failed to decrypt some elements. Please check the render.",
-            log: error,
+            log: errors.toString(),
           });
         }
 
         if (canvasRef.current) {
-          await canvasRef.current.loadData(canvasData);
+          await canvasRef.current.loadData(canvasDataWithDecryptedImages);
         }
       } catch (_err) {
         setDecryptionStatus({
@@ -170,37 +181,36 @@ export default function Editor() {
         setIsInitialLoading(false);
       }
     };
-
     loadExistingLetter();
   }, [public_id, masterKey]);
 
+  // to trigger short pulse animation for Last Saved AT element
   useEffect(() => {
     if (lastSavedPulseTick === 0) return;
-
     setIsSaveDatePulsing(true);
 
     const timer = setTimeout(() => {
       setIsSaveDatePulsing(false);
-    }, 10000);
+    }, STOP_SAVE_DATE_PULSE_AFTER_MS);
 
     return () => clearTimeout(timer);
   }, [lastSavedPulseTick]);
 
+  // to fade in and fade out the save status overlay after each save operation
+  // Note: otherwise the fade efect is abrupt due to component's immediate unmount
   useEffect(() => {
-    if (saveOverlay === "idle" || saveOverlay === "saving") return;
-
+    if (saveOverlay === "IDLE" || saveOverlay === "SAVING") return;
     const visibleTimer = setTimeout(
       () => {
         setShowSaveOverlay(false);
       },
-      saveOverlay === "saved" ? SAVED_VISIBLE_MS : ERROR_VISIBLE_MS,
+      saveOverlay === "SAVED" ? SAVED_VISIBLE_MS : ERROR_VISIBLE_MS,
     );
-
     const unmountTimer = setTimeout(
       () => {
-        setSaveOverlay("idle");
+        setSaveOverlay("IDLE");
       },
-      (saveOverlay === "saved" ? SAVED_VISIBLE_MS : ERROR_VISIBLE_MS) +
+      (saveOverlay === "SAVED" ? SAVED_VISIBLE_MS : ERROR_VISIBLE_MS) +
         OVERLAY_FADE_MS,
     );
 
@@ -212,9 +222,14 @@ export default function Editor() {
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
+    if (file && file.size < MAX_FILE_SIZE) {
       const url = URL.createObjectURL(file);
       canvasRef.current?.addImage(url, file);
+    } else {
+      setLogStatus({
+        status: "WARN",
+        message: "Please upload images with size less than 10MB.",
+      });
     }
   };
 
@@ -229,9 +244,9 @@ export default function Editor() {
       targetId = crypto.randomUUID();
     }
 
-    if (saveOverlay === "saving" || !masterKey) return;
+    if (saveOverlay === "SAVING" || !masterKey) return;
 
-    setSaveOverlay("saving");
+    setSaveOverlay("SAVING");
     setShowSaveOverlay(true);
 
     const cryptoUtils = new CryptoUtils();
@@ -241,15 +256,16 @@ export default function Editor() {
       const canvasData = canvasRef.current?.getData() || { objects: [] };
       const canvasImages = canvasRef.current?.getImages() || [];
 
-      const encImageFilesMap = await encryptCanvasImages(
-        canvasData,
-        canvasImages,
-        masterKey,
-        cryptoUtils,
-      );
+      const { encryptedImageFiles, encryptedCanvasData } =
+        await encryptCanvasImages(
+          canvasData,
+          canvasImages,
+          masterKey,
+          cryptoUtils,
+        );
 
       const encrypted_letter = await cryptoUtils.encryptLetter(
-        JSON.stringify(canvasData),
+        JSON.stringify(encryptedCanvasData),
         masterKey,
       );
 
@@ -278,7 +294,7 @@ export default function Editor() {
         encrypted_metadata.encrypted_content,
       );
 
-      encImageFilesMap.forEach((blob, filename) => {
+      encryptedImageFiles.forEach((blob, filename) => {
         formData.append("image_files", blob, filename);
       });
 
@@ -297,10 +313,10 @@ export default function Editor() {
       if (status === "SEALED" || status === "VAULT") {
         setSealedTargetId(targetId);
       }
-      setSaveOverlay("saved");
+      setSaveOverlay("SAVED");
       setShowSaveOverlay(true);
     } catch (_error) {
-      setSaveOverlay("error");
+      setSaveOverlay("ERROR");
       setShowSaveOverlay(true);
     }
   };
@@ -356,9 +372,9 @@ export default function Editor() {
           </div>
         )}
 
-        {saveOverlay !== "idle" && (
+        {saveOverlay !== "IDLE" && (
           <Modal isOpen={showSaveOverlay}>
-            {saveOverlay === "saving" && (
+            {saveOverlay === "SAVING" && (
               <div
                 role="alert"
                 className={`alert text-center alert-neutral shadow-lg transition-all ease-in-out duration-2000 ${
@@ -376,7 +392,7 @@ export default function Editor() {
               </div>
             )}
 
-            {saveOverlay === "saved" && (
+            {saveOverlay === "SAVED" && (
               <div
                 role="alert"
                 className={`alert alert-success shadow-lg transition-all ease-in-out duration-2000 ${
@@ -390,7 +406,7 @@ export default function Editor() {
               </div>
             )}
 
-            {saveOverlay === "error" && (
+            {saveOverlay === "ERROR" && (
               <div
                 role="alert"
                 className={`alert alert-error shadow-lg transition-all duration-300 ${
@@ -426,7 +442,7 @@ export default function Editor() {
             <div className="flex flex-col gap-2 flex-1">
               <label
                 htmlFor="recipient"
-                className="text-[10px] uppercase tracking-[0.4em] text-secondary-content font-bold"
+                className="text-xs uppercase tracking-[0.4em] text-secondary-content font-bold"
               >
                 Recipient
               </label>
@@ -466,6 +482,18 @@ export default function Editor() {
           <ComposeCanvas ref={canvasRef} readOnly={status !== "DRAFT"} />
         </div>
       </section>
+      <LogModal
+        status={logStatus.status}
+        message={logStatus.message}
+        log={""}
+        onClose={() =>
+          setLogStatus({
+            status: "RESET",
+            message: "",
+          })
+        }
+        isOpen={logStatus.status !== "RESET"}
+      />
     </>
   );
 }

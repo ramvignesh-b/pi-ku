@@ -25,7 +25,7 @@ export interface ProcessedLetter extends Letter {
   metadata: LetterMetadata;
 }
 
-async function decryptLetters(
+async function decryptLettersMetadata(
   letters: Letter[],
   masterKey: CryptoKey,
 ): Promise<ProcessedLetter[]> {
@@ -56,19 +56,22 @@ async function decryptLetters(
 export function useLetters() {
   const [letters, setLetters] = useState<ProcessedLetter[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
   const [isAuthRequired, setIsAuthRequired] = useState<boolean>(false);
   const { masterKey } = useKeyStore();
 
+  // to fetch the letters and decryypt the metadata on load
   useEffect(() => {
     if (!masterKey) {
       setIsAuthRequired(true);
       return;
     }
     setIsAuthRequired(false);
+    setError(null);
     setLoading(true);
     api
       .get(endpoints.LETTERS)
-      .then((res) => decryptLetters(res.data, masterKey))
+      .then((res) => decryptLettersMetadata(res.data, masterKey))
       .then((decrypted) => {
         setLetters(
           decrypted.sort(
@@ -78,7 +81,9 @@ export function useLetters() {
           ),
         );
       })
-      .catch((_err) => {})
+      .catch((err) => {
+        setError(err);
+      })
       .finally(() => setLoading(false));
   }, [masterKey]);
 
@@ -90,6 +95,10 @@ export function useLetters() {
       sent: letters.filter((l) => l.type === "SENT" && l.status === "SEALED"),
     };
   }, [letters]);
+
+  if (error) {
+    throw error;
+  }
 
   return {
     ...drawerItems,

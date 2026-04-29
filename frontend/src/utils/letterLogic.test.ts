@@ -12,6 +12,7 @@ vi.mock("../api/apiClient", () => ({
   api: {
     get: vi.fn(),
   },
+  apiServerUrl: "https://remote",
 }));
 
 vi.mock("./fileUtils", () => ({
@@ -21,7 +22,6 @@ vi.mock("./fileUtils", () => ({
 describe("letterLogic image helpers", () => {
   let masterKey: CryptoKey;
   let crypto: CryptoUtils;
-
   beforeEach(async () => {
     const keyBundle = await CryptoUtils.deriveKeyBundle(
       "password123",
@@ -58,15 +58,13 @@ describe("letterLogic image helpers", () => {
 
       const encryptImageSpy = vi.spyOn(CryptoUtils.prototype, "encryptImage");
 
-      const uploads = await encryptCanvasImages(
-        canvasData,
-        [],
-        masterKey,
-        crypto,
-      );
+      const { encryptedImageFiles: uploads, encryptedCanvasData } =
+        await encryptCanvasImages(canvasData, [], masterKey, crypto);
 
       expect(encryptImageSpy).not.toHaveBeenCalled();
-      expect(canvasData.objects[0].src).toBe("already-encrypted.png.bin");
+      expect(encryptedCanvasData.objects[0].src).toBe(
+        "already-encrypted.png.bin",
+      );
       expect(uploads.size).toBe(0);
     });
 
@@ -99,15 +97,11 @@ describe("letterLogic image helpers", () => {
         filename: "photo.png.bin",
       });
 
-      const uploads = await encryptCanvasImages(
-        canvasData,
-        canvasImages,
-        masterKey,
-        crypto,
-      );
+      const { encryptedImageFiles: uploads, encryptedCanvasData } =
+        await encryptCanvasImages(canvasData, canvasImages, masterKey, crypto);
 
       expect(CryptoUtils.prototype.encryptImage).toHaveBeenCalledTimes(1);
-      expect(canvasData.objects[0].src).toBe("photo.png.bin");
+      expect(encryptedCanvasData.objects[0].src).toBe("photo.png.bin");
       expect(uploads.size).toBe(1);
       expect(uploads.has("photo.png.bin")).toBe(true);
     });
@@ -136,7 +130,7 @@ describe("letterLogic image helpers", () => {
         ],
       };
       const remoteImages = [
-        { file_name: "photo.png.bin", file: "https://remote/photo.png.bin" },
+        { file_name: "photo.png.bin", file: `https://remote/photo.png.bin` },
       ];
 
       vi.mocked(api.get).mockResolvedValue({ data: new Blob(["encrypted"]) });
@@ -144,7 +138,7 @@ describe("letterLogic image helpers", () => {
         "blob:http://localhost/decrypted",
       );
 
-      await decryptCanvasImages(
+      const { canvasDataWithDecryptedImages } = await decryptCanvasImages(
         canvasData,
         remoteImages,
         "wrapped-dek",
@@ -153,7 +147,7 @@ describe("letterLogic image helpers", () => {
       );
 
       expect(api.get).toHaveBeenCalledWith(
-        "https://remote/photo.png.bin",
+        `https://remote/photo.png.bin`,
         expect.objectContaining({ responseType: "blob" }),
       );
       expect(CryptoUtils.prototype.decryptImage).toHaveBeenCalledWith(
@@ -161,8 +155,10 @@ describe("letterLogic image helpers", () => {
         "wrapped-dek",
         masterKey,
       );
-      expect(canvasData.objects[0].src).toBe("blob:http://localhost/decrypted");
-      expect(canvasData.objects[1].text).toBe("hello");
+      expect(canvasDataWithDecryptedImages.objects[0].src).toBe(
+        "blob:http://localhost/decrypted",
+      );
+      expect(canvasDataWithDecryptedImages.objects[1].text).toBe("hello");
     });
 
     it("should include raw file when includeRawFile is true", async () => {
@@ -191,7 +187,7 @@ describe("letterLogic image helpers", () => {
         new File(["raw"], "photo.png.bin"),
       );
 
-      await decryptCanvasImages(
+      const { canvasDataWithDecryptedImages } = await decryptCanvasImages(
         canvasData,
         remoteImages,
         "wrapped-dek",
@@ -204,7 +200,9 @@ describe("letterLogic image helpers", () => {
         "blob:http://localhost/decrypted",
         "photo.png.bin",
       );
-      expect(canvasData.objects[0]._customRawFile).toBeInstanceOf(File);
+      expect(
+        canvasDataWithDecryptedImages.objects[0]._customRawFile,
+      ).toBeInstanceOf(File);
     });
   });
 
@@ -232,12 +230,13 @@ describe("letterLogic image helpers", () => {
         "decryptImageWithSharingKey",
       ).mockResolvedValue("blob:http://localhost/decrypted-shared");
 
-      await decryptCanvasImagesWithSharingKey(
-        canvasData,
-        remoteImages,
-        "raw-sharing-key",
-        crypto,
-      );
+      const { canvasDataWithDecryptedImages } =
+        await decryptCanvasImagesWithSharingKey(
+          canvasData,
+          remoteImages,
+          "raw-sharing-key",
+          crypto,
+        );
 
       expect(api.get).toHaveBeenCalledWith(
         "https://remote/photo.png.bin",
@@ -246,7 +245,7 @@ describe("letterLogic image helpers", () => {
       expect(
         CryptoUtils.prototype.decryptImageWithSharingKey,
       ).toHaveBeenCalledWith(expect.any(Blob), "raw-sharing-key");
-      expect(canvasData.objects[0].src).toBe(
+      expect(canvasDataWithDecryptedImages.objects[0].src).toBe(
         "blob:http://localhost/decrypted-shared",
       );
     });

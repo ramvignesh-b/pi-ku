@@ -1,4 +1,4 @@
-import { api } from "../api/apiClient";
+import { api, apiServerUrl, publicApi } from "../api/apiClient";
 import type {
   CanvasJSON,
   FabricImageJSON,
@@ -11,6 +11,35 @@ export interface CanvasImageRef {
   file: File;
 }
 
+export interface DecryptedFabricImageJSON extends FabricImageJSON {
+  _customRawFile?: File;
+}
+
+export interface DecryptionResult {
+  canvasDataWithDecryptedImages: CanvasJSON;
+  isPartialFailure: boolean;
+  errors: string[];
+}
+
+export interface EncryptionResult {
+  encryptedImageFiles: Map<string, Blob>;
+  encryptedCanvasData: CanvasJSON;
+}
+
+async function fetchEncryptedBlobFromRemote(remoteUrl: string): Promise<Blob> {
+  // IF served statically from server, we need proper CORS setup
+  if (remoteUrl.includes(apiServerUrl)) {
+    const res = await api.get(remoteUrl, { responseType: "blob" });
+    return res.data;
+  }
+  // Note: S3 Storage fetch (external url) has to bypass our existing CORS setup
+  const res = await publicApi.get(remoteUrl, {
+    responseType: "blob",
+    withCredentials: false,
+  });
+  return res.data;
+}
+
 export async function decryptCanvasImages(
   canvasData: CanvasJSON,
   remoteImages: { file_name: string; file: string }[],
@@ -18,51 +47,66 @@ export async function decryptCanvasImages(
   masterKey: CryptoKey,
   cryptoUtils: CryptoUtils,
   includeRawFile = false,
-): Promise<{ isDecryptionPartialFailure: boolean; error: string }> {
-  if (!canvasData?.objects)
-    return { isDecryptionPartialFailure: false, error: "" };
-  let isDecryptionPartialFailure = false;
-  let error = "";
+): Promise<DecryptionResult> {
+  if (!canvasData?.objects) {
+    return {
+      canvasDataWithDecryptedImages: canvasData,
+      isPartialFailure: false,
+      errors: [],
+    };
+  }
 
   const imageMap = new Map(
     remoteImages.map((img) => [img.file_name, img.file]),
   );
 
-  const imageDecryptionPromises = canvasData.objects.map(async (obj, index) => {
-    if (obj.type !== "Image") return;
-    const imgObj = obj as FabricImageJSON;
-    const remoteUrl = imageMap.get(imgObj.src);
-    if (!remoteUrl) return;
+  const errors: string[] = [];
+  const processedObjects = await Promise.all(
+    canvasData.objects.map(async (obj) => {
+      if (obj.type !== "Image") return obj;
 
-    try {
-      // HACK: For S3 Storage fetch and avoiding CORS error
-      const res = await api.get(remoteUrl, {
-        responseType: "blob",
-        withCredentials: false,
-      });
-      const originalSrc = imgObj.src;
+      const imgObj = obj as FabricImageJSON;
+      const remoteUrl = imageMap.get(imgObj.src);
+      if (!remoteUrl) return obj;
 
-      const blobUrl = await cryptoUtils.decryptImage(
-        res.data,
-        encrypted_dek,
-        masterKey,
-      );
+      try {
+        const blob = await fetchEncryptedBlobFromRemote(remoteUrl);
+        const blobUrl = await cryptoUtils.decryptImage(
+          blob,
+          encrypted_dek,
+          masterKey,
+        );
 
-      imgObj.src = blobUrl;
+        const decryptedObj: DecryptedFabricImageJSON = {
+          ...imgObj,
+          src: blobUrl,
+        };
 
-      if (includeRawFile) {
-        imgObj._customRawFile = await blobUrlToFile(blobUrl, originalSrc);
+        if (includeRawFile) {
+          decryptedObj._customRawFile = await blobUrlToFile(
+            blobUrl,
+            imgObj.src,
+          );
+        }
+
+        return decryptedObj;
+      } catch (err) {
+        errors.push(
+          `Failed to decrypt ${imgObj.src}: ${err instanceof Error ? err.message : "Unknown error"}`,
+        );
+        return null;
       }
-    } catch (_error) {
-      delete canvasData.objects[index];
-      isDecryptionPartialFailure = true;
-      error = _error instanceof Error ? _error.message : "Unknown error";
-    }
-  });
+    }),
+  );
 
-  await Promise.all(imageDecryptionPromises);
-  canvasData.objects = canvasData.objects.filter(Boolean);
-  return { isDecryptionPartialFailure, error };
+  return {
+    canvasDataWithDecryptedImages: {
+      ...canvasData,
+      objects: processedObjects.filter((obj) => !!obj),
+    },
+    isPartialFailure: errors.length > 0,
+    errors,
+  };
 }
 
 export async function decryptCanvasImagesWithSharingKey(
@@ -70,41 +114,53 @@ export async function decryptCanvasImagesWithSharingKey(
   remoteImages: { file_name: string; file: string }[],
   sharingKey: string,
   cryptoUtils: CryptoUtils,
-): Promise<{ isDecryptionPartialFailure: boolean; error: string }> {
-  if (!canvasData?.objects)
-    return { isDecryptionPartialFailure: false, error: "" };
-  let isDecryptionPartialFailure = false;
-  let error = "";
+): Promise<DecryptionResult> {
+  if (!canvasData?.objects) {
+    return {
+      canvasDataWithDecryptedImages: canvasData,
+      isPartialFailure: false,
+      errors: [],
+    };
+  }
+
   const imageMap = new Map(
     remoteImages.map((img) => [img.file_name, img.file]),
   );
+  const errors: string[] = [];
 
-  const decryptionPromises = canvasData.objects.map(async (obj, index) => {
-    if (obj.type !== "Image") return;
+  const processedObjects = await Promise.all(
+    canvasData.objects.map(async (obj) => {
+      if (obj.type !== "Image") return obj;
 
-    const imgObj = obj as FabricImageJSON;
-    const remoteUrl = imageMap.get(imgObj.src);
-    if (!remoteUrl) return;
+      const imgObj = obj as FabricImageJSON;
+      const remoteUrl = imageMap.get(imgObj.src);
+      if (!remoteUrl) return obj;
 
-    try {
-      const res = await api.get(remoteUrl, {
-        responseType: "blob",
-        withCredentials: false,
-      });
-      imgObj.src = await cryptoUtils.decryptImageWithSharingKey(
-        res.data,
-        sharingKey,
-      );
-    } catch (_error) {
-      delete canvasData.objects[index];
-      isDecryptionPartialFailure = true;
-      error = _error instanceof Error ? _error.message : "Unknown error";
-    }
-  });
+      try {
+        const blob = await fetchEncryptedBlobFromRemote(remoteUrl);
+        const blobUrl = await cryptoUtils.decryptImageWithSharingKey(
+          blob,
+          sharingKey,
+        );
 
-  await Promise.all(decryptionPromises);
-  canvasData.objects = canvasData.objects.filter(Boolean);
-  return { isDecryptionPartialFailure, error };
+        return { ...imgObj, src: blobUrl };
+      } catch (err) {
+        errors.push(
+          `Failed to decrypt ${imgObj.src}: ${err instanceof Error ? err.message : "Unknown error"}`,
+        );
+        return null;
+      }
+    }),
+  );
+
+  return {
+    canvasDataWithDecryptedImages: {
+      ...canvasData,
+      objects: processedObjects.filter((obj) => !!obj),
+    },
+    isPartialFailure: errors.length > 0,
+    errors,
+  };
 }
 
 export async function encryptCanvasImages(
@@ -112,23 +168,34 @@ export async function encryptCanvasImages(
   canvasImages: CanvasImageRef[],
   masterKey: CryptoKey,
   cryptoUtils: CryptoUtils,
-) {
-  const encryptedFiles = new Map<string, Blob>();
+): Promise<EncryptionResult> {
+  const encryptedImageFiles = new Map<string, Blob>();
   const filenameMapping = new Map<string, string>();
 
-  for (const img of canvasImages) {
-    if (img.src.endsWith(".bin")) continue;
-    if (!img.file) continue;
-    const { filename, encryptedBlob } = await cryptoUtils.encryptImage(
-      img.file,
-      masterKey,
-    );
-    filenameMapping.set(img.src, filename);
-    encryptedFiles.set(filename, encryptedBlob);
-  }
+  // filter out already encrypted images
+  const imagesToEncrypt = canvasImages.filter(
+    (img) => img.file && !img.src.endsWith(".bin"),
+  );
 
-  if (canvasData?.objects) {
-    canvasData.objects = canvasData.objects.map((obj) => {
+  // encrypt images parallelly
+  await Promise.all(
+    imagesToEncrypt.map(async (img) => {
+      const { filename, encryptedBlob } = await cryptoUtils.encryptImage(
+        img.file,
+        masterKey,
+      );
+      // map the og image url to the encrypted file name and filename to the encrypted source
+      filenameMapping.set(img.src, filename);
+      encryptedImageFiles.set(filename, encryptedBlob);
+    }),
+  );
+
+  if (!canvasData?.objects)
+    return { encryptedImageFiles, encryptedCanvasData: canvasData };
+
+  const newCanvasData = {
+    ...canvasData,
+    objects: canvasData.objects.map((obj) => {
       if (obj.type === "Image") {
         const imgObj = obj as FabricImageJSON;
         if (filenameMapping.has(imgObj.src)) {
@@ -139,8 +206,8 @@ export async function encryptCanvasImages(
         }
       }
       return obj;
-    });
-  }
+    }),
+  };
 
-  return encryptedFiles;
+  return { encryptedImageFiles, encryptedCanvasData: newCanvasData };
 }
