@@ -1,11 +1,9 @@
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense, useEffect, useRef } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { ProtectedRoute, PublicRoute } from "./components/RouteGuards";
 import SplashScreen from "./components/SplashScreen";
 import { ROUTES } from "./config/routes";
 import { useAuth } from "./hooks/useAuth";
-
-let authInitialized = false;
 
 const Activate = lazy(() => import("./pages/Activate"));
 const Drawer = lazy(() => import("./pages/Drawer"));
@@ -18,11 +16,12 @@ const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
 
 export default function App() {
   const { initialize, isInitializing } = useAuth();
+  const authInitialized = useRef<boolean>(false);
 
   useEffect(() => {
-    if (authInitialized) return;
-    authInitialized = true;
-    initialize();
+    if (authInitialized.current) return;
+    authInitialized.current = true;
+    initialize().then();
   }, [initialize]);
 
   if (isInitializing) {

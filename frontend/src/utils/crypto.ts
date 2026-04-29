@@ -26,7 +26,8 @@ interface SealedEnvelope {
 // TODO: try refactoring into a pure function for consistency
 export class CryptoUtils {
   private dek!: CryptoKey;
-  private static readonly PBKDF2_ITERATIONS = 600_000;
+  private static readonly PBKDF2_ITERATIONS =
+    Number(import.meta.env.VITE_PBKDF2_ITERATIONS) || 600_000;
   // NOTE: https://www.w3.org/TR/webcrypto/#aes-gcm
   private static readonly AES_ALGO = { name: "AES-GCM", length: 256 };
   private static readonly IV_BYTE_LENGTH = 12;

@@ -9,6 +9,8 @@ export default defineConfig({
     env: {
       VITE_API_URL: "http://piku-server",
       TZ: "Asia/Kolkata",
+      // using the actual 600_000 iterations causes timeout in tests
+      VITE_PBKDF2_ITERATIONS: "1",
     },
     include: ["**/*.test.ts", "**/*.test.tsx"],
     environment: "jsdom",
