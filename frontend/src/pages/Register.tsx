@@ -99,7 +99,7 @@ export default function Register() {
           <FormField
             label="Email"
             type="email"
-            placeholder="f.kafka@email.com"
+            placeholder="f.kafka@wrongtrain.com"
             registration={register("email")}
             error={errors.email?.message}
             handleFocus={() =>
