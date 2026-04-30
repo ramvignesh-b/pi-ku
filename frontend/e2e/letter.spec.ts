@@ -34,7 +34,7 @@ test.describe("Letter Drafting (Real Backend)", () => {
     await recipientInput.fill(recipientName);
 
     // Initial load: verify textarea value (populated by Fabric when focused)
-    const canvasInput = page.getByLabel("Canvas text input");
+    const canvasInput = page.locator("textarea");
     await canvasInput.waitFor({ state: "attached" });
     await canvasInput.focus();
     await expect(canvasInput).toHaveValue(/Take a deep breath/i);
@@ -60,8 +60,14 @@ test.describe("Letter Drafting (Real Backend)", () => {
     logger.info(">> [Draft] Reloading to verify persistence...");
     await page.goto(savedUrl);
 
-    // Wait for initial load overlay to disappear
-    await expect(page.getByText(/opening your draft/i)).toBeHidden();
+    // Wait for initial load overlay to appear and then definitely disappear
+    await page
+      .getByText(/opening your draft/i)
+      .waitFor({ state: "visible", timeout: 2000 })
+      .catch(() => {});
+    await expect(page.getByText(/opening your draft/i)).toBeHidden({
+      timeout: 10000,
+    });
 
     // Check recipient
     await expect(page.locator("#recipient")).toHaveValue(recipientName);
@@ -92,7 +98,7 @@ test.describe("Letter Drafting (Real Backend)", () => {
     await recipientInput.waitFor({ state: "visible", timeout: 10000 });
     await recipientInput.fill("A Secret Guest");
 
-    const canvasInput = page.getByLabel("Canvas text input");
+    const canvasInput = page.locator("textarea");
     await canvasInput.focus();
     await canvasInput.fill("This letter will be sealed and shared.");
 
@@ -167,7 +173,7 @@ test.describe("Letter Drafting (Real Backend)", () => {
     await recipientInput.waitFor({ state: "visible" });
     await recipientInput.fill(recipientName);
 
-    const canvasInput = page.getByLabel("Canvas text input");
+    const canvasInput = page.locator("textarea");
     await canvasInput.focus();
     await canvasInput.fill(letterContent);
 
