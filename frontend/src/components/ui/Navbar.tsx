@@ -21,7 +21,7 @@ export const Navbar = ({ child }: { child?: React.ReactNode }) => {
               className="text-base-content/40 group-hover:text-primary transition-colors"
             />
           </div>
-          <span className="font-sans text-[10px] tracking-[0.3em] uppercase font-bold text-base-content/30 group-hover:text-base-content transition-colors">
+          <span className="font-sans text-xxs tracking-widester uppercase font-bold text-base-content/30 group-hover:text-base-content transition-colors">
             Drawer
           </span>
         </button>

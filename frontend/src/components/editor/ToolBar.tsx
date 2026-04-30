@@ -134,7 +134,7 @@ export function ToolBar({
       <div className="flex items-center gap-2">
         <button
           type="button"
-          className="btn btn-ghost btn-sm text-[10px] group tracking-[0.2em] uppercase font-bold text-base-content/60 hover:text-base-content"
+          className="btn btn-ghost btn-sm text-xxs group tracking-widester uppercase font-bold text-base-content/60 hover:text-base-content"
           title="Store in your private drawer"
           onClick={() => onSave("DRAFT")}
         >
@@ -223,7 +223,7 @@ export function LetterHead() {
     <div className="flex items-center justify-center mb-8 h-14">
       <div className="badge badge-outline border-primary/20 bg-primary/5 text-primary gap-2 p-4 rounded-full">
         <LockIcon size={14} weight="fill" />
-        <span className="text-[10px] uppercase tracking-widest font-bold">
+        <span className="text-xxs uppercase tracking-widest font-bold">
           Sealed & View Only
         </span>
       </div>

@@ -28,12 +28,12 @@ export default function Drawer() {
 
   return (
     <div className="min-h-screen w-full bg-base-100 text-base-content flex flex-col items-center py-12 px-5 pb-32 font-serif transition-colors">
-      <div className="fixed inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.5)_100%)] pointer-events-none z-0" />
+      <div className="fixed inset-0 bg-vig pointer-events-none z-0" />
 
       {isAuthRequired && <PasskeyModal onUnlock={unlock} />}
       <header className="text-center mb-12 z-10 animate-in fade-in slide-in-from-top-4 duration-500">
         <Logo />
-        <div className="font-sans text-xs tracking-[0.3em] uppercase text-base-content/40 mt-2">
+        <div className="font-sans text-xs tracking-widester uppercase text-base-content/40 mt-2">
           Personal Archive
         </div>
         <div className="mt-6 font-sans text-sm text-base-content flex items-center justify-center gap-2 opacity-60 hover:opacity-100 transition-opacity">
@@ -53,7 +53,7 @@ export default function Drawer() {
         {loading ? (
           <div className="flex-1 flex flex-col items-center justify-center p-12 gap-4">
             <span className="loading loading-ring loading-lg text-primary opacity-20"></span>
-            <span className="text-[10px] uppercase tracking-[0.3em] font-sans text-base-content/20 animate-pulse">
+            <span className="text-xxs uppercase tracking-widester font-sans text-base-content/20 animate-pulse">
               Opening your cabinet...
             </span>
           </div>
@@ -163,7 +163,7 @@ export default function Drawer() {
         </span>
       </button>
 
-      <footer className="mt-25 font-sans text-[0.6rem] tracking-[0.2em] uppercase text-base-content/10 z-10">
+      <footer className="mt-25 font-sans text-[0.6rem] tracking-widester uppercase text-base-content/10 z-10">
         For your unsaid.
       </footer>
       <div className="absolute bottom-0 z-50 font-sans">

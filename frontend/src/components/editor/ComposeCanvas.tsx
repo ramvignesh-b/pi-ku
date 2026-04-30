@@ -128,6 +128,8 @@ export function ComposeCanvas({
       logicalSizeRef.current.width,
       logicalSizeRef.current.height,
     );
+
+    fabricRef.current.requestRenderAll();
   }, [initialData]);
 
   // auto focus the cursor into the main textbox no matter the latest element added
@@ -182,8 +184,8 @@ export function ComposeCanvas({
           fill: DEFAULT_FONT_COLOR,
           lineHeight: 1.5,
           // NOTE: splitByGrapheme is required for word wrap and re-low
-          // but fabric asks to disable this for clear font??
-          splitByGrapheme: true,
+          // but fabric asks to disable this for clear font?? So we disable it for read view
+          splitByGrapheme: !readOnly,
           lockMovementX: true,
           lockMovementY: true,
           lockScalingX: true,
@@ -192,6 +194,7 @@ export function ComposeCanvas({
           hasControls: false,
           hasBorders: false,
           objectCaching: false,
+          noScaleCache: false,
         });
         canvas.add(textbox);
       }
@@ -202,6 +205,7 @@ export function ComposeCanvas({
       textbox.selectable = !readOnly;
       textbox.evented = !readOnly;
       textbox.editable = !readOnly;
+      textbox.hasBorders = false;
 
       textboxRef.current = textbox;
 
@@ -306,6 +310,7 @@ export function ComposeCanvas({
           originY: "top",
           left: PAD,
           top: PAD,
+          noScaleCache: false,
           objectCaching: false,
           // WHY?: after image object clean-up, its src becomes local blob://
           // but browser won't let us parse this blob:// into file afterwards. so we hold a local copy

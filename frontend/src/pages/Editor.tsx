@@ -339,8 +339,8 @@ export default function Editor() {
               isSaveDatePulsing ? "animate-pulse" : ""
             }`}
           >
-            <div className="text-sm text-neutral-content/30 flex-col justify-end leading-none text-right">
-              <span className="text-[10px] uppercase tracking-widest font-bold">
+            <div className="text-xxs text-neutral-content/30 flex-col justify-end leading-none text-right">
+              <span className="uppercase tracking-widest font-bold">
                 Last Save
               </span>
               <br />
@@ -374,7 +374,7 @@ export default function Editor() {
                 weight="bold"
                 className="animate-spin text-primary"
               />
-              <p className="text-[10px] uppercase tracking-[0.4em] font-bold text-base-content/40">
+              <p className="text-xxs uppercase tracking-widester font-bold text-base-content/40">
                 Opening your draft...
               </p>
             </div>
@@ -451,7 +451,7 @@ export default function Editor() {
             <div className="flex flex-col gap-2 flex-1">
               <label
                 htmlFor="recipient"
-                className="text-xs uppercase tracking-[0.4em] text-secondary-content font-bold"
+                className="text-xxs uppercase tracking-widester text-secondary-content font-bold"
               >
                 Recipient
               </label>

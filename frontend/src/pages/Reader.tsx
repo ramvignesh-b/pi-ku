@@ -192,12 +192,10 @@ export default function Reader() {
           log: err instanceof Error ? err.message : "Unknown error",
           type: "ERROR",
         });
-      } finally {
-        setIsDecrypting(false);
       }
     };
 
-    loadAndDecrypt();
+    loadAndDecrypt().then(() => setIsDecrypting(false));
   }, [public_id, sharingKey, masterKey]);
 
   useEffect(() => {
@@ -214,7 +212,7 @@ export default function Reader() {
   if (isDecrypting) {
     return (
       <div className="flex items-center h-screen w-screen justify-center bg-base-100 font-sans">
-        <div className="fixed inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.4)_100%)] pointer-events-none z-0" />
+        <div className="fixed inset-0 bg-vig pointer-events-none" />
         <div className="text-center space-y-6 z-10">
           <Logo />
           <div className="flex flex-col items-center gap-2">
@@ -245,7 +243,7 @@ export default function Reader() {
 
   return (
     <section className="min-h-fit w-full bg-base-100 px-4 py-8 md:py-16 font-serif relative overflow-hidden">
-      <div className="fixed inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.5)_100%)] pointer-events-none z-0" />
+      <div className="fixed inset-0 bg-vig pointer-events-none z-0" />
       <div
         className={`transition-all delay-300 duration-1000 relative ${
           revealState === "REVEALED"
@@ -274,7 +272,7 @@ export default function Reader() {
       {ignite && <PostActionOverlay revealState={revealState} />}
 
       {revealState === "REVEALED" && (
-        <div className="max-w-4xl m-8 mx-auto space-y-8 h-full relative inset-0 z-100">
+        <div className="max-w-180 m-8 mx-auto space-y-8 h-full relative inset-0 z-100">
           <div className="relative group perspective-1000">
             <div className="absolute inset-0 bg-primary/5 blur-3xl rounded-full scale-75 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none" />
 
@@ -284,7 +282,7 @@ export default function Reader() {
             </div>
 
             {metadata?.recipient && (
-              <p className="text-center sm:hidden text-[10px] uppercase tracking-[0.3em] text-base-content/20 mt-8">
+              <p className="text-center sm:hidden text-xxs uppercase tracking-widester text-base-content/20 mt-8">
                 For {metadata.recipient}
               </p>
             )}
@@ -332,7 +330,7 @@ export default function Reader() {
       )}
 
       <footer className="mt-16 text-center z-10 opacity-10 pointer-events-none">
-        <p className="text-xs font-sans uppercase tracking-[0.5em]">
+        <p className="text-xs font-sans uppercase tracking-widester">
           Read. Remember. Release.
         </p>
       </footer>

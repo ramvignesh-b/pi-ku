@@ -31,7 +31,7 @@ export default function DateDisplay({
 
   return (
     <div className={`text-right flex flex-col gap-2 min-w-35 ${className}`}>
-      <span className="text-[10px] uppercase tracking-[0.4em] text-accent font-bold">
+      <span className="text-xxs uppercase tracking-widester text-accent font-bold">
         Date
       </span>
       <span className="text-sm font-serif text-secondary-content italic whitespace-nowrap">

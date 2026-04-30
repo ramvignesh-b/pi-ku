@@ -15,7 +15,7 @@ export default function SplashScreen() {
           />
           <span className="loading loading-ring loading-xl text-primary"></span>
           ...
-          <p className="text-xs uppercase font-sans tracking-[1em] opacity-40">
+          <p className="text-xs uppercase font-sans tracking-widester opacity-40">
             Unsealing
           </p>
         </div>

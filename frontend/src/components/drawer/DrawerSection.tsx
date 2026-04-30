@@ -39,7 +39,7 @@ export function DrawerSection({
       >
         <div className="flex-1">
           <div
-            className={`font-sans text-xs tracking-[0.2em] uppercase transition-colors duration-800 ${
+            className={`font-sans text-xs tracking-widester uppercase transition-colors duration-800 ${
               isOpen
                 ? "text-base-content"
                 : "text-base-content/40 group-hover:text-base-content/80"
