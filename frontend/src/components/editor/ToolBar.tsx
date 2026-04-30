@@ -8,6 +8,7 @@ import {
   TextAUnderlineIcon,
   TrayIcon,
   VaultIcon,
+  XCircleIcon,
 } from "@phosphor-icons/react";
 import { Modal } from "../ui/Modal";
 import type { CanvasStyle } from "./ComposeCanvas.tsx";
@@ -26,6 +27,11 @@ const FONT_FAMILIES: Map<string, string> = new Map([
   ["Serif", "Playfair Display Variable"],
   ["Sans", "Jost Variable"],
   ["Cursive", "Playwrite HR Lijeva Variable"],
+  ["Handwriting", "Architects Daughter"],
+  ["Slab", "Cutive Mono"],
+  ["Mono", "Space Mono"],
+  ["Tamil", "Kavivanar"],
+  ["Crazy(pls no)", "Redacted Script"],
 ]);
 const FONT_COLORS: Map<string, string> = new Map([
   ["Black", "#000"],
@@ -166,7 +172,7 @@ export function ToolBar({
       </div>
 
       <div
-        className={`flex-col items-center gap-2 absolute right-0 z-100000 bg-primary/20 rounded-full p-8 -m-2 ${sealBtnClicked ? "" : "hidden"}`}
+        className={`flex-col items-center gap-2 absolute right-0 z-10 bg-primary/20 rounded-full p-8 -m-2 ${sealBtnClicked ? "" : "hidden"}`}
       >
         <button
           type="button"
@@ -192,12 +198,17 @@ export function ToolBar({
           <span className="transition-all duration-1000">Vault</span>
         </button>
       </div>
-
+      <button
+        className={`z-100001 absolute right-0 bg-transparent cursor-pointer ${sealBtnClicked ? "" : "hidden"}`}
+        type="button"
+        onClick={() => setSealBtnClicked(false)}
+      >
+        <XCircleIcon weight="duotone" size={20} className={"text-error"} />
+      </button>
       <button
         type="button"
         aria-label="Help"
-        onClick={() => setSealBtnClicked(false)}
-        className={`bg-transparent cursor-pointer -mt-2 absolute z-1000001 right-0 text-primary  ${sealBtnClicked ? "" : "hidden"}`}
+        className={`bg-transparent cursor-pointer -mt-2 absolute z-100001 right-0 text-primary  ${sealBtnClicked ? "" : "hidden"}`}
       >
         <div className="tooltip tooltip-left">
           <div className="tooltip-content -translate-x-38 text-left">
