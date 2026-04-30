@@ -10,6 +10,7 @@ import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Logo from "../components/Logo";
 import { EnvelopeReveal } from "../components/reader/EnvelopeReveal";
+import Saajan from "../components/ui/Saajan.tsx";
 import { ROUTES } from "../config/routes.ts";
 import { formatDate } from "../utils/dateFormat.ts";
 
@@ -214,8 +215,19 @@ export default function Home() {
                 opacity: useTransform(smoothProgress1, [0.66, 0.7], [0, 1]),
               }}
             >
-              {" "}
-              or{" "}
+              <motion.span
+                className="font-display text-accent"
+                style={{
+                  color: useTransform(
+                    smoothProgress1,
+                    [0.67, 1],
+                    ["var(--color-accent)", "var(--color-neutral)"],
+                  ),
+                }}
+              >
+                {" "}
+                or{" "}
+              </motion.span>
               <span className="font-display text-success">
                 yourself in the future
               </span>
@@ -270,7 +282,7 @@ export default function Home() {
           >
             <button
               className={
-                "opacity-50 hover:opacity-100 btn btn-ghost btn-wide md:btn-xl rounded-full font-extralight  grayscale hover:grayscale-0 hover:-translate-y-1 transition-all duration-1000"
+                "md:opacity-50 hover:opacity-100 btn btn-ghost btn-wide md:btn-xl rounded-full font-extralight md:grayscale hover:grayscale-0 hover:-translate-y-1 transition-all duration-1000"
               }
               type={"button"}
             >
@@ -279,7 +291,7 @@ export default function Home() {
             </button>
             <button
               className={
-                "opacity-50 hover:opacity-100 btn btn-primary rounded-full btn-wide md:btn-xl grayscale hover:grayscale-0 hover:-translate-y-1 transition-all duration-1000"
+                "md:opacity-50 hover:opacity-100 btn btn-primary rounded-full btn-wide md:btn-xl md:grayscale hover:grayscale-0 hover:-translate-y-1 transition-all duration-1000"
               }
               type={"button"}
               onClick={() => navigate(ROUTES.ONBOARD, { replace: true })}
@@ -298,11 +310,7 @@ export default function Home() {
                 [0.3, 0.4, 0.5, 0.52],
                 [0, 1, 0.1, 0],
               ),
-              y: useTransform(
-                smoothProgress1,
-                [0.3, 0.45, 0.5],
-                [400, 100, 300],
-              ),
+              y: useTransform(smoothProgress1, [0.3, 0.45, 0.5], [300, 0, 200]),
               scale: useTransform(
                 smoothProgress1,
                 [0.3, 0.4, 0.5],
@@ -310,7 +318,7 @@ export default function Home() {
               ),
             }}
           >
-            <div className="mockup-phone w-100 border-primary">
+            <div className="mockup-phone w-[75vw] border-primary">
               <div className="mockup-phone-camera"></div>
               <div className="mockup-phone-display">
                 <img alt="letter" src="/screenshots/letter.webp" />
@@ -319,7 +327,7 @@ export default function Home() {
           </motion.div>
           {/*  Envelope */}
           <motion.div
-            className="absolute scale-80"
+            className="absolute scale-50 md:scale-80 z-10"
             style={{
               opacity: useTransform(
                 smoothProgress1,
@@ -337,6 +345,25 @@ export default function Home() {
               onRevealComplete={() => {}}
               isFlip={isEnvelopeFlipped}
               openFlap={flapOpen}
+            />
+          </motion.div>
+          {/*  Saajan */}
+          <motion.div
+            className="absolute bottom-0 -mb-18 z-10 font-sans"
+            style={{
+              opacity: useTransform(
+                smoothProgress1,
+                [0.98, 0.995, 1],
+                [0, 0.5, 1],
+              ),
+              y: useTransform(smoothProgress1, [0.98, 1], [50, 0]),
+            }}
+          >
+            <Saajan
+              message={
+                "I think we forget things\nif there is nobody to tell them."
+              }
+              position={"top"}
             />
           </motion.div>
           {/*  Orb */}
