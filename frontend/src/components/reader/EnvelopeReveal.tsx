@@ -1,5 +1,5 @@
 import { WavesIcon } from "@phosphor-icons/react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import candle from "../../assets/envelope/candle.png";
 import stamp from "../../assets/envelope/stamp.png";
 import waxSeal from "../../assets/envelope/waxSeal.png";
@@ -11,6 +11,7 @@ export interface EnvelopeRevealProps {
   ignite: boolean;
   isFlip?: boolean;
   isInteractive?: boolean;
+  openFlap?: boolean;
 }
 
 export function EnvelopeReveal({
@@ -20,9 +21,11 @@ export function EnvelopeReveal({
   ignite,
   isFlip,
   isInteractive = true,
+  openFlap = false,
 }: EnvelopeRevealProps) {
   const [revealLetter, setRevealLetter] = useState(false);
   const [isFlipped, setIsFlipped] = useState(!!isFlip);
+  const [isFlapOpen, setIsFlapOpen] = useState(!!openFlap);
 
   useEffect(() => {
     setIsFlipped(!!isFlip);
@@ -33,7 +36,9 @@ export function EnvelopeReveal({
     height: 0,
   });
 
-  const flapCheckbox = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    setIsFlapOpen(openFlap);
+  }, [openFlap]);
 
   useEffect(() => {
     if (!ignite) {
@@ -69,7 +74,8 @@ export function EnvelopeReveal({
             <input
               type="checkbox"
               className="transition checkbox absolute h-full w-full text-transparent bg-transparent z-100"
-              ref={flapCheckbox}
+              checked={isFlapOpen}
+              onChange={() => setIsFlapOpen((prev) => !prev)}
               disabled={!isInteractive}
             />
           </div>
@@ -79,8 +85,8 @@ export function EnvelopeReveal({
             }
             src={waxSeal}
             alt="Seal"
-            onClick={() => flapCheckbox.current?.click()}
-            onKeyDown={() => flapCheckbox.current?.click()}
+            onClick={() => setIsFlapOpen((prev) => !prev)}
+            onKeyDown={() => setIsFlapOpen((prev) => !prev)}
           />
           <button
             type="button"
