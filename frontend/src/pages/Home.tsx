@@ -291,7 +291,7 @@ export default function Home() {
             </button>
             <button
               className={
-                "md:opacity-50 hover:opacity-100 btn btn-primary rounded-full btn-wide md:btn-xl md:grayscale hover:grayscale-0 hover:-translate-y-1 transition-all duration-1000"
+                "md:opacity-50 hover:opacity-100 btn rounded-full btn-primary btn-wide md:btn-xl md:grayscale hover:grayscale-0 hover:-translate-y-1 transition-all duration-1000"
               }
               type={"button"}
               onClick={() => navigate(ROUTES.ONBOARD, { replace: true })}
@@ -349,14 +349,14 @@ export default function Home() {
           </motion.div>
           {/*  Saajan */}
           <motion.div
-            className="absolute bottom-0 -mb-18 z-10 font-sans"
+            className="fixed bottom-0 z-10 font-sans -mb-6 scale-85 md:scale-100 md:mb-0"
             style={{
               opacity: useTransform(
                 smoothProgress1,
                 [0.98, 0.995, 1],
                 [0, 0.5, 1],
               ),
-              y: useTransform(smoothProgress1, [0.98, 1], [50, 0]),
+              y: useTransform(smoothProgress1, [0.98, 1], [50, -10]),
             }}
           >
             <Saajan
