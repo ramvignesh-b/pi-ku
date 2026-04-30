@@ -1,4 +1,3 @@
-import type { FabricText } from "fabric";
 import * as fabric from "fabric";
 import type * as React from "react";
 import { useCallback, useEffect, useImperativeHandle, useRef } from "react";
@@ -220,7 +219,7 @@ export function ComposeCanvas({
 
       // Hack: Fabric needs a small initial delay to mount before it will accept focus.
       // otherwise it goes to the front
-      if (!(readOnly || data)) {
+      if (!readOnly) {
         setTimeout(() => focusTextbox(textbox), 200);
       }
     },
@@ -353,24 +352,17 @@ export function ComposeCanvas({
     },
 
     setStyle: (style: CanvasStyle) => {
-      if (!fabricRef.current) return;
-      const textBoxes = fabricRef.current.getObjects("Textbox") as FabricText[];
+      const textBox = textboxRef.current;
+      if (!textBox) return;
 
-      for (const textBox of textBoxes) {
-        textBox.fontFamily = style.fontFamily || textBox.fontFamily;
-        textBox.fill = style.fontColor || textBox.fill;
-      }
+      textBox.fontFamily = style.fontFamily || textBox.fontFamily;
+      textBox.fill = style.fontColor || textBox.fill;
 
       syncViewport();
     },
 
     getStyle: () => {
-      if (!fabricRef.current)
-        return {
-          fontColor: DEFAULT_FONT_COLOR,
-          fontFamily: DEFAULT_FONT_FAMILY,
-        };
-      const textBox = fabricRef.current.getObjects("Textbox")[0] as FabricText;
+      const textBox = textboxRef.current;
 
       return {
         fontFamily: textBox?.fontFamily || DEFAULT_FONT_FAMILY,

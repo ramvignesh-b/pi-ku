@@ -74,7 +74,7 @@ export default function WelcomeModal({
           </div>
         </div>
       </Modal>
-      <div className="absolute bottom-0 z-1000 font-sans w-full">
+      <div className="absolute bottom-0 right-0 z-1000 font-sans w-full">
         <Saajan
           position="top"
           message={"I've lost words before.\nI know what it feels like."}
