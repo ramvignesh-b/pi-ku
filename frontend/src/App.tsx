@@ -13,6 +13,7 @@ const Login = lazy(() => import("./pages/Login"));
 const Reader = lazy(() => import("./pages/Reader"));
 const Register = lazy(() => import("./pages/Register"));
 const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
+const About = lazy(() => import("./pages/About"));
 
 export default function App() {
   const { initialize, isInitializing } = useAuth();
@@ -85,6 +86,7 @@ export default function App() {
               }
             />
             <Route path={ROUTES.READ} element={<Reader />} />
+            <Route path={ROUTES.ABOUT} element={<About />} />
             <Route path="*" element={<Navigate to={ROUTES.HOME} replace />} />
           </Routes>
         </Suspense>

@@ -66,5 +66,5 @@
 }
 
 .glass-card {
-  @apply bg-glass-bg backdrop-blur-xl border border-white/5 shadow-warm rounded-xl;
+  @apply bg-glass-bg backdrop-blur-xl border border-white/5 shadow-warm rounded-xl m-4;
 }

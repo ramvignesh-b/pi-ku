@@ -8,6 +8,7 @@ export const ROUTES = {
   DRAWER: "/drawer",
   WRITE: "/quill/:public_id?",
   READ: "/read/:public_id",
+  ABOUT: "/know-piku",
 };
 
 // Dynamic path BUILDERS
