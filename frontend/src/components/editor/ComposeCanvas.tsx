@@ -41,7 +41,6 @@ export type CanvasTools = {
   getData: () => CanvasJSON;
   getImages: () => { src: string; file: File }[];
   loadData: (data: CanvasJSON) => Promise<void>;
-  setStyle: (style: CanvasStyle) => void;
   getStyle: () => CanvasStyle;
 };
 
@@ -92,12 +91,14 @@ const DEFAULT_INIT_TEXT = "Take a deep breath...";
 interface ComposeCanvasProps {
   readOnly?: boolean;
   initialData?: CanvasJSON | null;
+  style?: CanvasStyle;
   ref?: React.Ref<CanvasTools>;
 }
 
 export function ComposeCanvas({
   readOnly = false,
   initialData = null,
+  style,
   ref,
 }: ComposeCanvasProps) {
   // wrapper is the parent div box
@@ -231,6 +232,15 @@ export function ComposeCanvas({
   );
 
   useEffect(() => {
+    if (style && textboxRef.current) {
+      const textBox = textboxRef.current;
+      textBox.fontFamily = style.fontFamily || textBox.fontFamily;
+      textBox.fill = style.fontColor || textBox.fill;
+      syncViewport();
+    }
+  }, [style, syncViewport]);
+
+  useEffect(() => {
     let isMounted = true;
     let resizeObserver: ResizeObserver | null = null;
     let lastWidth = 0;
@@ -354,16 +364,6 @@ export function ComposeCanvas({
         return;
       }
       await loadContent(data);
-    },
-
-    setStyle: (style: CanvasStyle) => {
-      const textBox = textboxRef.current;
-      if (!textBox) return;
-
-      textBox.fontFamily = style.fontFamily || textBox.fontFamily;
-      textBox.fill = style.fontColor || textBox.fill;
-
-      syncViewport();
     },
 
     getStyle: () => {

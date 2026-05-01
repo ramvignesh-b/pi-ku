@@ -14,7 +14,7 @@ import { Modal } from "../ui/Modal";
 import type { CanvasStyle } from "./ComposeCanvas.tsx";
 
 interface ToolBarProps {
-  fileInputRef: React.RefObject<HTMLInputElement | null>;
+  onAddImage: () => void;
   sealBtnClicked: boolean;
   setSealBtnClicked: (v: boolean) => void;
   onSave: (status: "SEALED" | "DRAFT" | "VAULT", date?: Date) => Promise<void>;
@@ -42,7 +42,7 @@ const FONT_COLORS: Map<string, string> = new Map([
 ]);
 
 export function ToolBar({
-  fileInputRef,
+  onAddImage,
   sealBtnClicked,
   setSealBtnClicked,
   onSave,
@@ -60,7 +60,7 @@ export function ToolBar({
         <button
           type="button"
           className="btn btn-ghost btn-sm group"
-          onClick={() => fileInputRef.current?.click()}
+          onClick={onAddImage}
         >
           <ImageIcon size={18} weight="bold" />
           <span className="hidden md:inline group-hover:inline transition-all duration-1000">

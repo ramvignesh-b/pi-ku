@@ -476,22 +476,12 @@ export default function Editor() {
 
           {status === "DRAFT" ? (
             <ToolBar
-              fileInputRef={fileInputRef}
+              onAddImage={() => fileInputRef.current?.click()}
               sealBtnClicked={sealBtnClicked}
               setSealBtnClicked={setSealBtnClicked}
               onSave={handleSave}
               setConfirmModal={setConfirmModal}
-              onFontChange={(style) => {
-                setCanvasFontStyle({
-                  fontFamily: style.fontFamily,
-                  fontColor: style.fontColor,
-                });
-                if (canvasRef?.current?.setStyle)
-                  canvasRef.current.setStyle({
-                    fontFamily: style.fontFamily,
-                    fontColor: style.fontColor,
-                  });
-              }}
+              onFontChange={setCanvasFontStyle}
               latestFontStyle={canvasFontStyle}
             />
           ) : (
@@ -506,7 +496,11 @@ export default function Editor() {
             className="hidden"
           />
 
-          <ComposeCanvas ref={canvasRef} readOnly={status !== "DRAFT"} />
+          <ComposeCanvas
+            ref={canvasRef}
+            readOnly={status !== "DRAFT"}
+            style={canvasFontStyle}
+          />
         </div>
       </section>
       <LogModal
