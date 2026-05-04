@@ -19,7 +19,7 @@ import {
 } from "@phosphor-icons/react";
 import { ReactLenis } from "lenis/react";
 import { AnimatePresence, motion, useScroll, useTransform } from "motion/react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import stamp from "../assets/envelope/stamp.png";
 import Logo from "../components/Logo.tsx";
 import { Modal } from "../components/ui/Modal";
@@ -47,6 +47,9 @@ function HorizontalScroll({ children }: { children: React.ReactNode }) {
 }
 
 export default function About() {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   return (
     <ReactLenis root options={{ lerp: 0.1, duration: 1.5, smoothWheel: true }}>
       <div className="flex flex-col">
