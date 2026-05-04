@@ -1,13 +1,29 @@
 import { DotIcon } from "@phosphor-icons/react";
 import "@fontsource/knewave/400.css";
 
-export default function Logo({ scale = 1, inline = false }) {
-  if (inline) {
-    // for span elements
+interface LogoProps {
+  scale?: number;
+  type?: "inline" | "mono" | "logo";
+}
+
+export default function Logo({ scale = 1, type = "logo" }: LogoProps) {
+  if (type === "inline") {
     return (
-      <span className={"text-accent font-serif italic"}>
+      <span
+        className={
+          "text-accent font-serif italic drop-shadow-xs drop-shadow-base-200/60 "
+        }
+      >
         Pi<span className="text-primary">.</span>&nbsp;Ku
         <span className="text-primary">.</span>&nbsp;
+      </span>
+    );
+  }
+
+  if (type === "mono") {
+    return (
+      <span className="font-mono italic font-bold border-b-3 border-dashed border-stone-800/50">
+        pi. ku.
       </span>
     );
   }

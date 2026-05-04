@@ -68,3 +68,11 @@
 .glass-card {
   @apply bg-glass-bg backdrop-blur-xl border border-white/5 shadow-warm rounded-xl m-4;
 }
+
+.ul-wavy {
+  @apply decoration-primary/40 underline decoration-wavy underline-offset-4;
+}
+
+a {
+  @apply text-primary underline decoration-base-content/20 underline-offset-4 hover:decoration-primary/60 transition-colors;
+}
