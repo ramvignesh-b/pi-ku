@@ -285,6 +285,7 @@ export default function Home() {
                 "md:opacity-50 hover:opacity-100 btn btn-ghost btn-wide md:btn-xl rounded-full font-extralight md:grayscale hover:grayscale-0 hover:-translate-y-1 transition-all duration-1000"
               }
               type={"button"}
+              onClick={() => navigate(ROUTES.ABOUT, { replace: true })}
             >
               <InfoIcon className={"text-primary"} />
               Tell me More
