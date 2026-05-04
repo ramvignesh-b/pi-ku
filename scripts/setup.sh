@@ -1,6 +1,14 @@
 #!/bin/bash
 set -e
 
+# Setup Env from examples
+if [ ! -f ".env" ]; then
+    cp .env.example .env
+fi
+if [ ! -f ".env.e2e" ]; then
+    cp .env.e2e.example .env.e2e
+fi
+
 NODE_BIN=$(command -v bun || command -v npm || true)
 PY_BIN=$(command -v uv || command -v pip || true)
 DISTRO_BIN=$(command -v apt || command -v yum || command -v pacman || command -v zypper || true)
@@ -35,17 +43,20 @@ else
 fi
 
 # Simplify ssl generation for local - source & credits:- https://github.com/FiloSottile/mkcert
-echo "[Cert] Setting up SSL..."
-# pre-requisites (might be available already, just in case)
-if [ $(basename "$DISTRO_BIN") = "apt" ]; then
-  sudo apt install -y libnss3-tools
-elif [ $(basename "$DISTRO_BIN") = "yum" ]; then
-  sudo yum install -y nss-tools
-elif [ $(basename "$DISTRO_BIN") = "pacman" ]; then
-  sudo pacman -S --noconfirm nss
-elif [ $(basename "$DISTRO_BIN") = "zypper" ]; then
-  sudo zypper install -y mozilla-nss-tools
-fi
+# Note, still try to perform the setup if pkg setups fail
+{
+  echo "[Cert] Setting up SSL..."
+  # pre-requisites (might be available already, just in case)
+  if [ $(basename "$DISTRO_BIN") = "apt" ]; then
+    sudo apt install -y libnss3-tools
+  elif [ $(basename "$DISTRO_BIN") = "yum" ]; then
+    sudo yum install -y nss-tools
+  elif [ $(basename "$DISTRO_BIN") = "pacman" ]; then
+    sudo pacman -S --noconfirm nss
+  elif [ $(basename "$DISTRO_BIN") = "zypper" ]; then
+    sudo zypper install -y mozilla-nss-tools
+  fi
+} || true
 
 # Detect os and arch to get the appropriate bin. Windows: ...NO SOUP FOR YOU!
 OS=$(uname -s)
