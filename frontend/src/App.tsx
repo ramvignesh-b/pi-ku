@@ -1,11 +1,5 @@
 import { lazy, Suspense, useEffect, useRef } from "react";
-import {
-  BrowserRouter,
-  Navigate,
-  Route,
-  Routes,
-  ScrollRestoration,
-} from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { ProtectedRoute, PublicRoute } from "./components/RouteGuards";
 import SplashScreen from "./components/SplashScreen";
 import { ROUTES } from "./config/routes";
