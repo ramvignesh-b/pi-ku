@@ -55,6 +55,18 @@ until $CONTAINER_BIN exec "$DB_NAME" pg_isready -U "${DB_USER:-test}" >/dev/null
 done
 
 export PIKU_ENV_FILE="$ENV_FILE"
+
+# NOTE: When running in Gitea Actions (within container), We must ponint DB and mail to the internal docker host instead.
+if [ "$GITEA_ACTIONS" = "true" ]; then
+    sudo apt-get update && sudo apt-get install -y iproute2
+    # Sample: "default via <internal docker host IP> dev <network interface> proto dhcp src <IP> metric 100"
+    HOST_IP=$(ip route show default | awk '/default/ {print $3}')
+    echo "Running on Gitea. Internal Docker host... $HOST_IP"
+
+    export DB_HOST=$HOST_IP
+    export EMAIL_HOST=$HOST_IP
+fi
+
 echo "Starting Backend..."
 mkdir -p ./tmp/logs
 (
