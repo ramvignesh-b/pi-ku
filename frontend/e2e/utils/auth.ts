@@ -54,6 +54,34 @@ async function registerAndLogin(
   await page.getByRole("button", { name: /sign in/i }).click();
 
   await expect(page).toHaveURL(/\/drawer/);
+  await handleWelcomeLetter(page);
   logger.info(`[Auth] Successfully authenticated ${email}`);
 }
-export const AuthHelper = { registerAndLogin };
+
+/**
+ * Handles and dismisses the first welocme letter
+ */
+async function handleWelcomeLetter(page: Page) {
+  logger.info("[Auth] Handling Welcome Letter...");
+  // Click envelope to flip
+  const envelope = page.locator("#env-front");
+  await envelope.waitFor({ state: "visible", timeout: 10000 });
+  await envelope.click();
+
+  // Click seal to open flap
+  const seal = page.getByAltText("Seal");
+  await seal.waitFor({ state: "visible" });
+  await seal.click();
+
+  // Click letter to reveal
+   await page.locator("#letter").click({ position: { x: 30, y: 15 } });
+
+  // Click "I'll see you" button
+  const completeButton = page.getByRole("button", { name: /I'll see you/i });
+  await completeButton.waitFor({ state: "visible", timeout: 10000 });
+  await completeButton.click();
+
+  await expect(completeButton).toBeHidden();
+}
+
+export const AuthHelper = { registerAndLogin, handleWelcomeLetter };

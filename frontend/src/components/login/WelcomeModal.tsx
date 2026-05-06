@@ -34,8 +34,7 @@ export default function WelcomeModal({
               className="inline text-primary"
               weight="fill"
             />
-            <div className="divider my-0"></div>
-            <br />
+            <span className="divider my-0 block"></span>
             Everything you write here is sealed with your password,{" "}
             <span className="font-display text-success">cryptographically</span>
             , before it leaves your hands.
@@ -44,11 +43,11 @@ export default function WelcomeModal({
 
           <div className="alert alert-warning bg-paper/20 border-paper/20 flex items-start gap-3 text-left py-3">
             <WarningIcon size={24} weight="fill" className="shrink-0 mt-0.5" />
-            <p className="text-sm font-medium text-primary-content">
+            <div className="text-sm font-medium text-primary-content">
               If you ever happen to forget your password, your letters are lost
               to time, forever.
               <br />
-              <span className="font-bold mt-2">
+              <span className="font-bold mt-2 block">
                 I highly, highly recommend storing this password in your{" "}
                 <a
                   href="https://www.privacyguides.org/en/passwords/"
@@ -60,7 +59,7 @@ export default function WelcomeModal({
                 </a>{" "}
                 or somewhere safe to remember it.
               </span>
-            </p>
+            </div>
           </div>
 
           <div className="modal-action w-full">

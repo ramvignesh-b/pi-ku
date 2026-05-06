@@ -2,6 +2,12 @@ import * as fabric from "fabric";
 import type * as React from "react";
 import { useCallback, useEffect, useImperativeHandle, useRef } from "react";
 
+import "@fontsource/kavivanar/index.css";
+import "@fontsource/space-mono/index.css";
+import "@fontsource/cutive-mono/index.css";
+import "@fontsource/architects-daughter/index.css";
+import "@fontsource/redacted-script/index.css";
+
 const PAD = 36;
 const BASE_WIDTH = 680;
 const DEFAULT_LOGICAL_HEIGHT = 900;
@@ -184,9 +190,7 @@ export function ComposeCanvas({
           fontFamily: DEFAULT_FONT_FAMILY,
           fill: DEFAULT_FONT_COLOR,
           lineHeight: 1.5,
-          // NOTE: splitByGrapheme is required for word wrap and re-low
-          // but fabric asks to disable this for clear font?? So we disable it for read view
-          splitByGrapheme: !readOnly,
+          splitByGrapheme: false,
           lockMovementX: true,
           lockMovementY: true,
           lockScalingX: true,
@@ -220,6 +224,16 @@ export function ComposeCanvas({
         }
       });
 
+      for (const img of canvas.getObjects("Image")) {
+        img.set({
+          hasControls: !readOnly,
+          hasBorders: !readOnly,
+        });
+      }
+
+      // NOTE: fabric refreshes fonts once the textbox is rendered after initial focus
+      await document.fonts.ready;
+      textbox.set("dirty", true);
       syncViewport();
 
       // Hack: Fabric needs a small initial delay to mount before it will accept focus.

@@ -1,9 +1,10 @@
 import { FeatherIcon } from "@phosphor-icons/react";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { DrawerSection } from "../components/drawer/DrawerSection.tsx";
 import { LetterItem } from "../components/drawer/LetterItem.tsx";
 import { PasskeyModal } from "../components/drawer/PasskeyModal.tsx";
+import { WelcomeLetterOverlay } from "../components/drawer/WelcomeLetterOverlay.tsx";
 import Logo from "../components/Logo";
 import Saajan from "../components/ui/Saajan.tsx";
 import { PATHS } from "../config/routes";
@@ -19,6 +20,10 @@ export default function Drawer() {
 
   const [openSection, setOpenSection] = useState<string | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
+  const [showWelcomeLetter, setShowWelcomeLetter] = useState(
+    !!location.state?.firstTime,
+  );
   const { drafts, kept, sent, vault, loading, isAuthRequired } = useLetters();
 
   if (!user) return null;
@@ -29,6 +34,16 @@ export default function Drawer() {
   return (
     <div className="min-h-screen w-full bg-base-100 text-base-content flex flex-col items-center py-12 px-5 pb-32 font-serif transition-colors">
       <div className="fixed inset-0 bg-vig pointer-events-none z-0" />
+
+      {showWelcomeLetter && (
+        <WelcomeLetterOverlay
+          userName={user.full_name}
+          onComplete={() => {
+            setShowWelcomeLetter(false);
+            navigate(location.pathname, { replace: true, state: {} });
+          }}
+        />
+      )}
 
       {isAuthRequired && <PasskeyModal />}
       <header className="text-center mb-12 z-10 animate-in fade-in slide-in-from-top-4 duration-500">
@@ -166,12 +181,14 @@ export default function Drawer() {
       <footer className="mt-25 font-sans text-[0.6rem] tracking-widester uppercase text-base-content/10 z-10">
         For your unsaid.
       </footer>
-      <div className="absolute bottom-0 z-50 font-sans">
-        <Saajan
-          message={`Good to see you again, ${user.full_name}.\nWhat's on your mind today?`}
-          position="top"
-        />
-      </div>
+      {!showWelcomeLetter && (
+        <div className="absolute bottom-0 z-50 font-sans">
+          <Saajan
+            message={`Good to see you again, ${user.full_name}.\nWhat's on your mind today?`}
+            position="top"
+          />
+        </div>
+      )}
     </div>
   );
 }

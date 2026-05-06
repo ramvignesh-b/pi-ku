@@ -34,12 +34,6 @@ import { CryptoUtils } from "../utils/crypto";
 import { formatRelativeDate } from "../utils/dateFormat";
 import { decryptCanvasImages, encryptCanvasImages } from "../utils/letterLogic";
 
-import "@fontsource/kavivanar/index.css";
-import "@fontsource/space-mono/index.css";
-import "@fontsource/cutive-mono/index.css";
-import "@fontsource/architects-daughter/index.css";
-import "@fontsource/redacted-script/index.css";
-
 type SaveOverlay = "IDLE" | "SAVING" | "SAVED" | "ERROR";
 
 const OVERLAY_FADE_MS = 250;
@@ -268,7 +262,9 @@ export default function Editor() {
     await cryptoUtils.initialize();
 
     try {
-      const canvasData = canvasRef.current?.getData() || { objects: [] };
+      const canvasData = (await canvasRef.current?.getData()) || {
+        objects: [],
+      };
       const canvasImages = canvasRef.current?.getImages() || [];
 
       const { encryptedImageFiles, encryptedCanvasData } =

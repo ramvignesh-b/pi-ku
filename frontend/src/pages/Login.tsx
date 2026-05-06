@@ -7,7 +7,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { api, publicApi } from "../api/apiClient";
 import Logo from "../components/Logo";
-import WelcomeModal from "../components/login/WelcomeModal.tsx";
+import WelcomeModal from "../components/login/WelcomeModal";
 import FormField from "../components/ui/FormField";
 import Saajan from "../components/ui/Saajan";
 import { endpoints } from "../config/endpoints";
@@ -64,7 +64,7 @@ export default function Login() {
 
       await setAuthStore(authData.access, userData, masterKey);
 
-      navigate(nextRoute, { replace: true });
+      navigate(nextRoute, { replace: true, state: location.state });
     } catch (err) {
       let message =
         "Sorry, we're experiencing technical issues.\nPlease try again later.";

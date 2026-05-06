@@ -208,7 +208,7 @@ test.describe("Letter Drafting (Real Backend)", () => {
     // Verify it opens the Reader without a hash
     logger.info(">> [Drawer] Verifying Reader page...");
     // Give it a bit more time for decryption
-    await expect(page).toHaveURL(/\/read\/[a-f0-9-]{36}$/, { timeout: 15000 }); // UUID without hash
+    await expect(page).toHaveURL(/\/read\/[a-f0-9-]{36}$/, { timeout: 15000 });
     // Reveal and check decrypted content in Reader
     await expect(page.getByText(/breaking the seal/i)).toBeHidden({
       timeout: 10000,

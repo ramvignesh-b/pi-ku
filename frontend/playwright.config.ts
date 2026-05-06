@@ -15,7 +15,7 @@ const baseUrl = getBaseUrl(
 );
 
 export default defineConfig({
-  timeout: 60000,
+  timeout: 80000,
   expect: {
     timeout: 10000,
   },
