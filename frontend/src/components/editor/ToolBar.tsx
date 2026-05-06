@@ -30,7 +30,7 @@ const FONT_FAMILIES: Map<string, string> = new Map([
   ["Handwriting", "Architects Daughter"],
   ["Slab", "Cutive Mono"],
   ["Mono", "Space Mono"],
-  ["Tamil", "Kavivanar"],
+  ["Ink", "Kavivanar"],
   ["Crazy(pls no)", "Redacted Script"],
 ]);
 const FONT_COLORS: Map<string, string> = new Map([
