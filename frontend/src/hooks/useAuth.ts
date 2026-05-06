@@ -57,7 +57,6 @@ export const useAuth = () => {
     }
 
     try {
-      // try session refresh
       const { data: refreshData } = await publicApi.post(endpoints.REFRESH);
       const { data: userData } = await api.get(endpoints.ME, {
         headers: { Authorization: `Bearer ${refreshData.access}` },
@@ -71,16 +70,24 @@ export const useAuth = () => {
   }, [setMasterKey]);
 
   const unlock = async (password: string) => {
-    if (!user) return;
+    if (!user) {
+      await logout();
+      return;
+    }
 
-    try {
-      const { masterKey } = await CryptoUtils.deriveKeyBundle(
-        password,
-        user.email,
-      );
-      await saveMasterKey(masterKey);
-      setMasterKey(masterKey);
-    } catch {}
+    const { masterKey, authHash } = await CryptoUtils.deriveKeyBundle(
+      password,
+      user.email,
+    );
+
+    // Validate password by calling login endpoint
+    await api.post(endpoints.LOGIN, {
+      email: user.email,
+      password: authHash,
+    });
+
+    await saveMasterKey(masterKey);
+    setMasterKey(masterKey);
   };
 
   return {

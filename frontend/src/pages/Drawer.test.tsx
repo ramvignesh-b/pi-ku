@@ -9,73 +9,75 @@ import Drawer from "./Drawer";
 vi.mock("../hooks/useLetters");
 
 describe("Drawer Page", () => {
-  beforeEach(() => {
-    // Setup authenticated state for the test
-    useAuthStore.setState({
-      user: mockUser,
-      accessToken: "fake-token",
-      isInitializing: false,
+    beforeEach(() => {
+        // Setup authenticated state for the test
+        useAuthStore.setState({
+            user: mockUser,
+            accessToken: "fake-token",
+            isInitializing: false,
+        });
+
+        vi.mocked(useLetters).mockReturnValue({
+            drafts: [],
+            kept: [],
+            sent: [],
+            vault: [],
+            loading: false,
+            isAuthRequired: false,
+        });
     });
 
-    vi.mocked(useLetters).mockReturnValue({
-      drafts: [],
-      kept: [],
-      sent: [],
-      vault: [],
-      loading: false,
-      isAuthRequired: false,
-    });
-  });
+    it("renders the cabinet sections and empty state message", () => {
+        render(
+            <MemoryRouter>
+                <Drawer />
+            </MemoryRouter>,
+        );
 
-  it("renders the cabinet sections and empty state message", () => {
-    render(
-      <MemoryRouter>
-        <Drawer />
-      </MemoryRouter>,
-    );
-
-    expect(screen.getByText(/Drafts/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/Kept/i).length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText(/Vault/i)).toBeInTheDocument();
-    expect(screen.getByText(/This drawer remains silent/i)).toBeInTheDocument();
-  });
-
-  it("renders the loading state", () => {
-    vi.mocked(useLetters).mockReturnValue({
-      drafts: [],
-      kept: [],
-      sent: [],
-      vault: [],
-      loading: true,
-      isAuthRequired: false,
+        expect(screen.getByText(/Drafts/i)).toBeInTheDocument();
+        expect(screen.getAllByText(/Kept/i).length).toBeGreaterThanOrEqual(1);
+        expect(screen.getByText(/Vault/i)).toBeInTheDocument();
+        expect(screen.getByText(/This drawer remains silent/i)).toBeInTheDocument();
     });
 
-    render(
-      <MemoryRouter>
-        <Drawer />
-      </MemoryRouter>,
-    );
+    it("renders the loading state", () => {
+        vi.mocked(useLetters).mockReturnValue({
+            drafts: [],
+            kept: [],
+            sent: [],
+            vault: [],
+            loading: true,
+            isAuthRequired: false,
+        });
 
-    expect(screen.getByText(/Opening your cabinet/i)).toBeInTheDocument();
-  });
+        render(
+            <MemoryRouter>
+                <Drawer />
+            </MemoryRouter>,
+        );
 
-  it("renders the authentication required modal when api requires auth", () => {
-    vi.mocked(useLetters).mockReturnValue({
-      drafts: [],
-      kept: [],
-      sent: [],
-      vault: [],
-      loading: false,
-      isAuthRequired: true,
+        expect(screen.getByText(/Opening your cabinet/i)).toBeInTheDocument();
     });
 
-    render(
-      <MemoryRouter>
-        <Drawer />
-      </MemoryRouter>,
-    );
+    it("renders the authentication required modal when api requires auth", () => {
+        vi.mocked(useLetters).mockReturnValue({
+            drafts: [],
+            kept: [],
+            sent: [],
+            vault: [],
+            loading: false,
+            isAuthRequired: true,
+        });
 
-    expect(screen.getByText(/Authentication Required/i)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/password/i)).toBeInTheDocument();
-  });
+        render(
+            <MemoryRouter>
+                <Drawer />
+            </MemoryRouter>,
+        );
+
+        expect(
+            screen.getByText(/You've been away a while./i),
+        ).toBeInTheDocument();
+        expect(screen.getByPlaceholderText(/password/i)).toBeInTheDocument();
+    });
 });

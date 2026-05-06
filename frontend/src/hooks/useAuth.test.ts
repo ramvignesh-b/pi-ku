@@ -6,6 +6,7 @@ import { mockUser } from "../../test/fixtures/user.fixture";
 import { server } from "../../test/mocks/server";
 import { useAuthStore } from "../store/useAuthStore";
 import { useKeyStore } from "../store/useKeyStore";
+import { CryptoUtils } from "../utils/crypto";
 import {
   clearMasterKey,
   loadMasterKey,
@@ -14,6 +15,7 @@ import {
 import { useAuth } from "./useAuth";
 
 vi.mock("../utils/keystore");
+vi.mock("../utils/crypto");
 
 const VITE_API_URL = "http://piku-server";
 
@@ -30,6 +32,11 @@ beforeEach(() => {
     isInitializing: true,
   });
   useKeyStore.setState({ masterKey: null });
+
+  vi.mocked(CryptoUtils.deriveKeyBundle).mockResolvedValue({
+    masterKey: mockMasterKey,
+    authHash: "mock-hash",
+  });
 });
 
 describe("isAuthenticated", () => {
@@ -199,5 +206,70 @@ describe("initialize", () => {
     expect(useAuthStore.getState().accessToken).toBeNull();
     expect(useAuthStore.getState().user).toBeNull();
     expect(useKeyStore.getState().masterKey).not.toBeNull();
+  });
+});
+
+describe("unlock", () => {
+  beforeEach(() => {
+    useAuthStore.setState({
+      accessToken: "valid-token",
+      user: mockUser,
+      isInitializing: false,
+    });
+  });
+
+  it("should derive the master key from the user password, validate it via API, and persist it", async () => {
+    let loginCalled = false;
+    server.use(
+      http.post(`${VITE_API_URL}/api/auth/login/`, async () => {
+        loginCalled = true;
+        return HttpResponse.json({ access: "token", user: mockUser });
+      }),
+    );
+    const { result } = renderHook(() => useAuth());
+
+    await act(async () => {
+      await result.current.unlock("password");
+    });
+
+    expect(CryptoUtils.deriveKeyBundle).toHaveBeenCalledWith(
+      "password",
+      mockUser.email,
+    );
+    expect(loginCalled).toBe(true);
+    expect(saveMasterKey).toHaveBeenCalledWith(mockMasterKey);
+    expect(useKeyStore.getState().masterKey).toEqual(mockMasterKey);
+  });
+
+  it("should logout if user is not present", async () => {
+    useAuthStore.setState({ user: null });
+    const { result } = renderHook(() => useAuth());
+
+    await act(async () => {
+      await result.current.unlock("password");
+    });
+
+    expect(CryptoUtils.deriveKeyBundle).not.toHaveBeenCalled();
+    expect(saveMasterKey).not.toHaveBeenCalled();
+    expect(useAuthStore.getState().accessToken).toBeNull();
+    expect(clearMasterKey).toHaveBeenCalled();
+  });
+
+  it("should throw an error and not persist the key if validation fails", async () => {
+    server.use(
+      http.post(
+        `${VITE_API_URL}/api/auth/login/`,
+        () => new HttpResponse(null, { status: 400 }),
+      ),
+    );
+
+    const { result } = renderHook(() => useAuth());
+
+    await act(async () => {
+      await expect(result.current.unlock("wrong-password")).rejects.toThrow();
+    });
+
+    expect(saveMasterKey).not.toHaveBeenCalled();
+    expect(useKeyStore.getState().masterKey).toBeNull();
   });
 });

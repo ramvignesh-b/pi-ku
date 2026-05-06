@@ -1,26 +1,26 @@
-import { LockKeyIcon } from "@phosphor-icons/react";
+import { HourglassSimpleMediumIcon } from "@phosphor-icons/react";
+import { useAuth } from "../../hooks/useAuth";
 import { Modal } from "../ui/Modal";
 
-interface PasskeyModalProps {
-  onUnlock: (password: string) => Promise<void>;
-}
+export function PasskeyModal() {
+  const { unlock } = useAuth();
 
-export function PasskeyModal({ onUnlock }: PasskeyModalProps) {
   return (
     <Modal isOpen={true}>
-      <LockKeyIcon
+      <HourglassSimpleMediumIcon
         size={48}
         className="text-primary mx-auto mb-8 animate-pulse"
+        weight="duotone"
       />
       <h3 className="font-bold text-lg font-display text-primary">
-        Authentication Required
+        You've been away a while.
       </h3>
       <p className="py-4 font-sans">
-        We need your passkey to open your letters
+        Your letters are still there. Just need the key once more.
       </p>
       <div className="divider w-1/2 mx-auto text-xs text-neutral-content/30 mt-0"></div>
       <p className="text-xs text-neutral-content/30 font-mono italic">
-        Your passkey is used to decrypt your data locally.
+        Nothing was lost.
       </p>
       <div className="modal-action items-center gap-4">
         <form
@@ -30,7 +30,7 @@ export function PasskeyModal({ onUnlock }: PasskeyModalProps) {
             const formData = new FormData(e.currentTarget);
             const password = formData.get("password") as string;
             if (!password) return;
-            await onUnlock(password);
+            await unlock(password);
           }}
         >
           <input

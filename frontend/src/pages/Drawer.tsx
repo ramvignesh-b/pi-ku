@@ -15,7 +15,7 @@ import {
 } from "../utils/dateFormat.ts";
 
 export default function Drawer() {
-  const { user, logout, unlock } = useAuth();
+  const { user, logout } = useAuth();
 
   const [openSection, setOpenSection] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -30,7 +30,7 @@ export default function Drawer() {
     <div className="min-h-screen w-full bg-base-100 text-base-content flex flex-col items-center py-12 px-5 pb-32 font-serif transition-colors">
       <div className="fixed inset-0 bg-vig pointer-events-none z-0" />
 
-      {isAuthRequired && <PasskeyModal onUnlock={unlock} />}
+      {isAuthRequired && <PasskeyModal />}
       <header className="text-center mb-12 z-10 animate-in fade-in slide-in-from-top-4 duration-500">
         <Logo />
         <div className="font-sans text-xs tracking-widester uppercase text-base-content/40 mt-2">
