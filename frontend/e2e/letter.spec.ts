@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import pino from "pino";
 import { AuthHelper } from "./utils/auth";
+import { revealEnvelope } from "./utils/envelope";
 
 const logger = pino({
   transport: {
@@ -22,20 +23,19 @@ test.describe("Letter Drafting (Real Backend)", () => {
     await AuthHelper.registerAndLogin(page, email, name, password);
 
     logger.info(">> [Draft] Navigating to Editor via UI...");
-    await page.getByRole("button", { name: /write something/i }).click();
+    await page.getByTestId("write-letter-btn").click();
 
     logger.info(`>> [Draft] Current URL after click: ${page.url()}`);
 
-    // Wait for the recipient input to be present in the DOM
-    const recipientInput = page.locator("#recipient");
-    await recipientInput.waitFor({ state: "visible", timeout: 20000 });
+    // Editor page
+    await expect(page.getByTestId("recipient-input")).toBeVisible();
+    const recipientInput = page.getByTestId("recipient-input");
 
     const recipientName = "Dear Friend";
     await recipientInput.fill(recipientName);
 
     // Initial load: verify textarea value (populated by Fabric when focused)
     const canvasInput = page.locator("textarea");
-    await canvasInput.waitFor({ state: "attached" });
     await canvasInput.focus();
     await expect(canvasInput).toHaveValue(/Take a deep breath/i);
 
@@ -46,10 +46,10 @@ test.describe("Letter Drafting (Real Backend)", () => {
     await page.keyboard.press("Enter");
     await page.keyboard.type("It should persist.");
     logger.info(">> [Draft] Clicking Draft...");
-    await page.getByRole("button", { name: /draft/i }).click();
+    await page.getByTestId("draft-btn").click();
 
     // Verify Success Modal/Alert
-    await expect(page.getByText(/your letter is saved/i)).toBeVisible();
+    await expect(page.getByTestId("save-success-toast")).toBeVisible();
 
     // Verify URL updated with a UUID
     await expect(page).toHaveURL(/\/quill\/[0-9a-f-]{36}/);
@@ -61,24 +61,16 @@ test.describe("Letter Drafting (Real Backend)", () => {
     await page.goto(savedUrl);
 
     // Wait for initial load overlay to appear and then definitely disappear
-    await page
-      .getByText(/opening your draft/i)
-      .waitFor({ state: "visible", timeout: 2000 })
-      .catch(() => {});
-    await expect(page.getByText(/opening your draft/i)).toBeHidden({
-      timeout: 10000,
-    });
+    await expect(page.getByTestId("opening-draft-overlay")).toBeHidden();
 
     // Check recipient
-    await expect(page.locator("#recipient")).toHaveValue(recipientName);
+    await expect(page.getByTestId("recipient-input")).toHaveValue(recipientName);
 
     // Check canvas content
     // We wait for the content to appear in the textarea.
     // toHaveValue will poll until it matches or timeouts.
     await canvasInput.focus();
-    await expect(canvasInput).toHaveValue(/This is a secret draft/i, {
-      timeout: 10000,
-    });
+    await expect(canvasInput).toHaveValue(/This is a secret draft/i);
     await expect(canvasInput).toHaveValue(/It should persist/i);
   });
 
@@ -92,10 +84,9 @@ test.describe("Letter Drafting (Real Backend)", () => {
     await AuthHelper.registerAndLogin(page, email, name, password);
 
     logger.info(">> [Seal] Navigating to Editor via UI...");
-    await page.locator("#write-letter-btn").click();
+    await page.getByTestId("write-letter-btn").click();
 
-    const recipientInput = page.locator("#recipient");
-    await recipientInput.waitFor({ state: "visible", timeout: 10000 });
+    const recipientInput = page.getByTestId("recipient-input");
     await recipientInput.fill("A Secret Guest");
 
     const canvasInput = page.locator("textarea");
@@ -104,55 +95,41 @@ test.describe("Letter Drafting (Real Backend)", () => {
 
     // Click Seal (open menu, then confirm)
     logger.info(">> [Seal] Clicking Seal...");
-    await page
-      .getByRole("button", { name: /seal/i })
-      .filter({ visible: true })
-      .click();
-    await page
-      .getByRole("button", { name: /seal/i })
-      .filter({ visible: true })
-      .click();
+    await page.getByTestId("seal-trigger-btn").click();
+    await page.getByTestId("seal-confirm-btn").click();
 
     // Should show sealed confirmation modal
     logger.info(">> [Seal] Verifying sealed modal...");
-    await expect(page.getByText(/your letter is sealed/i)).toBeVisible({
-      timeout: 10000,
-    });
+    await expect(page.getByTestId("post-seal-modal")).toBeVisible();
 
     // Navigate to Reader via "View letter"
-    await page.getByRole("button", { name: /view letter/i }).click();
+    await page.getByTestId("view-letter-btn").click();
 
     // Should be on Reader URL
-    await expect(page).toHaveURL(/\/read\/[a-f0-9-]{36}$/, { timeout: 15000 });
+    await expect(page).toHaveURL(/\/read\/[a-f0-9-]{36}$/);
 
     // Open the envelope to reveal the letter
-    await expect(page.getByText(/breaking the seal/i)).toBeHidden({
-      timeout: 10000,
-    });
-    // Flip the envelope to show the seal
-    await page.locator("#env-front").click();
-    await page.waitForTimeout(2500); // Wait for flip transition
-
-    await page.getByAltText("Seal").click();
-    await page.waitForTimeout(1500);
-    await page.locator("#letter").click({ position: { x: 30, y: 15 } });
-    await expect(page.locator("#letter")).toBeHidden({ timeout: 20000 });
+    await expect(page.getByTestId("decryption-overlay")).toBeHidden();
+    // Flip the envelope to show the seal and reveal the letter
+    await revealEnvelope(page);
+    await expect(page.getByTestId("envelope-letter")).toBeHidden();
 
     // Share on demand
     logger.info(">> [Seal] Clicking Share button in Reader...");
-    await page.locator("#share-letter-btn").click();
+    await page.getByTestId("share-letter-btn").click();
 
     // Verify share modal with a valid link
-    await expect(page.getByText(/send this letter/i)).toBeVisible();
+    await expect(page.getByTestId("share-letter-modal")).toBeVisible();
     const linkInput = page.locator("#share-link-input");
     const linkValue = await linkInput.inputValue();
     expect(linkValue).toContain("/read/");
     expect(linkValue).toContain("#");
     logger.info(`>> [Seal] Sharing link: ${linkValue}`);
 
-    await expect(page.getByRole("button", { name: /copy/i })).toBeVisible();
-    await page.getByRole("button", { name: /close/i }).click();
-    await expect(page.getByText(/send this letter/i)).toBeHidden();
+    await expect(page.getByTestId("copy-link-btn")).toBeVisible();
+    // Assuming Close button in ShareModal might need a testid too, but for now let's use text if unique or add testid
+    await page.getByTestId("modal-close-btn").click();
+    await expect(page.getByTestId("share-letter-modal")).toBeHidden();
   });
 
   test("should allow author to access sealed letter from drawer without sharing key", async ({
@@ -167,10 +144,9 @@ test.describe("Letter Drafting (Real Backend)", () => {
     await AuthHelper.registerAndLogin(page, email, name, password);
 
     logger.info(">> [Drawer] Creating and sealing a letter...");
-    await page.getByRole("button", { name: /write something/i }).click();
+    await page.getByTestId("write-letter-btn").click();
 
-    const recipientInput = page.locator("#recipient");
-    await recipientInput.waitFor({ state: "visible" });
+    const recipientInput = page.getByTestId("recipient-input");
     await recipientInput.fill(recipientName);
 
     const canvasInput = page.locator("textarea");
@@ -178,59 +154,34 @@ test.describe("Letter Drafting (Real Backend)", () => {
     await canvasInput.fill(letterContent);
 
     // Click Seal (open menu, then confirm)
-    await page
-      .getByRole("button", { name: /seal/i })
-      .filter({ visible: true })
-      .click();
-    await page
-      .getByRole("button", { name: /seal/i })
-      .filter({ visible: true })
-      .click();
+    await page.getByTestId("seal-trigger-btn").click();
+    await page.getByTestId("seal-confirm-btn").click();
 
     // Sealed modal should appear — click "Keep it" to go to Drawer
-    await expect(page.getByText(/your letter is sealed/i)).toBeVisible({
-      timeout: 10000,
-    });
-    await page.getByRole("button", { name: /keep it to myself/i }).click();
+    await expect(page.getByTestId("post-seal-modal")).toBeVisible();
+    await page.getByTestId("keep-it-btn").click();
 
     // Open "Kept" section - search for the section with id='kept' and click its toggle button
     logger.info(">> [Drawer] Opening Kept section...");
-    const keptSection = page.locator("#kept");
-    await keptSection.getByRole("button", { name: /kept/i }).click();
+    await page.getByTestId("drawer-section-kept").click();
 
     // Find the sealed letter in the drawer by recipient name and click it
     logger.info(">> [Drawer] Clicking sealed letter in drawer...");
     const sealedItem = page
-      .getByRole("button", { name: new RegExp(recipientName, "i") })
+      .getByTestId(/^letter-item-/)
+      .filter({ hasText: recipientName })
       .first();
     await sealedItem.click();
 
     // Verify it opens the Reader without a hash
     logger.info(">> [Drawer] Verifying Reader page...");
     // Give it a bit more time for decryption
-    await expect(page).toHaveURL(/\/read\/[a-f0-9-]{36}$/, { timeout: 15000 });
+    await expect(page).toHaveURL(/\/read\/[a-f0-9-]{36}$/);
     // Reveal and check decrypted content in Reader
-    await expect(page.getByText(/breaking the seal/i)).toBeHidden({
-      timeout: 10000,
-    });
-    // Check recipient on the front of the envelope
-    await expect(page.getByText(new RegExp(recipientName, "i"))).toBeVisible();
-
-    // Flip the envelope to the back
-    await page.getByText(new RegExp(recipientName, "i")).click();
-    // Wait for flip transition (2s)
-    await page.waitForTimeout(2500);
-
-    // Reveal the letter: click seal then click letter
-    await page.getByAltText("Seal").click();
-    // Wait for flap transition
-    await page.waitForTimeout(1500);
-
-    // Click the letter to pull it out
-    await page.locator("#letter").click({ position: { x: 30, y: 15 } });
-
-    // Wait for reveal transition
-    await expect(page.locator("#letter")).toBeHidden({ timeout: 20000 });
+    await expect(page.getByTestId("decryption-overlay")).toBeHidden();
+    // Flip the envelope and reveal the letter
+    await revealEnvelope(page);
+    await expect(page.getByTestId("envelope-letter")).toBeHidden();
 
     // Also check if we are redirected to the Reader if we manually go to the Editor URL
     const readerUrl = page.url();

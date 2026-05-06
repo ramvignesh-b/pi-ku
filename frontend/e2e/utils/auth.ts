@@ -1,6 +1,7 @@
 import { expect, type Page } from "@playwright/test";
 import pino from "pino";
 import { MailpitHelper } from "./mailpit";
+import { handleWelcomeLetter } from "./envelope";
 
 const logger = pino({
   transport: {
@@ -23,11 +24,11 @@ async function registerAndLogin(
   // Register the User
   logger.info(`[Auth] Registering user: ${email}`);
   await page.goto("/onboard");
-  await page.getByLabel(/pen name/i).fill(fullName);
-  await page.getByLabel("Email", { exact: true }).fill(email);
-  await page.getByLabel("Password", { exact: true }).fill(password);
-  await page.getByLabel(/confirm password/i).fill(password);
-  await page.getByRole("button", { name: /^register$/i }).click();
+  await page.getByTestId("pen-name-input").fill(fullName);
+  await page.getByTestId("email-input").fill(email);
+  await page.getByTestId("password-input").fill(password);
+  await page.getByTestId("confirm-password-input").fill(password);
+  await page.getByTestId("register-submit-btn").click();
 
   await expect(page).toHaveURL(/\/verify-email/);
 
@@ -37,51 +38,23 @@ async function registerAndLogin(
 
   await page.goto(activationLink);
 
-  await expect(page.getByText(/account activated/i)).toBeVisible();
-  await page.getByRole("button", { name: /start writing/i }).click();
+  await expect(page.getByTestId("activation-success-header")).toBeVisible();
+  await page.getByTestId("start-writing-btn").click();
 
   // Dismiss the Welcom Modal and Perform Login
   logger.info(`[Auth] Logging in...`);
   await expect(page).toHaveURL(/\/login/);
 
-  const welcomeButton = page.getByRole("button", { name: /I'll remember/i });
-  await welcomeButton.waitFor({ state: "visible", timeout: 10000 });
-  await welcomeButton.click();
-  await expect(welcomeButton).toBeHidden();
+  await page.getByTestId("welcome-dismiss-btn").click();
+  await expect(page.getByTestId("welcome-dismiss-btn")).toBeHidden();
 
-  await page.getByLabel("Email", { exact: true }).fill(email);
-  await page.getByLabel("Password", { exact: true }).fill(password);
-  await page.getByRole("button", { name: /sign in/i }).click();
+  await page.getByTestId("email-input").fill(email);
+  await page.getByTestId("password-input").fill(password);
+  await page.getByTestId("login-submit-btn").click();
 
   await expect(page).toHaveURL(/\/drawer/);
   await handleWelcomeLetter(page);
   logger.info(`[Auth] Successfully authenticated ${email}`);
 }
 
-/**
- * Handles and dismisses the first welocme letter
- */
-async function handleWelcomeLetter(page: Page) {
-  logger.info("[Auth] Handling Welcome Letter...");
-  // Click envelope to flip
-  const envelope = page.locator("#env-front");
-  await envelope.waitFor({ state: "visible", timeout: 10000 });
-  await envelope.click();
-
-  // Click seal to open flap
-  const seal = page.getByAltText("Seal");
-  await seal.waitFor({ state: "visible" });
-  await seal.click();
-
-  // Click letter to reveal
-   await page.locator("#letter").click({ position: { x: 30, y: 15 } });
-
-  // Click "I'll see you" button
-  const completeButton = page.getByRole("button", { name: /I'll see you/i });
-  await completeButton.waitFor({ state: "visible", timeout: 10000 });
-  await completeButton.click();
-
-  await expect(completeButton).toBeHidden();
-}
-
-export const AuthHelper = { registerAndLogin, handleWelcomeLetter };
+export const AuthHelper = { registerAndLogin };

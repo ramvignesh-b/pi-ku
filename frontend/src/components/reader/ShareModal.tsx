@@ -14,7 +14,11 @@ export function ShareModal({ shareLink, setShareLink }: ShareModalProps) {
   };
   return (
     <>
-      <Modal isOpen={!!shareLink} onClose={() => setShareLink(null)}>
+      <Modal
+        isOpen={!!shareLink}
+        onClose={() => setShareLink(null)}
+        data-testid="share-letter-modal"
+      >
         <div className="flex flex-col items-center justify-center text-center gap-6 py-4">
           <div className="space-y-2">
             <PaperPlaneTiltIcon
@@ -47,6 +51,7 @@ export function ShareModal({ shareLink, setShareLink }: ShareModalProps) {
             <button
               type="button"
               onClick={copyToClipboard}
+              data-testid="copy-link-btn"
               className="btn btn-primary font-sans btn-sm rounded-tl-xl rounded-bl-xl rounded-tr-full rounded-br-full"
             >
               Copy

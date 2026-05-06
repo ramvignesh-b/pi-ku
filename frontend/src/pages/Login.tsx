@@ -97,6 +97,7 @@ export default function Login() {
             label="Email"
             type="email"
             placeholder="f.kafka@wrongtrain.com"
+            data-testid="email-input"
             registration={register("email")}
             error={errors.email?.message}
             handleFocus={() => setSaajanMessage("I remember you.")}
@@ -106,6 +107,7 @@ export default function Login() {
             label="Password"
             type="password"
             placeholder="••••••••"
+            data-testid="password-input"
             registration={register("password")}
             error={errors.password?.message}
             handleFocus={() =>
@@ -119,6 +121,7 @@ export default function Login() {
               name="login"
               disabled={isLoading}
               aria-label="Sign In"
+              data-testid="login-submit-btn"
               className="btn btn-primary w-full shadow-lg"
             >
               {isLoading ? (

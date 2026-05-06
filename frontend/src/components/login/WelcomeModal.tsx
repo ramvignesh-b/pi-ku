@@ -65,6 +65,7 @@ export default function WelcomeModal({
           <div className="modal-action w-full">
             <button
               type="button"
+              data-testid="welcome-dismiss-btn"
               onClick={() => setShowWelcome(false)}
               className="btn btn-primary w-full shadow-lg"
             >

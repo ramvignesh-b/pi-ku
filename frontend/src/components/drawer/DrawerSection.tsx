@@ -35,6 +35,7 @@ export function DrawerSection({
       <button
         type="button"
         onClick={onClick}
+        data-testid={`drawer-section-${id}`}
         className={`w-full p-[24px_28px] cursor-pointer flex items-center gap-5 transition-all duration-2000 ease-in-out outline-none focus-visible:ring-2 focus-visible:ring-primary/50 border border-base-content/10 text-left bg-linear-to-r from-transparent to-base-100/40`}
       >
         <div className="flex-1">

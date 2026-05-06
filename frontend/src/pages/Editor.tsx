@@ -376,7 +376,10 @@ export default function Editor() {
                 weight="bold"
                 className="animate-spin text-primary"
               />
-              <p className="text-xxs uppercase tracking-widester font-bold text-base-content/40">
+              <p
+                data-testid="opening-draft-overlay"
+                className="text-xxs uppercase tracking-widester font-bold text-base-content/40"
+              >
                 Opening your draft...
               </p>
             </div>
@@ -406,6 +409,7 @@ export default function Editor() {
             {saveOverlay === "SAVED" && (
               <div
                 role="alert"
+                data-testid="save-success-toast"
                 className={`alert alert-success shadow-lg transition-all ease-in-out duration-2000 ${
                   showSaveOverlay
                     ? "opacity-100 scale-100 translate-y-0"
@@ -459,6 +463,7 @@ export default function Editor() {
               </label>
               <input
                 id="recipient"
+                data-testid="recipient-input"
                 type="text"
                 placeholder={toPlaceholderList[placeholderIndex]}
                 value={recipient}

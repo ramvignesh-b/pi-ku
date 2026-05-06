@@ -140,6 +140,7 @@ export function ToolBar({
       <div className="flex items-center gap-2">
         <button
           type="button"
+          data-testid="draft-btn"
           className="btn btn-ghost btn-sm text-xxs group tracking-widester uppercase font-bold text-base-content/60 hover:text-base-content"
           title="Store in your private drawer"
           onClick={() => onSave("DRAFT")}
@@ -155,6 +156,7 @@ export function ToolBar({
         {/*Seal */}
         <button
           type="button"
+          data-testid="seal-trigger-btn"
           className={`btn btn-primary btn-sm rounded-full px-6 group ${sealBtnClicked ? "invisible" : "visible"}`}
           onClick={() => setSealBtnClicked(true)}
         >
@@ -176,6 +178,7 @@ export function ToolBar({
       >
         <button
           type="button"
+          data-testid="seal-confirm-btn"
           className="btn btn-accent btn-sm rounded-full px-6 group"
           onClick={() => onSave("SEALED")}
         >

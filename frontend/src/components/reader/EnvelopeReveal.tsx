@@ -80,6 +80,7 @@ export function EnvelopeReveal({
             />
           </div>
           <img
+            data-testid="wax-seal"
             className={
               "translate-y-24 delay-2000 absolute z-6 peer-has-checked:pointer-events-none peer-has-checked:opacity-0 peer-has-checked:delay-0 transition-opacity duration-1000 cursor-pointer"
             }
@@ -91,6 +92,7 @@ export function EnvelopeReveal({
           <button
             type="button"
             id="letter"
+            data-testid="envelope-letter"
             className={`absolute mx-auto transition-all peer-has-checked:delay-800 peer-has-checked:duration-1000 duration-1000 mt-2 h-55 w-105 bg-paper peer-has-checked:-mt-12 hover:-mt-24 cursor-pointer ${revealLetter ? "duration-1000 peer-has-checked:duration-3000 w-screen max-w-4xl h-screen z-101 -translate-y-90" : "peer-has-checked:z-1"}`}
             onClick={handleClick}
           ></button>
@@ -112,6 +114,7 @@ export function EnvelopeReveal({
 
         <button
           id="env-front"
+          data-testid="envelope-front"
           type="button"
           disabled={!isInteractive}
           className={`text-left p-10 absolute inset-0 backface-hidden w-110 bg-base-200 z-99 rounded-md -translate-x-2 ${isFlipped ? "pointer-events-none" : ""}`}

@@ -7,6 +7,7 @@ interface FormFieldProps {
   registration: UseFormRegisterReturn;
   error?: string;
   handleFocus?: () => void;
+  "data-testid"?: string;
 }
 
 export default function FormField({
@@ -16,6 +17,7 @@ export default function FormField({
   registration,
   error,
   handleFocus,
+  "data-testid": testId,
 }: FormFieldProps) {
   return (
     <div className="form-control">
@@ -28,6 +30,7 @@ export default function FormField({
       <input
         {...registration}
         id={registration.name}
+        data-testid={testId}
         type={type}
         placeholder={placeholder}
         className={`input input-bordered focus:input-primary ${

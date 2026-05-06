@@ -217,7 +217,10 @@ export default function Reader() {
           <Logo />
           <div className="flex flex-col items-center gap-2">
             <span className="loading loading-ring loading-md text-primary/40"></span>
-            <p className="text-xs uppercase tracking-widest text-base-content/20 animate-pulse">
+            <p
+              data-testid="decryption-overlay"
+              className="text-xs uppercase tracking-widest text-base-content/20 animate-pulse"
+            >
               Breaking the seal...
             </p>
           </div>
@@ -306,6 +309,7 @@ export default function Reader() {
         <div className="flex justify-center gap-2 mt-8 z-10 relative">
           <button
             id="share-letter-btn"
+            data-testid="share-letter-btn"
             type="button"
             className="btn btn-ghost btn-sm text-base-content/30 hover:text-base-content hover:bg-base-content/10 gap-1.5"
             onClick={handleShare}
@@ -317,6 +321,7 @@ export default function Reader() {
           </button>
           <button
             id="burn-letter-btn"
+            data-testid="burn-letter-btn"
             type="button"
             className="btn btn-ghost btn-sm text-error/40 hover:text-error hover:bg-error/10 gap-1.5"
             onClick={() => setShowBurnModal(true)}

@@ -46,5 +46,10 @@ export default defineConfig(({ mode }) => {
       host: env.FRONTEND_DOMAIN,
       https: isSslEnabled ? sslCerts : undefined,
     },
+    preview: {
+      port: Number(env.FRONTEND_PORT),
+      host: env.FRONTEND_DOMAIN,
+      https: isSslEnabled ? sslCerts : undefined,
+    },
   };
 });

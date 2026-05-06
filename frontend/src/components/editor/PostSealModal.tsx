@@ -15,7 +15,7 @@ export function PostSealModal({
   type = "KEPT",
 }: PostSealModalProps) {
   return (
-    <Modal isOpen={!!sealedTargetId}>
+    <Modal isOpen={!!sealedTargetId} data-testid="post-seal-modal">
       <LockIcon size={32} weight="duotone" className="text-primary mt-3" />
       <h3 className="font-serif text-2xl">Your letter is sealed</h3>
       <p className="text-base-content/60">
@@ -53,6 +53,7 @@ export function PostSealModal({
           <>
             <button
               type="button"
+              data-testid="keep-it-btn"
               className="btn btn-ghost btn-sm"
               onClick={() => navigate(ROUTES.DRAWER)}
             >
@@ -60,6 +61,7 @@ export function PostSealModal({
             </button>
             <button
               type="button"
+              data-testid="view-letter-btn"
               className="btn btn-primary btn-sm"
               onClick={() => navigate(PATHS.read(sealedTargetId!))}
             >

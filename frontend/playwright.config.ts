@@ -60,7 +60,8 @@ export default defineConfig({
 
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: "npm run dev -- --mode e2e",
+    // NOTE: using npm here for docker compat mainly
+    command: "npm run build -- --mode e2e && npm run preview -- --mode e2e",
     url: getBaseUrl(
       process.env.SSL_ENABLED === "true",
       process.env.FRONTEND_DOMAIN,
