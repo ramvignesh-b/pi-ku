@@ -4,8 +4,10 @@ import {
     ArrowBendDownRightIcon,
     ArrowRightIcon,
     CaretUpIcon,
+    DetectiveIcon,
     FlowerTulipIcon,
     GhostIcon,
+    GithubLogoIcon,
     InfoIcon,
     LockLaminatedIcon,
     LockOpenIcon,
@@ -91,16 +93,17 @@ function PrivacySection() {
                     weight="bold"
                 />
             </h1>
-            <div className="flex flex-col items-center shrink-0 gap-8 max-w-11/12 w-200">
+            <div className="flex flex-col items-center shrink-0 gap-8 max-w-11/12 w-220">
                 <p className="text-xxs md:text-sm tracking-widester text-neutral-content/80 font-semibold uppercase mt-6">
                     <span className="text-accent">Your letters.</span>{" "}
                     <span className="text-error">Nobody else's.</span>
                 </p>
-                <p className="text-sm md:text-lg">
-                    When you write something here, it gets encrypted in your browser
-                    before anything leaves your device. What reaches the server isn't your
-                    letter. It's something unreadable &mdash; and the server has no way to
-                    change that, because the key never left you.
+                <p className="text-sm md:text-lg text-neutral">
+                    When you write or upload anything{" "}
+                    <span className="font-hand">(yes, even images)</span> here, it gets
+                    encrypted in your browser before anything leaves your device. What
+                    reaches the server is something unreadable&mdash;and the server has no
+                    way to change that, because the key never left you.
                 </p>
                 <figure className="diff aspect-3/4 touch-pan-y select-none">
                     <div className="diff-item-1 z-1" role="img">
@@ -205,21 +208,23 @@ function SpecsSection() {
 
     return (
         <section className="flex flex-col min-h-dvh w-screen justify-center items-center py-18">
-            <h1 className="relative tracking-tighter text-5xl md:text-8xl text-neutral-content/80 font-extrabold italic font-display z-10">
-                S'more Specs
+            <h1 className="flex tracking-tighter text-5xl md:text-8xl text-neutral-content/80 font-extrabold italic font-display z-10">
+                S'more&nbsp;
+                <DetectiveIcon weight="duotone" className="text-neutral" />
+                Specs
             </h1>
-            <div className="flex flex-col items-center shrink-0 gap-6 max-w-11/12 w-220 mt-4 md:mt-12">
+            <div className="flex flex-col items-center shrink-0 gap-6 max-w-11/12 w-220 mt-4 md:mt-12 text-neutral-content/80">
                 <h2 className="text-xl md:text-3xl text-center mx-auto">
                     <Logo type={"inline"} /> uses{" "}
                     <span className="text-accent font-mono">Zero Knowledge</span>{" "}
-                    <span className="group ul-wavy font-mono text-primary">
+                    <span className="group ul-wavy font-mono text-success">
                         E
                         <span className="hidden group-hover:inline group-focus-within:inline">
-                            nd&nbsp;
+                            nd&mdash;
                         </span>
                         2
                         <span className="hidden group-hover:inline group-focus-within:inline">
-                            &nbsp;
+                            &mdash;
                         </span>
                         E
                         <span className="hidden group-hover:inline group-focus-within:inline">
@@ -231,34 +236,66 @@ function SpecsSection() {
                                 ncryption
                             </span>
                         </span>
-                    </span>{" "} for your letters, with{" "}
-                    <a href="https://hackernoon.com/what-the-heck-is-envelope-encryption-in-cloud-security" target="_blank" rel="noopener noreferrer" className="font-mono text-primary">Envelope Encryption</a> for the keys.
+                    </span>{" "}
+                    for your <span className="font-hand text-primary">letters</span>, with{" "}
+                    <a
+                        href="https://hackernoon.com/what-the-heck-is-envelope-encryption-in-cloud-security"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-mono text-neutral!"
+                    >
+                        Envelope Encryption
+                    </a>{" "}
+                    for the <span className="font-hand text-primary">keys</span>.
                 </h2>
                 <p className="text-sm md:text-xl leading-relaxed">
-                    This means, both the encryption and decryption runs on your device, in your browser.
-                    <ul className="list-decimal list-inside opacity-60 marker:text-primary marker:font-mono marker:text-base">
-                        <li>Every letter has a{" "}
-                            <span className="font-mono text-primary">unique key</span> which is
-                            derived from your original password.</li>
-                        <li>Both the letter and the key are encrypted securely and sent to the
+                    This means, both the{" "}
+                    <span className="font-display text-info">encryption</span> and{" "}
+                    <span className="font-display text-info">decryption</span> runs on
+                    your device, in your browser.
+                    <ul className="list-decimal ml-6 md:ml-10 list-outside text-neutral marker:text-primary/30 marker:font-mono marker:text-xs marker:md:text-base">
+                        <li>
+                            Every letter has a{" "}
+                            <span className="font-mono text-primary/50 font-bold">
+                                unique key
+                            </span>{" "}
+                            which is derived from your original password.
+                        </li>
+                        <li>
+                            Both the letter and the key are encrypted securely and sent to the
                             server.
                         </li>
                         <li>
                             Now, the server holds{" "}
-                            <span className="text-primary font-bold">the envelope</span>,{" "}
-                            <span className="text-primary font-bold">the seal</span> and{" "}
-                            <span className="text-primary font-bold">another locked box</span>&mdash;with a key inside that unseals your letter.
+                            <span className="text-primary/50 font-bold">the envelope</span>,{" "}
+                            <span className="text-primary/50 font-bold">the seal</span> and{" "}
+                            <span className="text-primary/50 font-bold">
+                                another locked box
+                            </span>
+                            &mdash;with a key inside that unseals your letter.
                         </li>
                     </ul>
                     But you&mdash;
-                    <span className="italic">only you</span>&mdash;hold the very
-                    thing that opens that box,{" "}
+                    <span className="italic">only you</span>&mdash;hold the very thing
+                    that opens that box,{" "}
                     <span className="font-mono text-accent">your password</span>.
                 </p>
                 <p className="text-xs md:text-lg text-right w-full flex items-center justify-end gap-4 leading-relaxed text-neutral-content/80">
-                    Nothing on the server is readable without your actual password.
-                    <br />
-                    Even if someone were to breach in, all they'd find is encrypted noise.
+                    <span>
+                        Nothing on the server is readable without your actual password.
+                        <br />
+                        Even if someone were to breach in, all they'd find is encrypted
+                        noise and ain't no way they crackin' it.{" "}
+                        <a
+                            href="https://xkcd.com/538/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xxs md:text-sm text-neutral! font-hand"
+                        >
+                            (unless this happens)
+                        </a>
+                    </span>
+
                     <VaultIcon size={48} weight="duotone" />
                 </p>
 
@@ -275,17 +312,23 @@ function SpecsSection() {
 
                 <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
                     <div className="w-full bg-paper rounded-md p-6">
-                        <img src="/screenshots/e2e.svg" width={"100%"} alt="pi ku e2e diagram" />
+                        <img
+                            src="/screenshots/e2e.svg"
+                            width={"100%"}
+                            alt="pi ku e2e diagram"
+                        />
                     </div>
                 </Modal>
 
                 <p className="text-sm md:text-lg">
-                    Of course, this level of <span className="text-success font-bold">privacy</span> comes with a catch.{" "}
-                    <span className="text-error font-bold">No password reset</span> for you.
+                    Of course, this level of{" "}
+                    <span className="text-success font-bold">privacy</span> comes with a
+                    catch. <span className="text-error font-bold">No password reset</span>{" "}
+                    for you.
                 </p>
                 <p className="text-xs md:text-base alert alert-warning font-medium">
                     <InfoIcon weight="duotone" /> Your original password is never stored
-                    on the server. Which means, if it's lost, the letters stay sealed
+                    on the server. So, if it's forgotten, the letters stay sealed
                     foreeeeveer.
                 </p>
             </div>
@@ -301,30 +344,33 @@ function OSSSection() {
                     "relative tracking-tighter text-4xl md:text-8xl text-neutral-content/80 font-extrabold italic font-serif text-center"
                 }
             >
-                <span className="hidden absolute -translate-y-24 translate-x-45 font-display text-3xl md:text-6xl opacity-70 rotate-8">
-                    only for
-                    <br />
-                    <span className="text-primary">your letters</span> <SmileyIcon />
-                    <ArrowArcLeftIcon className="inline rotate-45 -translate-y-8" />
-                </span>
-                <Logo type={"inline"} /> is{" "}
-                <span className="line-through decoration-6 decoration-error">
+                <Logo type={"inline"} />
+                is{" "}
+                <span className="line-through decoration-6 text-neutral-content/50 decoration-error">
                     &nbsp;private
                 </span>{" "}
-                <span className="text-success">open source !</span>
+                <span className="absolute -translate-y-2 -translate-x-42 md:-translate-x-72 font-hand text-xs md:text-xl opacity-70 rotate-8 tracking-normal inline-flex items-center not-italic w-48 md:w-100 flex-wrap">
+                    only for
+                    <span className="text-primary">&nbsp;your letters&nbsp;</span>{" "}
+                    <SmileyIcon weight="duotone" className="text-primary" />
+                    <ArrowArcLeftIcon className="text-accent inline rotate-45 -translate-y" />
+                </span>
+                <span className="text-success -rotate-3">open source !</span>
             </h1>
-            <div className="flex flex-col items-center shrink-0 max-w-11/12 w-200 gap-4 p-4 md:p-6">
+            <div className="flex flex-col items-center shrink-0 max-w-11/12 w-220 gap-4 p-4 md:p-6 text-neutral-content/80">
                 <p className="text-sm md:text-xl">
-                    <Logo type={"mono"} /> is fully <span className="text-success font-display">open source</span>. Every claim about privacy
-                    and encryption is publicly available in the code so you don't have to
-                    take anyone's word for it.
+                    <Logo type={"mono"} /> is
+                    <span className="font-hand"> ...uhhh... pretty </span>
+                    <span className="text-success font-display">secure</span>. Every claim
+                    about privacy and encryption is publicly available in the code so you
+                    don't have to take my word at it.
                 </p>
                 <p className="text-sm md:text-lg">
                     You can also{" "}
-                    <span className="uppercase font-bold text-primary">Self-host</span>{" "}
+                    <span className="uppercase font-mono text-primary">Self-host</span>{" "}
                     <Logo type={"inline"} /> in just 4 steps.
                 </p>
-                <div className="mockup-code max-w-110 text-xs">
+                <div className="mockup-code w-110 max-w-11/12 text-xs">
                     <pre data-prefix="$">
                         <code>git clone https://git.ramvignesh.dev/me/pi-ku.git</code>
                     </pre>
@@ -344,10 +390,11 @@ function OSSSection() {
                         href="https://git.ramvignesh.dev/me/pi-ku"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-primary"
+                        className="text-primary flex items-center gap-2"
                     >
-                        View Source
+                        <GithubLogoIcon weight="duotone" /> View Source
                     </a>
+                    .
                     <p className="text-xs md:text-base opacity-70">
                         Found something to report or request?{" "}
                         <a
@@ -370,7 +417,7 @@ function OSSSection() {
                     <Logo type={"mono"} /> wouldn't exist without the work of people who
                     chose to build in the open.
                 </p>
-
+                <p className="divider font-display opacity-30 my-0">a big thanks to</p>
                 <p className="text-sm md:text-lg">
                     <a
                         href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API"
@@ -378,10 +425,9 @@ function OSSSection() {
                         rel="noopener noreferrer"
                     >
                         Web Crypto API
-                    </a>{" "}
-                    &mdash; the backbone of everything promised. Browser-native
-                    cryptography that runs entirely on your device. Without it, none of
-                    the privacy here would be possible &mdash; or credible.
+                    </a>
+                    : Browser-native cryptography that runs entirely on your device. The
+                    backbone of everything secure&mdash;your letters, keys&mdash;here.
                 </p>
 
                 <p className="text-sm md:text-lg">
@@ -407,14 +453,14 @@ function OSSSection() {
                         rel="noopener noreferrer"
                     >
                         Phosphor Icons
-                    </a>{" "}
-                    &mdash; the beautiful work by others that let me focus on the core
-                    experience.
+                    </a>
+                    : The brilliant work by others that let me focus on the core
+                    experience instead of re-inventing the wheel.
                 </p>
 
-                <p className="text-sm md:text-lg mt-4">
-                    Open source is what made this possible. It felt right to give it back
-                    the same way.
+                <p className="text-sm md:text-lg mt-2 md:mt-4 text-neutral">
+                    Open source is what made <Logo type={"inline"} /> possible. It always
+                    feels right to give it back the same way.
                 </p>
             </div>
         </section>
@@ -436,7 +482,7 @@ function StorySection() {
                     <Logo />
                 </div>
                 <div className="flex ml-10 font-tamil text-2xl md:text-3xl group">
-                    <div className={"flex flex-col flex-wrap ul-wavy"}>
+                    <button type="button" className={"flex flex-col flex-wrap ul-wavy"}>
                         பின்
                         <span
                             className={
@@ -445,7 +491,7 @@ function StorySection() {
                         >
                             after
                         </span>
-                    </div>
+                    </button>
                     <ArrowBendDownLeftIcon className={"text-primary"} />
                     <ArrowBendDownRightIcon className="ml-8 text-primary" />
                     <div className={"flex flex-col flex-wrap group ul-wavy"}>
@@ -494,13 +540,14 @@ function StorySection() {
                 </div>
                 <div
                     className={
-                        "max-w-200 md:text-xl p-6 flex flex-col gap-4 md:gap-8 text-base-content/70 leading-relaxed"
+                        "max-w-220 md:text-xl p-6 flex flex-col gap-4 md:gap-8 text-base-content/70 leading-relaxed"
                     }
                 >
                     <p className={""}>
                         <Logo type={"inline"} /> is an abbreviated transliteration of the
                         Tamil word for{" "}
-                        <span
+                        <button
+                            type="button"
                             className={
                                 "group italic text-primary font-serif inline underline decoration-dotted underline-offset-2 decoration-primary/40"
                             }
@@ -522,9 +569,9 @@ function StorySection() {
                                 cript
                             </span>
                             .
-                        </span>{" "}
-                        &mdash; the thing you add after you've already signed your name,
-                        what you write when you thought you were finished, but weren't.
+                        </button>{" "}
+                        &mdash;the thing you add after you've already signed your name, what
+                        you write when you thought you were finished, but weren't.
                     </p>
                     <p>
                         <span className={"font-medium text-primary"}>
@@ -534,15 +581,16 @@ function StorySection() {
                         It sits in drafts , in half-written notes, in the pause before we
                         change the subject. <br />
                         Those words{" "}
-                        <span
+                        <button
+                            type="button"
                             className={
                                 "blur-sm hover:blur-none active:blur-none focus:blur-none focus:outline-none transition-all duration-500"
                             }
                         >
                             don't just disappear. They
-                        </span>{" "}
-                        stay <span className={"text-primary font-hand"}>unsaid</span>{" "}
-                        &mdash; a quiet weight difficult to bear.
+                        </button>{" "}
+                        stay <span className={"text-primary font-hand"}>unsaid</span>
+                        &mdash;a quiet weight difficult to bear.
                     </p>
                     <p className={"italic text-primary"}>And that's okay...</p>
                     <p>
@@ -567,15 +615,15 @@ function ForWhoSection() {
                     Who is <br /> this for?
                 </h2>
 
-                <div className="space-y-6 max-w-200 p-4 text-base-200 text-xl md:text-2xl leading-relaxed">
+                <div className="space-y-6 max-w-220 p-4 text-base-200 text-xl md:text-2xl leading-relaxed">
                     <p>
                         <Logo type={"mono"} /> wasn't built for one kind of person, but a
-                        particular kind of feeling &mdash;
+                        particular kind of feeling&mdash;
                         <span className="italic font-serif text-stone-900">
                             {" "}
                             the one that lingers very quietly
                         </span>{" "}
-                        &mdash; fragile, yet never breaks.
+                        &mdash;fragile, yet never breaks.
                     </p>
 
                     <div className="pt-8 flex items-center gap-4">
@@ -604,7 +652,7 @@ function ArchetypesSection() {
             >
                 The Archetypes
             </h1>
-            <div className="flex flex-col items-center shrink-0 w-200 max-w-11/12 gap-2 md:gap-8 my-4">
+            <div className="flex flex-col items-center shrink-0 w-220 max-w-11/12 gap-2 md:gap-8 my-4">
                 <div className="relative w-full">
                     <details
                         className="collapse shadow-xs glass opacity-75 open:opacity-100 text-base-300 peer"
@@ -649,8 +697,8 @@ function ArchetypesSection() {
                         <div className="collapse-content text-sm md:text-lg flex flex-col gap-4">
                             <p>
                                 Not every letter is about distance. Sometimes you just need to
-                                say something properly &mdash; without a text thread, without
-                                the noise of a conversation already in motion. A letter slows it
+                                say something properly&mdash;without a text thread, without the
+                                noise of a conversation already in motion. A letter slows it
                                 down.
                             </p>
                             <p className="font-serif font-medium opacity-70">
@@ -684,7 +732,7 @@ function ArchetypesSection() {
                         </summary>
                         <div className="collapse-content text-sm md:text-lg flex flex-col gap-4">
                             <p>
-                                Not a journal. Not a note-to-self. A proper letter &mdash; to
+                                Not a journal. Not a note-to-self. A proper letter&mdash;to
                                 whoever you'll be in a year, or five, or ten.
                                 <br />
                                 Ask yourself of the healed wounds, forgotten fears, or the
@@ -725,11 +773,14 @@ function ArchetypesSection() {
                         04
                     </span>
                 </div>
-                <div className="flex items-center justify-center gap-2 group mt-12">
+                <button
+                    className="flex items-center justify-center gap-2 group mt-12 text-left"
+                    type="button"
+                >
                     <img
                         src={stamp}
                         alt="stamp"
-                        className="rotate-6 group-hover:rotate-0 group-focus-within:rotate-0 transition-all duration-1000"
+                        className="rotate-6 group-hover:rotate-0 group-focus-within:rotate-0 transition-all duration-1000 focus:outline-none"
                     />
                     <p className="md:text-xl mt-4">
                         If any of these felt familiar,
@@ -738,7 +789,7 @@ function ArchetypesSection() {
                         <br />
                         this is for you.
                     </p>
-                </div>
+                </button>
             </div>
         </div>
     );
@@ -754,7 +805,7 @@ function AttributionSection() {
     const navigate = useNavigate();
 
     return (
-        <div className="flex flex-col min-h-screen w-screen items-center py-18">
+        <div className="flex flex-col min-h-screen w-screen items-center py-18 bg-accent text-neutral-content">
             {/* Saajan hover image */}
             <AnimatePresence>
                 {hover.visible && (
@@ -776,7 +827,7 @@ function AttributionSection() {
 
             <h1
                 className={
-                    "relative tracking-tighter text-5xl md:text-8xl text-neutral-content/80 font-extrabold italic font-serif"
+                    "relative tracking-tighter text-5xl md:text-8xl text-base-200 font-extrabold italic font-serif"
                 }
             >
                 Honest Speak
@@ -784,7 +835,7 @@ function AttributionSection() {
             <div className="flex flex-col items-center shrink-0">
                 <div
                     className={
-                        "max-w-200 m-2 md:m-8 text-sm md:text-lg p-6 md:p-12 flex flex-col gap-4 md:gap-8 text-base-100 leading-relaxed bg-paper font-mono tracking-tight"
+                        "max-w-220 m-2 md:m-8 text-sm md:text-lg p-6 md:p-12 flex flex-col gap-4 md:gap-8 text-base-100 leading-relaxed bg-paper font-sans tracking-tight"
                     }
                 >
                     Hi.
@@ -801,17 +852,31 @@ function AttributionSection() {
                             CS50W
                         </a>{" "}
                         capstone&mdash;one I kept postponing until I ran out of excuses.
-                        When I sat down to build it, it felt heavier than a typical assignment&mdash;not just because things were difficult. It had to be something that outlasted the grade.
-                        I wanted to make this one count more than anything else I'd ever made. Something as close to perfect as I could get it. Something to be remembered for&mdash;a Swan Song if you will.
+                        When I sat down to build it, it felt heavier than a typical
+                        assignment&mdash;not just because things were difficult. It had to
+                        be something that outlasted the grade. I wanted to make this one
+                        count more than anything else I'd ever made. Something as close to
+                        perfect as I could get it. Something to be remembered for&mdash;a
+                        Swan Song if you will.
+                    </p>
+                    <p>So, I gave it all I've got.</p>
+                    <p>
+                        Of course, frustrations, id-exisi crises, crept in from time to
+                        time. But <Logo type="inline" /> helped me re-kindle the love for
+                        the odd hours spent obsessing over the tiniest UX decisions and
+                        endlessly polishing the UI{" "}
+                        <span className="font-hand">
+                            (only if I could've just made my mind up on one design system
+                            sooner, instead of paddling in a sea of muses, muses everywhere)
+                        </span>
+                        . I know I've shared the nuts and bolts of <Logo type={"inline"} />{" "}
+                        here&mdash;the core philosophies, how it all works&mdash;but the
+                        heart of it is really something you have to find by exploring it
+                        yourself.
                     </p>
                     <p>
-                        So, I gave it all I've got.
-                    </p>
-                    <p>
-                        Of course, frustrations, id-exisi crises, crept in from time to time. But <Logo type="inline" /> helped me re-kindle the love for the odd hours spent obsessing over the tiniest UX decisions and endlessly polishing the UI <span className="font-hand">(only if I could've just made my mind up on one design system sooner, instead of paddling in a sea of muses, muses everywhere)</span>. I know I've shared the nuts and bolts of <Logo type={"inline"} /> here&mdash;the core philosophies, how it all works&mdash;but the heart of it is really something you have to find by exploring it yourself.
-                    </p>
-                    <p>
-                        The "why" behind all of this didn't just appear out of nowhere. For a while, I kept coming back to{" "}
+                        The "why" behind all of this didn't just appear out of nowhere. For
+                        a while, I kept coming back to{" "}
                         <span
                             role="tooltip"
                             className="cursor-default ul-wavy text-accent"
@@ -835,29 +900,44 @@ function AttributionSection() {
                         </span>{" "}
                         from{" "}
                         <a
-                            href="https://www.imdb.com/title/tt2350496/"
+                            href="https://www.themoviedb.org/movie/191714-the-lunchbox"
                             target="_blank"
                             rel="noopener noreferrer"
                         >
                             The Lunchbox
                         </a>{" "}
-                        &mdash;
-                        brought to life with such subtle brilliance by Irrfan Khan <PeaceIcon className="inline text-accent" />
-                        &mdash;the quiet emotional weight he carries through a lonely and mechanized life, right up until those letters arrive and something inside him finally loosens. The ending feels like a deep sigh of "it is what it is," but the simple act of writing&mdash;of letting the unsaid out&mdash;offered him a brief, yet necessary ease. I think about that a lot.
+                        &mdash;brought to life with such subtle brilliance by{" "}
+                        <a
+                            className="text-accent!"
+                            href="https://www.themoviedb.org/person/76793-irrfan-khan"
+                            rel="noopener noreferrer"
+                        >
+                            Irrfan Khan
+                        </a>{" "}
+                        <PeaceIcon weight="duotone" className="inline text-accent" />
+                        &mdash;the quiet emotional weight he carries through a lonely and
+                        mechanized life, right up until those letters arrive and something
+                        inside him finally loosens. The ending feels like a deep sigh of{" "}
+                        <span className="font-hand font-bold text-accent">
+                            "it is what it is"
+                        </span>
+                        , but the simple act of writing&mdash;of letting the unsaid
+                        out&mdash;offered him a brief, yet necessary ease. I think about
+                        that a lot.
                     </p>
                     <p>
                         There's a lot that goes{" "}
                         <span className={"text-primary font-hand text-lg md:text-xl"}>
                             unsaid
                         </span>{" "}
-                        these days. Not for a lack of feeling, not for the lack of time, but because
-                        the ways we reach each other have quietly changed. We're always
-                        reachable <span className="italic">digitally,</span> yet somehow the
-                        things that actually matter most end up staying inside&mdash;a trapped one at that.
+                        these days. Not for a lack of feeling, not for the lack of time, but
+                        because the ways we reach each other have quietly changed. We're
+                        always reachable <span className="italic">digitally,</span> yet
+                        somehow the things that actually matter most end up staying
+                        inside&mdash;a trapped one at that.
                         <br />
-                        Maybe writing can/will help. Maybe putting
-                        words somewhere deliberate makes them feel less like a weight
-                        you're carrying alone.
+                        Maybe writing can/will help. Maybe putting words somewhere
+                        deliberate makes them feel less like a weight you're carrying alone.
                     </p>
                     <p>Or maybe it won't&mdash;but it's worth a try.</p>
                     <p>
@@ -868,15 +948,25 @@ function AttributionSection() {
                             "text-right font-hand text-base-content text-lg md:text-xl"
                         }
                     >
-                        &mdash; Ram
+                        &mdash;Ram
                     </p>
-                    <p className="text-xs md:text-sm opacity-75 italic">
-                        P.S. And just so we're clear&mdash;I wrote every word of this myself&mdash;as I continue to back <a href="https://em-dash-appreciation.org/" target="_blank" rel="noopener noreferrer">Em DASH</a>. Why should AI get to have all the fun with 'em em dashes? <span className="font-hand">(get it?)</span>
+                    <p className="text-xs md:text-sm opacity-75 font-mono">
+                        P.S. And just so we're clear&mdash;I wrote every word of this
+                        myself&mdash;as I continue to back{" "}
+                        <a
+                            href="https://em-dash-appreciation.org/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            Em DASH
+                        </a>
+                        . Why should AI get to have all the fun with 'em em dashes?{" "}
+                        <span className="font-hand">(get it?)</span>
                     </p>
                 </div>
-                <blockquote className="text-primary/50 italic mt-8 md:mt-12 mx-auto border-l-primary/20 leading-relaxed border-l pl-4 max-w-11/12 text-lg">
+                <blockquote className="text-base-200 italic mt-8 md:mt-12 mx-auto border-l-neutral-content/50 leading-relaxed border-l-4 pl-4 max-w-11/12 text-lg">
                     "I think we forget things if there is nobody to tell them."
-                    <span className="block mt-2 text-sm not-italic text-base-content/30 w-full text-right">
+                    <span className="block mt-2 text-sm not-italic text-base-200/70 w-full text-right">
                         ~ Saajan Fernandes, <span className="italic">The Lunchbox</span>
                     </span>
                 </blockquote>
@@ -885,7 +975,7 @@ function AttributionSection() {
                 <button
                     type={"button"}
                     onClick={() => navigate("/onboard")}
-                    className="btn btn-primary btn-wide rounded-full px-14 font-mono"
+                    className="btn btn-base-100 btn-wide rounded-full px-14 font-mono"
                 >
                     Begin
                 </button>
