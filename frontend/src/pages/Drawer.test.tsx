@@ -48,10 +48,10 @@ describe("Drawer Page", () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText(/Drafts/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/Kept/i).length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText(/Vault/i)).toBeInTheDocument();
-    expect(screen.getByText(/This drawer remains silent/i)).toBeInTheDocument();
+    expect(screen.getByTestId("drawer-section-drafts")).toBeInTheDocument();
+    expect(screen.getAllByTestId("drawer-section-title").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByTestId("drawer-section-vault")).toBeInTheDocument();
+    expect(screen.getByTestId("empty-drawer-message-drafts")).toBeInTheDocument();
   });
 
   it("renders the loading state", () => {
@@ -70,7 +70,7 @@ describe("Drawer Page", () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText(/Opening your cabinet/i)).toBeInTheDocument();
+    expect(screen.getByTestId("drawer-loading-state")).toBeInTheDocument();
   });
 
   it("renders the authentication required modal when api requires auth", () => {
@@ -89,7 +89,7 @@ describe("Drawer Page", () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText(/You've been away a while./i)).toBeInTheDocument();
+    expect(screen.getByTestId("passkey-modal-title")).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/password/i)).toBeInTheDocument();
   });
 

@@ -89,7 +89,7 @@ export default function Login() {
 
           {apiError && (
             <div className="alert alert-error text-xs py-2 rounded-md">
-              <span>{apiError}</span>
+              <span data-testid="login-error-message">{apiError}</span>
             </div>
           )}
 

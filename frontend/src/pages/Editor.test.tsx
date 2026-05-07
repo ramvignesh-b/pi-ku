@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitForElementToBeRemoved } from "@testing-library/react";
 import { HttpResponse, http } from "msw";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -79,9 +79,7 @@ describe("Editor Page", () => {
     );
 
     // Wait for initial load to complete
-    await waitFor(() => {
-      expect(screen.queryByText(/Opening your draft/i)).not.toBeInTheDocument();
-    });
+    await waitForElementToBeRemoved(() => screen.queryByTestId("opening-draft-overlay"));
 
     const canvas = screen.getByTestId("canvas");
     expect(canvas.getAttribute("data-readonly")).toBe("false");
@@ -107,9 +105,7 @@ describe("Editor Page", () => {
     fireEvent.click(confirmVaultBtn);
 
     // Wait for save to complete and check readOnly
-    await waitFor(() => {
-      expect(screen.getByText(/Your letter is saved/i)).toBeInTheDocument();
-    });
+    expect(await screen.findByTestId("save-success-toast")).toBeInTheDocument();
 
     expect(canvas.getAttribute("data-readonly")).toBe("true");
     expect(screen.getByLabelText(/recipient/i)).toBeDisabled();
@@ -140,9 +136,7 @@ describe("Editor Page", () => {
       </MemoryRouter>,
     );
 
-    await waitFor(() => {
-      expect(screen.queryByText(/Opening your draft/i)).not.toBeInTheDocument();
-    });
+    await waitForElementToBeRemoved(() => screen.queryByTestId("opening-draft-overlay"));
 
     const canvas = screen.getByTestId("canvas");
 
@@ -156,9 +150,7 @@ describe("Editor Page", () => {
     if (!secondarySealBtn) throw new Error("Secondary seal button not found");
     fireEvent.click(secondarySealBtn);
 
-    await waitFor(() => {
-      expect(screen.getByText(/Your letter is saved/i)).toBeInTheDocument();
-    });
+    expect(await screen.findByTestId("save-success-toast")).toBeInTheDocument();
 
     expect(canvas.getAttribute("data-readonly")).toBe("true");
     expect(screen.getByLabelText(/recipient/i)).toBeDisabled();

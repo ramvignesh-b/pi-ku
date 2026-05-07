@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { HttpResponse, http } from "msw";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -76,9 +76,7 @@ describe("Reader Page", () => {
         </Routes>
       </MemoryRouter>,
     );
-    await waitFor(() => {
-      expect(screen.getByText(/Guest/i)).toBeInTheDocument();
-    });
+    expect(await screen.findByTestId("envelope-recipient")).toHaveTextContent(/Guest/i);
   });
 
   it("should display an error message if the server request fails", async () => {
@@ -100,8 +98,8 @@ describe("Reader Page", () => {
     );
 
     expect(
-      await screen.findByText(/Failed to load letter/i),
-    ).toBeInTheDocument();
+      await screen.findByTestId("log-modal-message"),
+    ).toHaveTextContent(/Failed to load letter/i);
   });
 
   it("should navigate to the login page with redirect url when the letter has no sharing key and the user is not logged in", async () => {

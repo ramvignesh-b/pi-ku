@@ -40,6 +40,7 @@ export function DrawerSection({
       >
         <div className="flex-1">
           <div
+            data-testid="drawer-section-title"
             className={`font-sans text-xs tracking-widester uppercase transition-colors duration-800 ${
               isOpen
                 ? "text-base-content"

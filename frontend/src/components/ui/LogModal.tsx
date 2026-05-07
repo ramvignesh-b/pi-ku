@@ -24,7 +24,7 @@ export const LogModal = ({
         {status === "WARN" && (
           <WarningIcon className="text-warning" size={16} weight="duotone" />
         )}
-        {message}
+        <span data-testid="log-modal-message">{message}</span>
         {log && (
           <>
             <div className="divider text-primary-content text-xs uppercase tracking-widest">

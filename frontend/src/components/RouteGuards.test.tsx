@@ -9,8 +9,8 @@ function renderGuard(ui: React.ReactNode, mountPath: "/protected" | "/public") {
   return render(
     <MemoryRouter initialEntries={[mountPath]}>
       <Routes>
-        <Route path="/login" element={<div>Login Page</div>} />
-        <Route path="/drawer" element={<div>Drawer Page</div>} />
+        <Route path="/login" element={<div data-testid="login-page">Login Page</div>} />
+        <Route path="/drawer" element={<div data-testid="drawer-page">Drawer Page</div>} />
         <Route path="/protected" element={ui} />
         <Route path="/public" element={ui} />
       </Routes>
@@ -35,13 +35,13 @@ describe("ProtectedRoute", () => {
     });
     renderGuard(
       <ProtectedRoute>
-        <div>Secret</div>
+        <div data-testid="secret-page">Secret</div>
       </ProtectedRoute>,
       "/protected",
     );
 
-    expect(screen.getByText(/Unsealing/i)).toBeInTheDocument();
-    expect(screen.queryByText("Secret")).not.toBeInTheDocument();
+    expect(screen.getByTestId("splash-screen")).toBeInTheDocument();
+    expect(screen.queryByTestId("secret-page")).not.toBeInTheDocument();
   });
 
   it("should redirect unauthenticated users to /login", () => {
@@ -52,12 +52,12 @@ describe("ProtectedRoute", () => {
     });
     renderGuard(
       <ProtectedRoute>
-        <div>Secret</div>
+        <div data-testid="secret-page">Secret</div>
       </ProtectedRoute>,
       "/protected",
     );
-    expect(screen.getByText("Login Page")).toBeInTheDocument();
-    expect(screen.queryByText("Secret")).not.toBeInTheDocument();
+    expect(screen.getByTestId("login-page")).toBeInTheDocument();
+    expect(screen.queryByTestId("secret-page")).not.toBeInTheDocument();
   });
 
   it("should render page for authenticated users", () => {
@@ -68,12 +68,12 @@ describe("ProtectedRoute", () => {
     });
     renderGuard(
       <ProtectedRoute>
-        <div>Secret</div>
+        <div data-testid="secret-page">Secret</div>
       </ProtectedRoute>,
       "/protected",
     );
 
-    expect(screen.getByText("Secret")).toBeInTheDocument();
+    expect(screen.getByTestId("secret-page")).toBeInTheDocument();
   });
 });
 
@@ -86,12 +86,12 @@ describe("PublicRoute", () => {
     });
     renderGuard(
       <PublicRoute>
-        <div>Login Page</div>
+        <div data-testid="mock-login-page">Login Page</div>
       </PublicRoute>,
       "/public",
     );
-    expect(screen.getByText(/Unsealing/i)).toBeInTheDocument();
-    expect(screen.queryByText("Login Page")).not.toBeInTheDocument();
+    expect(screen.getByTestId("splash-screen")).toBeInTheDocument();
+    expect(screen.queryByTestId("mock-login-page")).not.toBeInTheDocument();
   });
 
   it("should redirect authenticated users to /drawer", () => {
@@ -102,12 +102,12 @@ describe("PublicRoute", () => {
     });
     renderGuard(
       <PublicRoute>
-        <div>Login Form</div>
+        <div data-testid="login-form">Login Form</div>
       </PublicRoute>,
       "/public",
     );
-    expect(screen.getByText("Drawer Page")).toBeInTheDocument();
-    expect(screen.queryByText("Login Form")).not.toBeInTheDocument();
+    expect(screen.getByTestId("drawer-page")).toBeInTheDocument();
+    expect(screen.queryByTestId("login-form")).not.toBeInTheDocument();
   });
 
   it("should render page for unauthenticated users", () => {
@@ -118,10 +118,10 @@ describe("PublicRoute", () => {
     });
     renderGuard(
       <PublicRoute>
-        <div>Login Form</div>
+        <div data-testid="login-form">Login Form</div>
       </PublicRoute>,
       "/public",
     );
-    expect(screen.getByText("Login Form")).toBeInTheDocument();
+    expect(screen.getByTestId("login-form")).toBeInTheDocument();
   });
 });
