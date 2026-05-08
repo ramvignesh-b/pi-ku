@@ -3,14 +3,20 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it } from "vitest";
 import { mockUser } from "../../test/fixtures/user.fixture";
 import { useAuthStore } from "../store/useAuthStore";
-import { ProtectedRoute, PublicRoute } from "./RouteGuards";
+import { AutoRedirectRoute, ProtectedRoute } from "./RouteGuards";
 
 function renderGuard(ui: React.ReactNode, mountPath: "/protected" | "/public") {
   return render(
     <MemoryRouter initialEntries={[mountPath]}>
       <Routes>
-        <Route path="/login" element={<div data-testid="login-page">Login Page</div>} />
-        <Route path="/drawer" element={<div data-testid="drawer-page">Drawer Page</div>} />
+        <Route
+          path="/login"
+          element={<div data-testid="login-page">Login Page</div>}
+        />
+        <Route
+          path="/drawer"
+          element={<div data-testid="drawer-page">Drawer Page</div>}
+        />
         <Route path="/protected" element={ui} />
         <Route path="/public" element={ui} />
       </Routes>
@@ -85,9 +91,9 @@ describe("PublicRoute", () => {
       user: null,
     });
     renderGuard(
-      <PublicRoute>
+      <AutoRedirectRoute>
         <div data-testid="mock-login-page">Login Page</div>
-      </PublicRoute>,
+      </AutoRedirectRoute>,
       "/public",
     );
     expect(screen.getByTestId("splash-screen")).toBeInTheDocument();
@@ -101,9 +107,9 @@ describe("PublicRoute", () => {
       user: mockUser,
     });
     renderGuard(
-      <PublicRoute>
+      <AutoRedirectRoute>
         <div data-testid="login-form">Login Form</div>
-      </PublicRoute>,
+      </AutoRedirectRoute>,
       "/public",
     );
     expect(screen.getByTestId("drawer-page")).toBeInTheDocument();
@@ -117,9 +123,9 @@ describe("PublicRoute", () => {
       user: null,
     });
     renderGuard(
-      <PublicRoute>
+      <AutoRedirectRoute>
         <div data-testid="login-form">Login Form</div>
-      </PublicRoute>,
+      </AutoRedirectRoute>,
       "/public",
     );
     expect(screen.getByTestId("login-form")).toBeInTheDocument();

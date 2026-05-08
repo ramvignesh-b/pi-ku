@@ -1,4 +1,9 @@
-import { fireEvent, render, screen, waitForElementToBeRemoved } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitForElementToBeRemoved,
+} from "@testing-library/react";
 import { HttpResponse, http } from "msw";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -79,7 +84,9 @@ describe("Editor Page", () => {
     );
 
     // Wait for initial load to complete
-    await waitForElementToBeRemoved(() => screen.queryByTestId("opening-draft-overlay"));
+    await waitForElementToBeRemoved(() =>
+      screen.queryByTestId("opening-draft-overlay"),
+    );
 
     const canvas = screen.getByTestId("canvas");
     expect(canvas.getAttribute("data-readonly")).toBe("false");
@@ -136,7 +143,9 @@ describe("Editor Page", () => {
       </MemoryRouter>,
     );
 
-    await waitForElementToBeRemoved(() => screen.queryByTestId("opening-draft-overlay"));
+    await waitForElementToBeRemoved(() =>
+      screen.queryByTestId("opening-draft-overlay"),
+    );
 
     const canvas = screen.getByTestId("canvas");
 

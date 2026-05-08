@@ -123,7 +123,12 @@ export function EnvelopeReveal({
           <span className={"text-neutral-content/60 font-xs font-display"}>
             to
           </span>
-          <h1 data-testid="envelope-recipient" className="text-3xl font-bold text-base-content">{recipient}</h1>
+          <h1
+            data-testid="envelope-recipient"
+            className="text-3xl font-bold text-base-content"
+          >
+            {recipient}
+          </h1>
           <p className="text-base-content/60 font-display mt-8">{date}</p>
           <img
             src={stamp}

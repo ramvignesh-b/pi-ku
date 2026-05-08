@@ -3,19 +3,23 @@ import { GearFineIcon } from "@phosphor-icons/react";
 interface DrawerSectionProps {
   id: string;
   title: string;
-  count: string;
+  count: number;
+  subtext: string;
   isOpen: boolean;
   onClick: () => void;
   children: React.ReactNode;
+  icon: React.ReactNode;
 }
 
 export function DrawerSection({
   id,
   title,
   count,
+  subtext,
   isOpen,
   onClick,
   children,
+  icon,
 }: DrawerSectionProps) {
   return (
     <div
@@ -23,20 +27,32 @@ export function DrawerSection({
       className={`join-item group flex flex-col transition-colors duration-3000 ease-in-out ${isOpen ? "bg-base-300/30" : ""}`}
     >
       <div
-        className={`transition-all duration-1500 ease-in-out bg-neutral/10 ${
-          isOpen
-            ? "max-h-125 opacity-100 py-3 border-b border-base-content/5 overflow-visible"
-            : "max-h-0 opacity-0 pointer-events-none"
-        }`}
+        className={`bg-neutral/10 transition-all duration-1000 ease-in-out overflow-visible ${isOpen ? "max-h-125" : "max-h-0 pointer-events-none"}`}
       >
-        {children}
+        <div
+          className={`transition-opacity ease-in-out ${
+            isOpen
+              ? "opacity-100 py-3 border-b border-base-content/5 duration-700 delay-500"
+              : "opacity-0 duration-100"
+          }`}
+        >
+          {children}
+          {count === 0 && (
+            <p
+              data-testid={`empty-drawer-message-${id}`}
+              className="text-center text-base-content/20 mt-4"
+            >
+              This drawer remains silent
+            </p>
+          )}
+        </div>
       </div>
 
       <button
         type="button"
         onClick={onClick}
         data-testid={`drawer-section-${id}`}
-        className={`w-full p-[24px_28px] cursor-pointer flex items-center gap-5 transition-all duration-2000 ease-in-out outline-none focus-visible:ring-2 focus-visible:ring-primary/50 border border-base-content/10 text-left bg-linear-to-r from-transparent to-base-100/40`}
+        className="w-full relative p-[24px_28px] cursor-pointer flex items-center gap-5 transition-all duration-2000 ease-in-out outline-none focus-visible:ring-2 overflow-hidden focus-visible:ring-primary/50 border border-base-content/10 text-left bg-linear-to-r from-transparent to-base-100/40"
       >
         <div className="flex-1">
           <div
@@ -49,8 +65,14 @@ export function DrawerSection({
           >
             {title}
           </div>
-          <div className="font-sans text-[0.6rem] text-base-content/20 mt-1">
-            {count}
+          <div className="font-sans text-xs text-base-content/20 mt-1">
+            <span className="font-mono text-xs md:text-base -mt-1 absolute text-primary/30">
+              {count}
+            </span>{" "}
+            <span className="ml-3">{subtext}</span>
+          </div>
+          <div className="absolute right-5 -translate-y-15 text-base-content/4">
+            {icon}
           </div>
         </div>
 

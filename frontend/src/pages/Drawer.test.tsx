@@ -41,7 +41,7 @@ describe("Drawer Page", () => {
     });
   });
 
-  it("renders the cabinet sections and empty state message", () => {
+  it("renders the drawer sections and empty state message", () => {
     render(
       <MemoryRouter>
         <Drawer />
@@ -49,9 +49,13 @@ describe("Drawer Page", () => {
     );
 
     expect(screen.getByTestId("drawer-section-drafts")).toBeInTheDocument();
-    expect(screen.getAllByTestId("drawer-section-title").length).toBeGreaterThanOrEqual(1);
+    expect(
+      screen.getAllByTestId("drawer-section-title").length,
+    ).toBeGreaterThanOrEqual(1);
     expect(screen.getByTestId("drawer-section-vault")).toBeInTheDocument();
-    expect(screen.getByTestId("empty-drawer-message-drafts")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("empty-drawer-message-drafts"),
+    ).toBeInTheDocument();
   });
 
   it("renders the loading state", () => {

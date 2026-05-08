@@ -31,7 +31,9 @@ describe("Login Page", () => {
     await userEvent.type(screen.getByLabelText(/password/i), "password123");
     await userEvent.click(screen.getByRole("button", { name: /sign in/i }));
 
-    expect(await screen.findByTestId("login-error-message")).toHaveTextContent(/technical issues/i);
+    expect(await screen.findByTestId("login-error-message")).toHaveTextContent(
+      /technical issues/i,
+    );
   });
 
   it.each([
@@ -73,8 +75,14 @@ describe("Login Page", () => {
       >
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route path="/drawer" element={<div data-testid="drawer-page">Drawer</div>} />
-          <Route path="/read/:publicId" element={<div data-testid="reader-page">Reader</div>} />
+          <Route
+            path="/drawer"
+            element={<div data-testid="drawer-page">Drawer</div>}
+          />
+          <Route
+            path="/read/:publicId"
+            element={<div data-testid="reader-page">Reader</div>}
+          />
         </Routes>
       </MemoryRouter>,
     );
@@ -83,7 +91,8 @@ describe("Login Page", () => {
     await userEvent.type(screen.getByLabelText(/password/i), "password123");
     await userEvent.click(screen.getByRole("button", { name: /sign in/i }));
 
-    const expectedTestId = nextRoute.toLowerCase() === "drawer" ? "drawer-page" : "reader-page";
+    const expectedTestId =
+      nextRoute.toLowerCase() === "drawer" ? "drawer-page" : "reader-page";
     expect(await screen.findByTestId(expectedTestId)).toBeInTheDocument();
   });
 });

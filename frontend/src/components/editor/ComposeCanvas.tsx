@@ -122,6 +122,7 @@ export function ComposeCanvas({
   // re-calculates height based on content and applies the zoom transform
   const syncViewport = useCallback(() => {
     if (!(fabricRef.current && wrapperRef.current)) return;
+    textboxRef.current.initDimensions();
 
     const minHeight = initialData?.canvasHeight ?? DEFAULT_LOGICAL_HEIGHT;
     logicalSizeRef.current.height = measureLogicalContentHeight(

@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useRef } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
-import { ProtectedRoute, PublicRoute } from "./components/RouteGuards";
+import { AutoRedirectRoute, ProtectedRoute } from "./components/RouteGuards";
 import SplashScreen from "./components/SplashScreen";
 import { ROUTES } from "./config/routes";
 import { useAuth } from "./hooks/useAuth";
@@ -34,38 +34,45 @@ export default function App() {
       <main className="relative min-h-screen min-w-screen flex items-center justify-center w-full bg-base-200 before:absolute before:top-0 before:left-0 before:w-full before:h-full before:content-[''] before:opacity-[0.03] before:z-50 before:pointer-events-none before:bg-[url('assets/noise.gif')]">
         <Suspense fallback={<SplashScreen />}>
           <Routes>
-            <Route path={ROUTES.HOME} element={<Home />} />
+            <Route
+              path={ROUTES.HOME}
+              element={
+                <AutoRedirectRoute>
+                  <Home />
+                </AutoRedirectRoute>
+              }
+            />
 
             <Route
               path={ROUTES.ONBOARD}
               element={
-                <PublicRoute>
+                <AutoRedirectRoute>
                   <Register />
-                </PublicRoute>
+                </AutoRedirectRoute>
               }
             />
             <Route
               path={ROUTES.LOGIN}
               element={
-                <PublicRoute>
+                <AutoRedirectRoute>
                   <Login />
-                </PublicRoute>
+                </AutoRedirectRoute>
               }
             />
             <Route
               path={ROUTES.VERIFY_EMAIL}
               element={
-                <PublicRoute>
+                <AutoRedirectRoute>
                   <VerifyEmail />
-                </PublicRoute>
+                </AutoRedirectRoute>
               }
             />
             <Route
               path={ROUTES.ACTIVATE}
               element={
-                <PublicRoute>
+                <AutoRedirectRoute>
                   <Activate />
-                </PublicRoute>
+                </AutoRedirectRoute>
               }
             />
 

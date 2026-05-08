@@ -14,6 +14,9 @@ import Saajan from "../components/ui/Saajan.tsx";
 import { ROUTES } from "../config/routes.ts";
 import { formatDate } from "../utils/dateFormat.ts";
 
+import "@fontsource/space-mono/index.css";
+import "@fontsource/architects-daughter/index.css";
+
 export default function Home() {
   const sectionContainer1 = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
@@ -53,7 +56,7 @@ export default function Home() {
     <ReactLenis root options={{ lerp: 0.1, duration: 1.5, smoothWheel: true }}>
       <section
         ref={sectionContainer1}
-        className="relative w-full h-[850vh] bg-base-100 font-serif"
+        className="relative w-full h-[850vh] bg-base-100 font-serif text-neutral-content/90"
       >
         <div className="sticky top-0 h-screen w-full flex flex-col items-center justify-center overflow-hidden">
           {/*  Intro */}
@@ -64,12 +67,12 @@ export default function Home() {
               scale: useTransform(scrollYProgress, [0, 0.12], [1, 10]),
             }}
           >
-            <h1 className="text-neutral-content/40 text-4xl md:text-6xl text-center px-6">
+            <h1 className="text-neutral text-4xl md:text-6xl text-center px-6">
               You've been carrying something
             </h1>
-            <h2 className="text-primary text-5xl md:text-7xl font-extralight mt-4 italic font-display animate-pulse">
+            <motion.h2 className="text-primary text-5xl md:text-7xl mt-4 italic font-display font-light">
               unsaid
-            </h2>
+            </motion.h2>
           </motion.div>
 
           <motion.div
@@ -97,9 +100,9 @@ export default function Home() {
             }}
             transition={{ delay: 4 }}
           >
-            <Logo scale={2} />
+            <Logo type="logo" scale={1.5} ul={true} />
             <motion.div
-              className="mt-6 text-4xl md:text-6xl text-base-content/60 "
+              className="font-serif italic font-extralight mt-6 text-4xl md:text-6xl text-neutral "
               style={{
                 opacity: useTransform(
                   scrollYProgress,
@@ -113,14 +116,14 @@ export default function Home() {
                 ),
               }}
             >
-              is a{" "}
+              is a{"  "}
               <span className="font-display text-primary font-extralight">
                 safe space
               </span>
               ,<br />
               <motion.span
-                className="opacity-0 text-3xl md:text-5xl"
-                transition={{ delay: 3 }}
+                className="opacity-0 text-2xl md:text-4xl font-hand tracking-widest italic text-neutral"
+                transition={{ delay: 5 }}
                 whileInView={{ opacity: 1 }}
                 viewport={{ once: false, amount: 0.3 }}
               >
@@ -168,11 +171,11 @@ export default function Home() {
               className="absolute text-4xl md:text-6xl text-center px-10 leading-tight"
             >
               seal it{" "}
-              <span className="text-secondary font-display italic font-extralight">
+              <span className="text-success font-mono tracking-tighter font-extrabold">
                 secure
               </span>{" "}
               and{" "}
-              <span className="text-secondary font-display font-extralight italic">
+              <span className="text-info font-mono tracking-tighter italic">
                 private
               </span>
               .
@@ -252,7 +255,7 @@ export default function Home() {
             {/*  Outro  */}
             <motion.h2
               className={
-                "italic absolute text-4xl md:text-6xl text-center px-10 leading-tight"
+                "italic absolute text-4xl md:text-6xl text-center px-10 leading-tight text-neutral-content/50"
               }
               style={{
                 opacity: useTransform(scrollYProgress, [0.9, 1], [0, 1]),
@@ -264,7 +267,7 @@ export default function Home() {
             {/* CTA */}
             <motion.div
               className={
-                "z-100 absolute -bottom-12 md:bottom-0 font-display flex flex-wrap md:flex-nowrap gap-4 md:gap-12 justify-center"
+                "z-100 absolute -bottom-12 md:bottom-0 font-hand flex flex-wrap md:flex-nowrap gap-4 md:gap-12 justify-center"
               }
               style={{
                 opacity: useTransform(scrollYProgress, [0.98, 1], [0, 1]),
@@ -288,7 +291,7 @@ export default function Home() {
               </button>
               <button
                 className={
-                  "md:opacity-50 hover:opacity-100 btn rounded-full btn-primary btn-wide md:btn-xl md:grayscale hover:grayscale-0 hover:-translate-y-1 transition-all duration-1000"
+                  "md:opacity-50 hover:opacity-100 btn rounded-full btn-primary btn-wide md:btn-xl md:grayscale-50 hover:grayscale-0 focus:grayscale-0 active:grayscale-0 hover:-translate-y-1 transition-all duration-1000"
                 }
                 type={"button"}
                 onClick={() => navigate(ROUTES.ONBOARD, { replace: true })}

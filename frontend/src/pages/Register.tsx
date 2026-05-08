@@ -77,7 +77,7 @@ export default function Register() {
       <div className="glass-card w-full max-w-sm p-2 transition-all duration-500 hover:shadow-2xl fade-zoom">
         <form onSubmit={handleSubmit(onSubmit)} className="card-body gap-4">
           <div className="card-title font-display text-2xl justify-center text-primary/80 tracking-tight whitespace-nowrap">
-            Create a <Logo /> Account
+            Create a <Logo type="logo" scale={0.7} /> Account
           </div>
 
           {apiError && (

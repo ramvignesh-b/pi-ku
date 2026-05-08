@@ -76,7 +76,9 @@ describe("Reader Page", () => {
         </Routes>
       </MemoryRouter>,
     );
-    expect(await screen.findByTestId("envelope-recipient")).toHaveTextContent(/Guest/i);
+    expect(await screen.findByTestId("envelope-recipient")).toHaveTextContent(
+      /Guest/i,
+    );
   });
 
   it("should display an error message if the server request fails", async () => {
@@ -97,9 +99,9 @@ describe("Reader Page", () => {
       </MemoryRouter>,
     );
 
-    expect(
-      await screen.findByTestId("log-modal-message"),
-    ).toHaveTextContent(/Failed to load letter/i);
+    expect(await screen.findByTestId("log-modal-message")).toHaveTextContent(
+      /Failed to load letter/i,
+    );
   });
 
   it("should navigate to the login page with redirect url when the letter has no sharing key and the user is not logged in", async () => {

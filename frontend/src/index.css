@@ -24,9 +24,9 @@
   --color-neutral: oklch(38% 0.02 45);
   --color-neutral-content: oklch(80% 0.015 60);
 
-  --color-info: oklch(60% 0.07 240);
+  --color-info: oklch(60% 0.06 250);
   --color-info-content: oklch(95% 0.01 240);
-  --color-success: oklch(60% 0.08 150);
+  --color-success: oklch(65% 0.05 140);
   --color-success-content: oklch(16% 0.03 150);
   --color-warning: oklch(68% 0.08 72);
   --color-warning-content: oklch(18% 0.03 60);
@@ -66,7 +66,7 @@
 }
 
 .glass-card {
-  @apply bg-glass-bg backdrop-blur-xl border border-white/5 shadow-warm rounded-xl m-4;
+  @apply bg-glass-bg max-w-xs md:max-w-sm backdrop-blur-xl border border-neutral-content/10 shadow-warm rounded-xl m-4;
 }
 
 .ul-wavy {

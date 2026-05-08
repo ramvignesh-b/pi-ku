@@ -22,10 +22,10 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 /**
- * Public - auth route guard.
+ * Auto-redirect - auth route guard.
  * If authenticated, redirect all the auth related flows to the drawer
  */
-export function PublicRoute({ children }: { children: React.ReactNode }) {
+export function AutoRedirectRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isInitializing } = useAuth();
 
   if (isInitializing) return <SplashScreen />;

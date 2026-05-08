@@ -12,7 +12,10 @@ export function PasskeyModal() {
         className="text-primary mx-auto mb-8 animate-pulse"
         weight="duotone"
       />
-      <h3 data-testid="passkey-modal-title" className="font-bold text-lg font-display text-primary">
+      <h3
+        data-testid="passkey-modal-title"
+        className="font-bold text-lg font-display text-primary"
+      >
         You've been away a while.
       </h3>
       <p className="py-4 font-sans">

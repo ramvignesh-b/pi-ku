@@ -83,8 +83,8 @@ export default function Login() {
       {showWelcome && <WelcomeModal setShowWelcome={setShowWelcome} />}
       <div className="glass-card w-full max-w-sm p-2 transition-all duration-500 hover:shadow-2xl fade-zoom">
         <form onSubmit={handleSubmit(onSubmit)} className="card-body gap-4">
-          <h1 className="card-title font-display text-2xl justify-center text-primary/80 tracking-tight">
-            Enter <Logo /> Archive
+          <h1 className="flex items-center font-display text-2xl justify-center text-primary/80 tracking-tight">
+            &nbsp;&nbsp;Enter <Logo type="logo" scale={0.7} /> Archive
           </h1>
 
           {apiError && (
