@@ -1,4 +1,5 @@
 import { DotIcon } from "@phosphor-icons/react";
+import logo from "../assets/logo.svg";
 import "@fontsource/knewave/400.css";
 
 interface LogoProps {
@@ -31,12 +32,7 @@ export default function Logo({
 
   if (type === "logo") {
     return (
-      <img
-        src="/logo.svg"
-        alt="Pi. Ku. logo"
-        className="mx-4"
-        width={scale * 100}
-      />
+      <img src={logo} alt="Pi. Ku. logo" className="mx-4" width={scale * 100} />
     );
   }
 

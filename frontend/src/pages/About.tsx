@@ -25,7 +25,9 @@ import { ReactLenis } from "lenis/react";
 import { AnimatePresence, motion, useScroll, useTransform } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import stamp from "../assets/envelope/stamp.png";
-import Logo from "../components/Logo.tsx";
+import e2eDiag from "../assets/screenshots/e2e.svg";
+import saajan from "../assets/sf.png";
+import Logo from "../components/Logo";
 import { Modal } from "../components/ui/Modal";
 
 import "@fontsource/kavivanar/index.css";
@@ -35,7 +37,7 @@ import "@fontsource/architects-daughter/index.css";
 import { useNavigate } from "react-router-dom";
 
 function HorizontalScroll({ children }: { children: React.ReactNode }) {
-  const ref = useRef(null);
+  const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: ref });
   const x = useTransform(scrollYProgress, [0, 1], ["0%", "-50%"]);
 
@@ -166,7 +168,7 @@ function PrivacySection() {
             </div>
           </div>
           <div className="diff-item-2" role="img">
-            <div className="bg-neutral-content bg-[url('https://www.transparenttextures.com/patterns/random-grey-variations.png')] text-primary-content grid place-content-center text-sm md:gap-4">
+            <div className="bg-neutral-content bg-[url('assets/textures/random-grey-variations.png')] text-primary-content grid place-content-center text-sm md:gap-4">
               <div className="flex flex-col gap-2">
                 <h1 className="text-3xl md:text-6xl uppercase font-bold text-right tracking-widest mt-2 md:mt-8">
                   server see
@@ -257,7 +259,7 @@ function SpecsSection() {
           </a>{" "}
           for the <span className="font-hand text-primary">keys</span>.
         </h2>
-        <p className="text-sm md:text-xl leading-relaxed">
+        <div className="text-sm md:text-xl leading-relaxed">
           This means, both the{" "}
           <span className="font-display text-info">encryption</span> and{" "}
           <span className="font-display text-info">decryption</span> runs on
@@ -288,8 +290,8 @@ function SpecsSection() {
           <span className="italic">only you</span>&mdash;hold the very thing
           that opens that box,{" "}
           <span className="font-mono text-accent">your password</span>.
-        </p>
-        <p className="text-xs md:text-lg text-right w-full flex items-center justify-end gap-4 leading-relaxed text-neutral-content/80">
+        </div>
+        <div className="text-xs md:text-lg text-right w-full flex items-center justify-end gap-4 leading-relaxed text-neutral-content/80">
           <span>
             Nothing on the server is readable without your actual password.
             <br />
@@ -304,14 +306,14 @@ function SpecsSection() {
               (unless this happens)
             </a>
           </span>
-          <div className="w-18 h-18 flex shrink-0 items-center justify-center bg-success/20 rounded-full p-0 ">
+          <div className="w-18 h-18 flex shrink-0 items-center justify-end bg-success/20 rounded-full p-0 ">
             <VaultIcon
               size={36}
               weight="duotone"
               className="text-neutral-content"
             />
           </div>
-        </p>
+        </div>
 
         <button
           type={"button"}
@@ -326,11 +328,7 @@ function SpecsSection() {
 
         <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
           <div className="w-full bg-paper rounded-md p-6">
-            <img
-              src="/screenshots/e2e.svg"
-              width={"100%"}
-              alt="pi ku e2e diagram"
-            />
+            <img src={e2eDiag} width={"100%"} alt="pi ku e2e diagram" />
           </div>
         </Modal>
 
@@ -833,7 +831,7 @@ function AttributionSection() {
       <AnimatePresence>
         {hover.visible && (
           <motion.img
-            src="/saajan.png"
+            src={saajan}
             alt="Saajan Fernandes from The Lunchbox, cutout"
             initial={{ opacity: 0, scale: 0.5 }}
             animate={{ opacity: 1, scale: 1 }}

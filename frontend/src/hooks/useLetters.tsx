@@ -1,32 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { api } from "../api/apiClient";
+import type { LetterMetadata, LetterResponseData } from "../api/response";
 import { endpoints } from "../config/endpoints";
 import { useKeyStore } from "../store/useKeyStore";
 import { CryptoUtils } from "../utils/crypto";
 
-export interface Letter {
-  public_id: string;
-  type: "KEPT" | "VAULT" | "SENT";
-  status: "DRAFT" | "SEALED" | "BURNED";
-  updated_at: string;
-  sealed_at?: string;
-  unlock_at: string;
-  encrypted_metadata: string;
-  encrypted_content: string;
-  encrypted_dek: string;
-}
-
-export interface LetterMetadata {
-  recipient: string;
-  tags?: string[];
-}
-
-export interface ProcessedLetter extends Letter {
+export interface ProcessedLetter extends LetterResponseData {
   metadata: LetterMetadata;
 }
 
 async function decryptLettersMetadata(
-  letters: Letter[],
+  letters: LetterResponseData[],
   masterKey: CryptoKey,
 ): Promise<ProcessedLetter[]> {
   const cryptoUtils = new CryptoUtils();
@@ -43,7 +27,7 @@ async function decryptLettersMetadata(
         )) as LetterMetadata;
 
         return { ...letter, metadata };
-      } catch (_err) {
+      } catch {
         return {
           ...letter,
           metadata: { recipient: "Encrypted Letter" },

@@ -7,7 +7,7 @@ import "@fontsource-variable/playwrite-hr-lijeva/wght.css";
 import "@fontsource-variable/jost/wght.css";
 import "@fontsource-variable/playfair-display/wght.css";
 
-import App from "./App.tsx";
+import App from "./App";
 
 const root = document.getElementById("root");
 if (root) {

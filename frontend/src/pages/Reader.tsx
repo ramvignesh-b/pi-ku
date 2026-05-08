@@ -1,4 +1,5 @@
 import { FlameIcon, PaperPlaneTiltIcon } from "@phosphor-icons/react";
+import type { AxiosResponse } from "axios";
 import { useEffect, useRef, useState } from "react";
 import {
   type NavigateFunction,
@@ -7,6 +8,7 @@ import {
   useParams,
 } from "react-router-dom";
 import { api } from "../api/apiClient";
+import type { LetterImageData, LetterResponseData } from "../api/response";
 import {
   type CanvasJSON,
   type CanvasTools,
@@ -71,7 +73,8 @@ export default function Reader() {
     const key = await cryptoUtils.extractSharingKey(encryptedDek, masterKey);
     try {
       await api.patch(`${endpoints.LETTERS}${public_id}/`, { type: "SENT" });
-    } catch (_err) {
+    } catch {
+      // shouldn't obstruct share if api operation fails (since it's client side share)
     } finally {
       setShareLink(`${window.location.origin}${PATHS.read(public_id)}#${key}`);
     }
@@ -84,7 +87,10 @@ export default function Reader() {
       await api.patch(`${endpoints.LETTERS}${public_id}/`, {
         status: "BURNED",
       });
-    } catch (_err) {
+    } catch {
+      // should not obstruct burn if api operation fails
+      // WHY?: it disconnects the UX. if you want to burn the letter, you should be able to burn the letter
+      // TODO: maybe say something like: "the wind is strong today, let's try again"? or maybe something less stupid :3
     } finally {
       setIsBurning(false);
       setShowBurnModal(false);
@@ -103,89 +109,109 @@ export default function Reader() {
       return;
     }
 
-    const loadAndDecrypt = async () => {
+    const decryptImages = async (
+      canvasData: CanvasJSON,
+      images: LetterImageData[],
+      encrypted_dek: string,
+      cryptoUtils: CryptoUtils,
+    ) => {
+      if (!images?.length) return;
+      const isShared = !!sharingKey;
       try {
-        const response = await api.get(`${endpoints.LETTERS}${public_id}/`);
-        const {
-          encrypted_content,
-          encrypted_metadata,
-          encrypted_dek,
-          images,
-          updated_at,
-          status,
-        } = response.data;
-
-        if (status === "BURNED")
-          throw new Error("This letter has been burned.");
-
-        if (encrypted_dek) setEncryptedDek(encrypted_dek);
-
-        const cryptoUtils = new CryptoUtils();
-        const isShared = !!sharingKey;
-
-        if (isShared && !encrypted_content) throw new Error("Content missing");
-        const isDecryptionKeyAvailable = encrypted_dek && masterKey;
-        if (!(isShared || isDecryptionKeyAvailable))
-          throw new Error("Auth required: Decryption key is not available");
-
-        // Decrypt Metadata
-        const decryptedMetadata = isShared
-          ? await cryptoUtils.decryptMetadataWithSharingKey(
-              encrypted_metadata,
-              sharingKey,
-            )
-          : await cryptoUtils.decryptMetadata(
-              { encrypted_content: encrypted_metadata, encrypted_dek },
-              // biome-ignore lint/style/noNonNullAssertion: masterKey is guaranteed to be non-null here as isDecryptionKeyAvailable is true
-              masterKey!,
-            );
-        setMetadata({
-          ...(decryptedMetadata as LetterMetadata),
-          updated_at,
-        });
-
-        // Decrypt Content
-        const decryptedContent = isShared
-          ? await cryptoUtils.decryptLetterWithSharingKey(
-              encrypted_content,
-              sharingKey,
-            )
-          : await cryptoUtils.decryptLetter(
-              { encrypted_content, encrypted_dek },
-              // biome-ignore lint/style/noNonNullAssertion: masterKey is guaranteed to be non-null here as isDecryptionKeyAvailable is true
-              masterKey!,
-            );
-
-        const canvasData: CanvasJSON = JSON.parse(decryptedContent);
-
-        try {
-          // Decrypt Images
-          if (images?.length > 0) {
-            isShared
-              ? await decryptCanvasImagesWithSharingKey(
-                  canvasData,
-                  images,
-                  sharingKey,
-                  cryptoUtils,
-                )
-              : await decryptCanvasImages(
-                  canvasData,
-                  images,
-                  encrypted_dek,
-                  // biome-ignore lint/style/noNonNullAssertion: masterKey is guaranteed to be non-null here as isDecryptionKeyAvailable is true
-                  masterKey!,
-                  cryptoUtils,
-                );
-          }
-        } catch (err) {
-          setLogTrace({
-            message:
-              "Failed to decrypt elements. Images might not render in the letter as intended.",
-            log: err instanceof Error ? err.message : "Unknown error",
-            type: "WARN",
-          });
+        if (isShared) {
+          await decryptCanvasImagesWithSharingKey(
+            canvasData,
+            images,
+            sharingKey,
+            cryptoUtils,
+          );
+        } else {
+          await decryptCanvasImages(
+            canvasData,
+            images,
+            encrypted_dek,
+            // biome-ignore lint/style/noNonNullAssertion: masterKey is guaranteed to be non-null here as isDecryptionKeyAvailable is true
+            masterKey!,
+            cryptoUtils,
+          );
         }
-        setDecryptedCanvasData(canvasData);
+      } catch (err) {
+        setLogTrace({
+          message:
+            "Failed to decrypt elements. Images might not render in the letter as intended.",
+          log: err instanceof Error ? err.message : "Unknown error",
+          type: "WARN",
+        });
+      }
+    };
+
+    const decryptLetterData = async (
+      data: LetterResponseData,
+      cryptoUtils: CryptoUtils,
+    ) => {
+      const isShared = !!sharingKey;
+      const {
+        encrypted_content,
+        encrypted_metadata,
+        encrypted_dek,
+        images,
+        updated_at,
+      } = data;
+
+      // Decrypt Metadata
+      const decryptedMetadata = isShared
+        ? await cryptoUtils.decryptMetadataWithSharingKey(
+            encrypted_metadata,
+            sharingKey,
+          )
+        : await cryptoUtils.decryptMetadata(
+            { encrypted_content: encrypted_metadata, encrypted_dek },
+            // biome-ignore lint/style/noNonNullAssertion: masterKey is guaranteed to be non-null here as isDecryptionKeyAvailable is true
+            masterKey!,
+          );
+      setMetadata({
+        ...(decryptedMetadata as LetterMetadata),
+        updated_at,
+      });
+
+      // Decrypt Content
+      const decryptedContent = isShared
+        ? await cryptoUtils.decryptLetterWithSharingKey(
+            encrypted_content,
+            sharingKey,
+          )
+        : await cryptoUtils.decryptLetter(
+            { encrypted_content, encrypted_dek },
+            // biome-ignore lint/style/noNonNullAssertion: masterKey is guaranteed to be non-null here as isDecryptionKeyAvailable is true
+            masterKey!,
+          );
+
+      const canvasData: CanvasJSON = JSON.parse(decryptedContent);
+      await decryptImages(canvasData, images, encrypted_dek, cryptoUtils);
+      setDecryptedCanvasData(canvasData);
+    };
+
+    const processLetterData = async (data: LetterResponseData) => {
+      if (data.status === "BURNED")
+        throw new Error("This letter has been burned.");
+
+      if (data.encrypted_dek) setEncryptedDek(data.encrypted_dek);
+
+      const isDecryptionKeyAvailable = data.encrypted_dek && masterKey;
+      if (!(!!sharingKey || isDecryptionKeyAvailable)) {
+        throw new Error("Auth required: Decryption key is not available");
+      }
+
+      const cryptoUtils = new CryptoUtils();
+      await decryptLetterData(data, cryptoUtils);
+    };
+
+    const loadAndDecryptLetter = async () => {
+      try {
+        const response: AxiosResponse<LetterResponseData> = await api.get(
+          `${endpoints.LETTERS}${public_id}/`,
+        );
+        await processLetterData(response.data);
       } catch (err) {
         setLogTrace({
           message: `Failed to load letter ☹`,
@@ -195,7 +221,7 @@ export default function Reader() {
       }
     };
 
-    loadAndDecrypt().then(() => setIsDecrypting(false));
+    loadAndDecryptLetter().then(() => setIsDecrypting(false));
   }, [public_id, sharingKey, masterKey]);
 
   useEffect(() => {

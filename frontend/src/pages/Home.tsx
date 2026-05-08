@@ -8,11 +8,12 @@ import {
 } from "motion/react";
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import letterSample from "../assets/screenshots/letter.webp";
 import Logo from "../components/Logo";
 import { EnvelopeReveal } from "../components/reader/EnvelopeReveal";
-import Saajan from "../components/ui/Saajan.tsx";
-import { ROUTES } from "../config/routes.ts";
-import { formatDate } from "../utils/dateFormat.ts";
+import Saajan from "../components/ui/Saajan";
+import { ROUTES } from "../config/routes";
+import { formatDate } from "../utils/dateFormat";
 
 import "@fontsource/space-mono/index.css";
 import "@fontsource/architects-daughter/index.css";
@@ -325,7 +326,7 @@ export default function Home() {
               <div className="mockup-phone w-[75vw] border-primary">
                 <div className="mockup-phone-camera"></div>
                 <div className="mockup-phone-display">
-                  <img alt="letter" src="/screenshots/letter.webp" />
+                  <img alt="letter" src={letterSample} />
                 </div>
               </div>
             </motion.div>

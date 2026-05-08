@@ -1,3 +1,5 @@
+import type { LetterMetadata } from "../api/response";
+
 export interface EncryptedLetter {
   encrypted_content: string;
   encrypted_dek: string;
@@ -275,7 +277,7 @@ export class CryptoUtils {
   }
 
   public async encryptMetadata(
-    metadata: Record<string, any>,
+    metadata: LetterMetadata,
     masterKey: CryptoKey,
   ): Promise<EncryptedLetterMetadata> {
     const { encryptedContent, encrypted_dek, sharingKey } =
@@ -290,7 +292,7 @@ export class CryptoUtils {
   public async decryptMetadata(
     encrypted_metadata: EncryptedLetter,
     masterKey: CryptoKey,
-  ): Promise<Record<string, any>> {
+  ): Promise<LetterMetadata> {
     const bytes = await this.openEnvelope(
       encrypted_metadata.encrypted_content,
       encrypted_metadata.encrypted_dek,
@@ -303,7 +305,7 @@ export class CryptoUtils {
   public async decryptMetadataWithSharingKey(
     encrypted_content: string,
     sharingKey: string,
-  ): Promise<Record<string, any>> {
+  ): Promise<LetterMetadata> {
     const bytes = await this.openEnvelopeWithSharingKey(
       encrypted_content,
       sharingKey,

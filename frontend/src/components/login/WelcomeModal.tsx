@@ -3,9 +3,9 @@ import {
   ShieldCheckIcon,
   WarningIcon,
 } from "@phosphor-icons/react";
-import Logo from "../Logo.tsx";
+import Logo from "../Logo";
 import { Modal } from "../ui/Modal";
-import Saajan from "../ui/Saajan.tsx";
+import Saajan from "../ui/Saajan";
 
 export default function WelcomeModal({
   setShowWelcome,
@@ -53,7 +53,7 @@ export default function WelcomeModal({
                   href="https://www.privacyguides.org/en/passwords/"
                   target="_blank"
                   className="link link-primary-content"
-                  rel="noopener"
+                  rel="noopener noreferrer"
                 >
                   password manager
                 </a>{" "}

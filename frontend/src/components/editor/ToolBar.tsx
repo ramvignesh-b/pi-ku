@@ -11,7 +11,7 @@ import {
   XCircleIcon,
 } from "@phosphor-icons/react";
 import { Modal } from "../ui/Modal";
-import type { CanvasStyle } from "./ComposeCanvas.tsx";
+import type { CanvasStyle } from "./ComposeCanvas";
 
 interface ToolBarProps {
   onAddImage: () => void;

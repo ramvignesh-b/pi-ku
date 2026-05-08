@@ -66,7 +66,7 @@ export function WelcomeLetterOverlay({
               type="button"
               data-testid="dismiss-welcome-letter-btn"
               onClick={onComplete}
-              className="btn btn-accent opacity-80 px-12 shadow-lg"
+              className="btn btn-base btn-xs btn-wide opacity-80 shadow-lg font-light tracking-wider"
             >
               I'll see you
             </button>

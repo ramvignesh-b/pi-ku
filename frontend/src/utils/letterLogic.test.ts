@@ -221,7 +221,11 @@ describe("letterLogic image helpers", () => {
         ],
       };
       const remoteImages = [
-        { file_name: "photo.png.bin", file: "https://remote/photo.png.bin" },
+        {
+          public_id: "1234",
+          file_name: "photo.png.bin",
+          file: "https://remote/photo.png.bin",
+        },
       ];
 
       vi.mocked(api.get).mockResolvedValue({ data: new Blob(["encrypted"]) });

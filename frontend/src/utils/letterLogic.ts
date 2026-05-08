@@ -1,4 +1,5 @@
 import { api, apiServerUrl, publicApi } from "../api/apiClient";
+import type { LetterImageData } from "../api/response";
 import type {
   CanvasJSON,
   FabricImageJSON,
@@ -111,7 +112,7 @@ export async function decryptCanvasImages(
 
 export async function decryptCanvasImagesWithSharingKey(
   canvasData: CanvasJSON,
-  remoteImages: { file_name: string; file: string }[],
+  remoteImages: LetterImageData[],
   sharingKey: string,
   cryptoUtils: CryptoUtils,
 ): Promise<DecryptionResult> {

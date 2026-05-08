@@ -11,6 +11,7 @@ import {
   useParams,
 } from "react-router-dom";
 import { api } from "../api/apiClient";
+import type { LetterResponseData } from "../api/response";
 import {
   type CanvasStyle,
   type CanvasTools,
@@ -26,7 +27,6 @@ import DateDisplay from "../components/ui/DateDisplay";
 import { LogModal } from "../components/ui/LogModal";
 import { Modal } from "../components/ui/Modal";
 import { Navbar } from "../components/ui/Navbar";
-
 import { endpoints } from "../config/endpoints";
 import { PATHS } from "../config/routes";
 import { useKeyStore } from "../store/useKeyStore";
@@ -116,10 +116,54 @@ export default function Editor() {
       justSavedRef.current = false;
       return;
     }
+    const decryptAndLoadLetter = async (
+      letterData: LetterResponseData,
+      masterKey: CryptoKey,
+    ) => {
+      const cryptoUtils = new CryptoUtils();
+      const metadata = await cryptoUtils.decryptMetadata(
+        {
+          encrypted_content: letterData.encrypted_metadata,
+          encrypted_dek: letterData.encrypted_dek,
+        },
+        masterKey,
+      );
+      setRecipient(metadata.recipient || "");
+
+      const decryptedJsonStr = await cryptoUtils.decryptLetter(
+        {
+          encrypted_content: letterData.encrypted_content,
+          encrypted_dek: letterData.encrypted_dek,
+        },
+        masterKey,
+      );
+      const canvasData = JSON.parse(decryptedJsonStr);
+
+      const { errors, isPartialFailure, canvasDataWithDecryptedImages } =
+        await decryptCanvasImages(
+          canvasData,
+          letterData.images ?? [],
+          letterData.encrypted_dek,
+          masterKey,
+          cryptoUtils,
+          true,
+        );
+
+      if (isPartialFailure) {
+        setDecryptionStatus({
+          status: "WARN",
+          message: "Failed to decrypt some elements. Please check the render.",
+          log: errors.toString(),
+        });
+      }
+
+      if (canvasRef.current) {
+        await canvasRef.current.loadData(canvasDataWithDecryptedImages);
+      }
+    };
+
     const loadExistingLetter = async () => {
       setIsInitialLoading(true);
-      const cryptoUtils = new CryptoUtils();
-
       try {
         const res = await api.get(`${endpoints.LETTERS}${public_id}/`);
         const letterData = res.data;
@@ -132,55 +176,14 @@ export default function Editor() {
           return;
         }
 
-        if (!letterData.encrypted_dek) {
-          return;
+        if (letterData.encrypted_dek && masterKey) {
+          await decryptAndLoadLetter(letterData, masterKey);
         }
-
-        const metadata = await cryptoUtils.decryptMetadata(
-          {
-            encrypted_content: letterData.encrypted_metadata,
-            encrypted_dek: letterData.encrypted_dek,
-          },
-          masterKey,
-        );
-        setRecipient(metadata.recipient || "");
-
-        const decryptedJsonStr = await cryptoUtils.decryptLetter(
-          {
-            encrypted_content: letterData.encrypted_content,
-            encrypted_dek: letterData.encrypted_dek,
-          },
-          masterKey,
-        );
-        const canvasData = JSON.parse(decryptedJsonStr);
-
-        const { errors, isPartialFailure, canvasDataWithDecryptedImages } =
-          await decryptCanvasImages(
-            canvasData,
-            letterData.images ?? [],
-            letterData.encrypted_dek,
-            masterKey,
-            cryptoUtils,
-            true,
-          );
-
-        if (isPartialFailure) {
-          setDecryptionStatus({
-            status: "WARN",
-            message:
-              "Failed to decrypt some elements. Please check the render.",
-            log: errors.toString(),
-          });
-        }
-
-        if (canvasRef.current) {
-          await canvasRef.current.loadData(canvasDataWithDecryptedImages);
-        }
-      } catch (_err) {
+      } catch (err) {
         setDecryptionStatus({
           status: "ERROR",
           message: "Failed to decrypt letter. Please try again later.",
-          log: _err instanceof Error ? _err.message : "Unknown error",
+          log: err instanceof Error ? err.message : "Unknown error",
         });
       } finally {
         setIsInitialLoading(false);
@@ -242,76 +245,79 @@ export default function Editor() {
     }
   };
 
+  const getRequestData = async (
+    targetId: string,
+    status: string,
+    vaultDate?: Date,
+  ): Promise<FormData> => {
+    const cryptoUtils = new CryptoUtils();
+    await cryptoUtils.initialize();
+
+    const canvasData = (await canvasRef.current?.getData()) || { objects: [] };
+    const canvasImages = canvasRef.current?.getImages() || [];
+
+    const { encryptedImageFiles, encryptedCanvasData } =
+      await encryptCanvasImages(
+        canvasData,
+        canvasImages,
+        // biome-ignore lint/style/noNonNullAssertion: masterkey can never be null here
+        masterKey!,
+        cryptoUtils,
+      );
+
+    const encrypted_letter = await cryptoUtils.encryptLetter(
+      JSON.stringify(encryptedCanvasData),
+      // biome-ignore lint/style/noNonNullAssertion: masterkey can never be null here
+      masterKey!,
+    );
+
+    const encrypted_metadata = await cryptoUtils.encryptMetadata(
+      { recipient, tags: [] },
+      // biome-ignore lint/style/noNonNullAssertion: masterkey can never be null here
+      masterKey!,
+    );
+
+    const formData = new FormData();
+    if (status === "VAULT") {
+      const finalDate = vaultDate || unlockDate;
+      formData.append("type", "VAULT");
+      if (finalDate) formData.append("unlock_at", finalDate.toISOString());
+      formData.append("status", "SEALED");
+    } else {
+      formData.append("type", "KEPT");
+      formData.append("status", status);
+    }
+
+    formData.append("public_id", targetId);
+    formData.append("encrypted_content", encrypted_letter.encrypted_content);
+    formData.append("encrypted_dek", encrypted_letter.encrypted_dek);
+    formData.append("encrypted_metadata", encrypted_metadata.encrypted_content);
+
+    encryptedImageFiles.forEach((blob, filename) => {
+      formData.append("image_files", blob, filename);
+    });
+
+    return formData;
+  };
+
   const handleSave = async (
     status: "SEALED" | "DRAFT" | "VAULT",
     vaultDate?: Date,
   ): Promise<void> => {
     setSealBtnClicked(false);
-
-    let targetId = public_id || letterIdRef.current;
-    if (!targetId) {
-      targetId = crypto.randomUUID();
-    }
+    // use the letter's id if an existing letter or create a new id
+    const targetId = public_id || letterIdRef.current || crypto.randomUUID();
 
     if (saveOverlay === "SAVING" || !masterKey) return;
 
     setSaveOverlay("SAVING");
     setShowSaveOverlay(true);
 
-    const cryptoUtils = new CryptoUtils();
-    await cryptoUtils.initialize();
-
     try {
-      const canvasData = (await canvasRef.current?.getData()) || {
-        objects: [],
-      };
-      const canvasImages = canvasRef.current?.getImages() || [];
-
-      const { encryptedImageFiles, encryptedCanvasData } =
-        await encryptCanvasImages(
-          canvasData,
-          canvasImages,
-          masterKey,
-          cryptoUtils,
-        );
-
-      const encrypted_letter = await cryptoUtils.encryptLetter(
-        JSON.stringify(encryptedCanvasData),
-        masterKey,
-      );
-
-      const encrypted_metadata = await cryptoUtils.encryptMetadata(
-        { recipient, tags: [] },
-        masterKey,
-      );
-
-      const formData = new FormData();
-      if (status === "VAULT") {
-        const finalDate = vaultDate || unlockDate;
-        formData.append("type", "VAULT");
-        if (finalDate) {
-          formData.append("unlock_at", finalDate.toISOString());
-        }
-        formData.append("status", "SEALED");
-      } else {
-        formData.append("type", "KEPT");
-        formData.append("status", status);
-      }
-      formData.append("public_id", targetId);
-      formData.append("encrypted_content", encrypted_letter.encrypted_content);
-      formData.append("encrypted_dek", encrypted_letter.encrypted_dek);
-      formData.append(
-        "encrypted_metadata",
-        encrypted_metadata.encrypted_content,
-      );
-
-      encryptedImageFiles.forEach((blob, filename) => {
-        formData.append("image_files", blob, filename);
-      });
-
+      const formData = await getRequestData(targetId, status, vaultDate);
       await api.put(`${endpoints.LETTERS}${targetId}/`, formData);
-      justSavedRef.current = true;
 
+      justSavedRef.current = true;
       if (!public_id) {
         letterIdRef.current = targetId;
         navigate(PATHS.write(targetId), { replace: true });
@@ -326,7 +332,7 @@ export default function Editor() {
       }
       setSaveOverlay("SAVED");
       setShowSaveOverlay(true);
-    } catch (_error) {
+    } catch {
       setSaveOverlay("ERROR");
       setShowSaveOverlay(true);
     }

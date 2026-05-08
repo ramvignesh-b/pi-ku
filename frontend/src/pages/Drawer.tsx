@@ -7,19 +7,19 @@ import {
 } from "@phosphor-icons/react";
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { DrawerSection } from "../components/drawer/DrawerSection.tsx";
-import { LetterItem } from "../components/drawer/LetterItem.tsx";
-import { PasskeyModal } from "../components/drawer/PasskeyModal.tsx";
-import { WelcomeLetterOverlay } from "../components/drawer/WelcomeLetterOverlay.tsx";
+import { DrawerSection } from "../components/drawer/DrawerSection";
+import { LetterItem } from "../components/drawer/LetterItem";
+import { PasskeyModal } from "../components/drawer/PasskeyModal";
+import { WelcomeLetterOverlay } from "../components/drawer/WelcomeLetterOverlay";
 import Logo from "../components/Logo";
-import Saajan from "../components/ui/Saajan.tsx";
+import Saajan from "../components/ui/Saajan";
 import { PATHS } from "../config/routes";
 import { useAuth } from "../hooks/useAuth";
 import { useLetters } from "../hooks/useLetters";
 import {
   formatRelativeDate,
   formatRelativeDateWithoutTime,
-} from "../utils/dateFormat.ts";
+} from "../utils/dateFormat";
 
 export default function Drawer() {
   const { user, logout } = useAuth();

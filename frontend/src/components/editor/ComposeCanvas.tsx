@@ -122,7 +122,7 @@ export function ComposeCanvas({
   // re-calculates height based on content and applies the zoom transform
   const syncViewport = useCallback(() => {
     if (!(fabricRef.current && wrapperRef.current)) return;
-    textboxRef.current.initDimensions();
+    textboxRef.current?.initDimensions();
 
     const minHeight = initialData?.canvasHeight ?? DEFAULT_LOGICAL_HEIGHT;
     logicalSizeRef.current.height = measureLogicalContentHeight(
@@ -260,17 +260,35 @@ export function ComposeCanvas({
     let resizeObserver: ResizeObserver | null = null;
     let lastWidth = 0;
 
+    const getInitialWidth = async () => {
+      if (!wrapperRef.current) return BASE_WIDTH;
+      let width = wrapperRef.current.clientWidth;
+      if (width === 0) {
+        await new Promise((resolve) => requestAnimationFrame(resolve));
+        width = wrapperRef.current?.clientWidth || BASE_WIDTH;
+      }
+      return width;
+    };
+
+    const initResizeOberver = () => {
+      if (!wrapperRef.current) return null;
+      const observer = new ResizeObserver(() => {
+        const nextWidth = wrapperRef.current?.clientWidth;
+        if (!nextWidth || nextWidth === lastWidth) return;
+        lastWidth = nextWidth;
+        syncViewport();
+      });
+      observer.observe(wrapperRef.current);
+      return observer;
+    };
+
     const initCanvas = async () => {
       // HACK: actual font may change the text-width - small ux improvement
       await document.fonts.ready;
 
       if (!(wrapperRef.current && canvasRef.current && isMounted)) return;
 
-      let width = wrapperRef.current.clientWidth;
-      if (width === 0) {
-        await new Promise((resolve) => requestAnimationFrame(resolve));
-        width = wrapperRef.current?.clientWidth || BASE_WIDTH;
-      }
+      const width = await getInitialWidth();
 
       // init the fabric instance
       const canvas = new fabric.Canvas(canvasRef.current, {
@@ -301,13 +319,7 @@ export function ComposeCanvas({
 
       // auto window resizing based width
       lastWidth = wrapperRef.current.clientWidth;
-      resizeObserver = new ResizeObserver(() => {
-        const nextWidth = wrapperRef.current?.clientWidth;
-        if (!nextWidth || nextWidth === lastWidth) return;
-        lastWidth = nextWidth;
-        syncViewport();
-      });
-      resizeObserver.observe(wrapperRef.current!);
+      resizeObserver = initResizeOberver();
     };
 
     initCanvas().then();

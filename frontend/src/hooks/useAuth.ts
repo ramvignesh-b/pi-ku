@@ -32,7 +32,7 @@ export const useAuth = () => {
   const logout = async () => {
     try {
       await api.post(endpoints.LOGOUT);
-    } catch (_error) {
+    } catch {
     } finally {
       clearAuth();
       setMasterKey(null);

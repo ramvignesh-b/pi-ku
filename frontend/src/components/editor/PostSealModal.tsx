@@ -63,7 +63,11 @@ export function PostSealModal({
               type="button"
               data-testid="view-letter-btn"
               className="btn btn-primary btn-sm"
-              onClick={() => navigate(PATHS.read(sealedTargetId!))}
+              onClick={() => {
+                if (sealedTargetId) {
+                  navigate(PATHS.read(sealedTargetId));
+                }
+              }}
             >
               View letter
             </button>

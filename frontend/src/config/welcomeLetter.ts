@@ -1,3 +1,4 @@
+import trainImage from "../assets/screenshots/train.png";
 import type { CanvasJSON } from "../components/editor/ComposeCanvas";
 
 export function getWelcomeLetterContent(userName: string): CanvasJSON {
@@ -30,7 +31,7 @@ export function getWelcomeLetterContent(userName: string): CanvasJSON {
         originY: "top",
         left: 36,
         top: 36,
-        width: 608,
+        width: 720,
         height: 813.6,
         fill: "#111e67",
         stroke: null,
@@ -90,12 +91,12 @@ export function getWelcomeLetterContent(userName: string): CanvasJSON {
         globalCompositeOperation: "source-over",
         skewX: 0,
         skewY: 0,
-        src: "/screenshots/train.png",
+        src: trainImage,
         crossOrigin: null,
         filters: [],
       },
     ],
-    canvasWidth: 680,
+    canvasWidth: 700,
     canvasHeight: 900,
   };
 }
