@@ -120,28 +120,29 @@ export default function Login() {
               type="submit"
               name="login"
               disabled={isLoading}
-              aria-label="Sign In"
               data-testid="login-submit-btn"
               className="btn btn-primary w-full shadow-lg"
             >
               {isLoading ? (
                 <span className="loading loading-spinner loading-sm" />
               ) : (
-                "Sign In"
+                "Continue"
               )}
             </button>
           </div>
-
-          <div className="text-center text-sm font-medium text-base-content/70">
-            Don't have an account?{" "}
+          <div className="divider text-neutral my-0">or</div>
+          <div className="text-center text-sm font-medium text-neutral">
+            New to <Logo type="inline" />
+            ?&nbsp;
             <button
               type="button"
               name="register"
               onClick={() => navigate(ROUTES.ONBOARD)}
-              className="link link-primary no-underline hover:underline font-bold"
+              className="link link-primary"
             >
-              Register
+              Start here
             </button>
+            .
           </div>
         </form>
       </div>

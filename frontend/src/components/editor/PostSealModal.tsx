@@ -25,10 +25,11 @@ export function PostSealModal({
         <p className="text-base-content/80 text-sm font-sans">
           When you're ready,
           <br />
-          you can{" "}
-          <span className="text-primary font-bold font-display">read</span> it,{" "}
+          you can&nbsp;
+          <span className="text-primary font-bold font-display">read</span>
+          &nbsp; it,&nbsp;
           <span className="text-accent font-bold font-display">send</span> it to
-          someone, or{" "}
+          someone, or&nbsp;
           <span className="text-error font-bold font-display">burn</span> it to
           release
         </p>
@@ -36,12 +37,12 @@ export function PostSealModal({
         <p className="text-base-content/80 text-sm font-sans">
           Be assured that the letter will find you when the time is right.
           <br />
-          Till then,{" "}
+          Till then,&nbsp;
           <span className="font-bold font-display text-primary">
             take a deep breath
           </span>
           , <span className="font-bold font-display text-accent">manifest</span>
-          , and{" "}
+          , and&nbsp;
           <span className="font-bold font-display text-success">
             let it rest
           </span>

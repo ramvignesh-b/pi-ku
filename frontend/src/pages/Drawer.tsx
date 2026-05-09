@@ -58,7 +58,7 @@ export default function Drawer() {
           Personal Archive
         </div>
         <div className="mt-6 font-sans text-sm text-base-content flex items-center justify-center gap-2 opacity-60 hover:opacity-100 transition-opacity">
-          Welcome Back{" "}
+          Welcome Back&nbsp;
           <span className="font-semibold text-primary">{user.full_name}</span>
           <button
             type="button"
@@ -180,7 +180,7 @@ export default function Drawer() {
           weight="duotone"
           className="text-primary/30 transition-all duration-300 group-hover:text-primary"
         />
-        Write something{" "}
+        Write something&nbsp;
         <span className="relative inline-flex">
           <span className="transition-opacity duration-500 opacity-80 group-hover:opacity-0">
             . . . . . .

@@ -23,8 +23,8 @@ export default function VerifyEmail() {
             Check Your Mailbox
           </h2>
           <p className="text-sm opacity-80 leading-relaxed font-sans mt-6">
-            You're one train away from starting your <Logo scale={0.8} />{" "}
-            journey.
+            You're one train away from starting your <Logo scale={0.8} />
+            &nbsp; journey.
           </p>
         </div>
 

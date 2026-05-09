@@ -68,7 +68,8 @@ export function DrawerSection({
           <div className="font-sans text-xs text-base-content/20 mt-1">
             <span className="font-mono text-xs md:text-base -mt-1 absolute text-primary/30">
               {count}
-            </span>{" "}
+            </span>
+            &nbsp;
             <span className="ml-3">{subtext}</span>
           </div>
           <div className="absolute right-5 -translate-y-15 text-base-content/4">

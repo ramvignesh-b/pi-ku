@@ -30,7 +30,7 @@ export function ShareModal({ shareLink, setShareLink }: ShareModalProps) {
             <p className="text-base-content/80 text-sm font-sans mt-4">
               You've carried these words long enough.
               <br />
-              Send your letter now, and let the{" "}
+              Send your letter now, and let the&nbsp;
               <span className="text-accent font-display">unsaid</span> finally
               find its home.
             </p>
@@ -59,8 +59,8 @@ export function ShareModal({ shareLink, setShareLink }: ShareModalProps) {
           </div>
           <div className="flex flex-col gap-1 uppercase tracking-widest text-base-content/30 font-sans">
             <p className="textarea-xs flex items-center justify-center">
-              <EyeSlashIcon weight="duotone" size={18} className="mr-2" />{" "}
-              Zero-Knowledge Share:
+              <EyeSlashIcon weight="duotone" size={18} className="mr-2" />
+              &nbsp; Zero-Knowledge Share:
             </p>
             <p className="textarea-xs font-mono text-center">
               The key never leaves your or the recipient's browser.
@@ -68,7 +68,7 @@ export function ShareModal({ shareLink, setShareLink }: ShareModalProps) {
           </div>
         </div>
       </Modal>
-      <div className="absolute bottom-0 z-1000 font-sans w-full">
+      <div className="absolute bottom-0 md:right-5/11 z-1000 font-sans w-full">
         <Saajan
           position="top"
           message={`Someone once said,\n"To send a letter is a good way to go somewhere without moving anything but your heart."\nThey were not wrong.`}

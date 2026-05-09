@@ -27,9 +27,9 @@ describe("Login Page", () => {
       </MemoryRouter>,
     );
 
-    await userEvent.type(screen.getByLabelText(/email/i), "test@example.com");
-    await userEvent.type(screen.getByLabelText(/password/i), "password123");
-    await userEvent.click(screen.getByRole("button", { name: /sign in/i }));
+    await userEvent.type(screen.getByTestId("email-input"), "test@example.com");
+    await userEvent.type(screen.getByTestId("password-input"), "password123");
+    await userEvent.click(screen.getByTestId("login-submit-btn"));
 
     expect(await screen.findByTestId("login-error-message")).toHaveTextContent(
       /technical issues/i,
@@ -87,9 +87,9 @@ describe("Login Page", () => {
       </MemoryRouter>,
     );
 
-    await userEvent.type(screen.getByLabelText(/email/i), "test@example.com");
-    await userEvent.type(screen.getByLabelText(/password/i), "password123");
-    await userEvent.click(screen.getByRole("button", { name: /sign in/i }));
+    await userEvent.type(screen.getByTestId("email-input"), "test@example.com");
+    await userEvent.type(screen.getByTestId("password-input"), "password123");
+    await userEvent.click(screen.getByTestId("login-submit-btn"));
 
     const expectedTestId =
       nextRoute.toLowerCase() === "drawer" ? "drawer-page" : "reader-page";

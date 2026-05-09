@@ -59,7 +59,8 @@ export default function Activate() {
             You're in.
           </h2>
           <p className="opacity-70 leading-relaxed">
-            Welcome to <Logo scale={1} />
+            Welcome to&nbsp;
+            <Logo type="inline" />
             <br />
             Just one more step and you can start writing timeless letters.
           </p>

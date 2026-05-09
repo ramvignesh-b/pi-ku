@@ -149,7 +149,7 @@ export default function Home() {
               }}
               className="absolute text-4xl md:text-6xl text-center px-10 leading-tight"
             >
-              pen down your unsaid words into{" "}
+              pen down your unsaid words into&nbsp;
               <span className="font-display text-primary font-extralight">
                 letters
               </span>
@@ -171,11 +171,11 @@ export default function Home() {
               }}
               className="absolute text-4xl md:text-6xl text-center px-10 leading-tight"
             >
-              seal it{" "}
+              seal it&nbsp;
               <span className="text-success font-mono tracking-tighter font-extrabold">
                 secure
-              </span>{" "}
-              and{" "}
+              </span>
+              &nbsp; and&nbsp;
               <span className="text-info font-mono tracking-tighter italic">
                 private
               </span>
@@ -197,7 +197,7 @@ export default function Home() {
               }}
               className="absolute text-4xl md:text-6xl text-center px-10 leading-tight"
             >
-              send it to{" "}
+              send it to&nbsp;
               <motion.span
                 className="font-display text-accent"
                 style={{
@@ -225,8 +225,7 @@ export default function Home() {
                     ),
                   }}
                 >
-                  {" "}
-                  or{" "}
+                  &nbsp; or&nbsp;
                 </motion.span>
                 <span className="font-display text-success">
                   yourself in the future
@@ -250,8 +249,8 @@ export default function Home() {
               }}
               className="absolute text-4xl md:text-6xl text-center px-10 leading-tight"
             >
-              and even <span className="font-display text-error">burn it</span>{" "}
-              to release the burden.
+              and even <span className="font-display text-error">burn it</span>
+              &nbsp; to release the burden.
             </motion.h2>
             {/*  Outro  */}
             <motion.h2

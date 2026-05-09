@@ -194,6 +194,7 @@ export function ToolBar({
         </div>
         <button
           type="button"
+          data-testid="vault-trigger-btn"
           className="btn btn-neutral btn-sm rounded-full px-6 group"
           onClick={() => setConfirmModal("VAULT")}
         >
@@ -269,8 +270,7 @@ export function VaultConfirmModal({
         I'll remember to mail you this on the unlock date.
         <br />
         <span className={"font-bold text-primary"}>
-          {" "}
-          But I won't let you read or rewrite this letter until then.
+          &nbsp; But I won't let you read or rewrite this letter until then.
         </span>
         <br />
       </p>
@@ -299,6 +299,7 @@ export function VaultConfirmModal({
         <div className="w-full flex justify-center gap-8 mt-4">
           <button
             type="button"
+            data-testid="vault-cancel-btn"
             className="btn btn-ghost btn-sm mt-4"
             onClick={() => setConfirmModal(null)}
           >
@@ -307,6 +308,7 @@ export function VaultConfirmModal({
           <button
             className="btn btn-primary btn-sm mt-4"
             type="submit"
+            data-testid="vault-confirm-btn"
             form="vault-form"
           >
             Take it

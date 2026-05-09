@@ -23,8 +23,8 @@ export function PostActionOverlay({ revealState }: PostActionOverlayProps) {
           May your <span className="italic text-primary">soul</span> find
           solace,
           <br />
-          just like your <span className="text-accent italic">unsaid</span>{" "}
-          words did.
+          just like your <span className="text-accent italic">unsaid</span>
+          &nbsp; words did.
         </p>
         <div className="divider mx-auto w-24 text-center"></div>
         <button

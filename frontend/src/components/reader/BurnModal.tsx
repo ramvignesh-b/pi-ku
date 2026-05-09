@@ -58,8 +58,8 @@ export function BurnModal({
           Let the echoes of your unsaid be finally released.
         </p>
         <div className="mt-4 font-sans text-sm">
-          <span className="text-error">Press</span> and{" "}
-          <span className="text-error">hold</span> the{" "}
+          <span className="text-error">Press</span> and&nbsp;
+          <span className="text-error">hold</span> the&nbsp;
           <span className="text-amber-300">flame</span> to proceed.
         </div>
         <div className="modal-action w-full justify-center gap-3 mt-2">

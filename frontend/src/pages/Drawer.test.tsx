@@ -94,7 +94,7 @@ describe("Drawer Page", () => {
     );
 
     expect(screen.getByTestId("passkey-modal-title")).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/password/i)).toBeInTheDocument();
+    expect(screen.getByTestId("passkey-input")).toBeInTheDocument();
   });
 
   it("renders the welcome letter when firstTime state is present", () => {

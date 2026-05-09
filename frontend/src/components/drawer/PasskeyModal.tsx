@@ -41,10 +41,15 @@ export function PasskeyModal() {
             required
             type="password"
             placeholder="password"
+            data-testid="passkey-input"
             className="font-sans validator input input-bordered rounded-r-none"
           />
           <div className="validator-message text-xs text-error"></div>
-          <button type="submit" className="btn btn-primary rounded-l-none">
+          <button
+            type="submit"
+            data-testid="passkey-submit-btn"
+            className="btn btn-primary rounded-l-none"
+          >
             Unlock
           </button>
         </form>

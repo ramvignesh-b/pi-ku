@@ -23,7 +23,7 @@ export default function FormField({
     <div className="form-control">
       <label
         htmlFor={registration.name}
-        className="field-label font-display text-base-content/90 font-medium"
+        className="field-label font-display text-neutral-content/80 font-medium"
       >
         {label}
       </label>

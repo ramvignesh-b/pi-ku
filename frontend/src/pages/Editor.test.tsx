@@ -97,25 +97,22 @@ describe("Editor Page", () => {
     fireEvent.click(sealBtn);
 
     // Click Vault to show confirm modal
-    const vaultBtn = screen.getByRole("button", { name: /vault/i });
+    const vaultBtn = screen.getByTestId("vault-trigger-btn");
     fireEvent.click(vaultBtn);
 
     // Set date and submit vault form
-    const dateInput = container.querySelector('input[name="vault-date"]');
+    const dateInput = document.body.querySelector('input[name="vault-date"]');
     if (!dateInput) throw new Error("Date input not found");
     fireEvent.change(dateInput, { target: { value: "2026-12-31" } });
 
-    const confirmVaultBtn = container.querySelector(
-      'button[form="vault-form"]',
-    );
-    if (!confirmVaultBtn) throw new Error("Confirm vault button not found");
+    const confirmVaultBtn = screen.getByTestId("vault-confirm-btn");
     fireEvent.click(confirmVaultBtn);
 
     // Wait for save to complete and check readOnly
     expect(await screen.findByTestId("save-success-toast")).toBeInTheDocument();
 
     expect(canvas.getAttribute("data-readonly")).toBe("true");
-    expect(screen.getByLabelText(/recipient/i)).toBeDisabled();
+    expect(screen.getByTestId("recipient-input")).toBeDisabled();
   });
 
   it("should set canvas to readOnly when status is SEALED", async () => {
@@ -135,7 +132,7 @@ describe("Editor Page", () => {
       }),
     );
 
-    const { container } = render(
+    render(
       <MemoryRouter initialEntries={["/write/test-id"]}>
         <Routes>
           <Route path="/write/:public_id" element={<Editor />} />
@@ -149,19 +146,17 @@ describe("Editor Page", () => {
 
     const canvas = screen.getByTestId("canvas");
 
-    const toolbar = container.querySelector("#writer-toolbar");
-    const sealBtn = toolbar?.querySelector(".btn-primary");
-    if (!sealBtn) throw new Error("Seal button not found");
+    const sealBtn = screen.getByTestId("seal-trigger-btn");
     fireEvent.click(sealBtn);
 
     // The secondary seal button appears (it has btn-accent class)
-    const secondarySealBtn = container.querySelector(".btn-accent");
+    const secondarySealBtn = screen.getByTestId("seal-confirm-btn");
     if (!secondarySealBtn) throw new Error("Secondary seal button not found");
     fireEvent.click(secondarySealBtn);
 
     expect(await screen.findByTestId("save-success-toast")).toBeInTheDocument();
 
     expect(canvas.getAttribute("data-readonly")).toBe("true");
-    expect(screen.getByLabelText(/recipient/i)).toBeDisabled();
+    expect(screen.getByTestId("recipient-input")).toBeDisabled();
   });
 });

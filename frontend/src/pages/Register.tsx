@@ -77,7 +77,8 @@ export default function Register() {
       <div className="glass-card w-full max-w-sm p-2 transition-all duration-500 hover:shadow-2xl fade-zoom">
         <form onSubmit={handleSubmit(onSubmit)} className="card-body gap-4">
           <div className="card-title font-display text-2xl justify-center text-primary/80 tracking-tight whitespace-nowrap">
-            Create a <Logo type="logo" scale={0.7} /> Account
+            Create a<Logo type="logo" scale={0.7} />
+            Account
           </div>
 
           {apiError && (
@@ -143,9 +144,9 @@ export default function Register() {
             <InfoIcon size={20} weight="duotone" className="mt-0.5 shrink-0" />
             <p className="text-sm font-semibold">
               Choose a password you won't forget. <br />
-              Just like life,{" "}
-              <span className="underline decoration-2">there is no reset</span>{" "}
-              here. If you lose it, your letters cannot be recovered.
+              Just like life,&nbsp;
+              <span className="underline decoration-2">there is no reset</span>
+              &nbsp; here. If you lose it, your letters cannot be recovered.
             </p>
           </div>
 
@@ -160,9 +161,22 @@ export default function Register() {
               {isLoading ? (
                 <span className="loading loading-spinner loading-sm" />
               ) : (
-                "Register"
+                "Begin"
               )}
             </button>
+          </div>
+          <div className="divider text-neutral my-0">or</div>
+          <div className="text-center text-sm font-medium text-neutral">
+            Been here before?&nbsp;
+            <button
+              type="button"
+              name="register"
+              onClick={() => navigate(ROUTES.LOGIN)}
+              className="link link-primary"
+            >
+              Continue where you left off
+            </button>
+            .
           </div>
         </form>
       </div>
