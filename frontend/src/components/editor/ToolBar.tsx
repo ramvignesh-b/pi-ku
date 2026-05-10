@@ -24,11 +24,11 @@ interface ToolBarProps {
 }
 
 const FONT_FAMILIES: Map<string, string> = new Map([
-  ["Serif", "Playfair Display Variable"],
+  ["Serif", "Fraunces Variable"],
   ["Sans", "Jost Variable"],
   ["Cursive", "Playwrite HR Lijeva Variable"],
   ["Handwriting", "Architects Daughter"],
-  ["Slab", "Cutive Mono"],
+  ["Slab", "Josefin Slab Variable"],
   ["Mono", "Space Mono"],
   ["Ink", "Kavivanar"],
   ["Crazy(pls no)", "Redacted Script"],

@@ -4,14 +4,14 @@ import { useCallback, useEffect, useImperativeHandle, useRef } from "react";
 
 import "@fontsource/kavivanar/index.css";
 import "@fontsource/space-mono/index.css";
-import "@fontsource/cutive-mono/index.css";
+import "@fontsource-variable/josefin-slab/wght.css";
 import "@fontsource/architects-daughter/index.css";
 import "@fontsource/redacted-script/index.css";
 
 const PAD = 36;
 const BASE_WIDTH = 680;
 const DEFAULT_LOGICAL_HEIGHT = 900;
-const DEFAULT_FONT_FAMILY = "Playfair Display Variable";
+const DEFAULT_FONT_FAMILY = "Fraunces Variable";
 const DEFAULT_FONT_COLOR = "#000";
 
 export interface FabricObjectJSON {

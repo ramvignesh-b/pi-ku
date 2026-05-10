@@ -46,11 +46,11 @@
 @theme {
   --font-display: "Playwrite HR Lijeva Variable", cursive;
   --font-sans: "Jost Variable", sans-serif;
-  --font-serif: "Playfair Display Variable", serif;
+  --font-serif: "Fraunces Variable", serif;
   --font-mono: "Space Mono", monospace;
   --font-ink: "Kavivanar", sans-serif;
   --font-redact: "Redacted Script", cursive;
-  --font-slab: "Cutive Mono", monospace;
+  --font-slab: "Josefin Slab Variable", serif;
   --font-hand: "Architects Daughter", cursive;
   --color-glass-bg: rgba(28, 22, 16, 0.45);
   --shadow-warm: 0 20px 50px -12px rgba(30, 20, 12, 0.6);

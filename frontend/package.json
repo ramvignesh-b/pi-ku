@@ -19,11 +19,11 @@
         "test:e2e:ui": "playwright test --ui --ui-host=0.0.0.0 --ui-port=43008"
     },
     "dependencies": {
+        "@fontsource-variable/fraunces": "^5.2.9",
+        "@fontsource-variable/josefin-slab": "^5.2.7",
         "@fontsource-variable/jost": "^5.2.8",
-        "@fontsource-variable/playfair-display": "^5.2.8",
         "@fontsource-variable/playwrite-hr-lijeva": "^5.2.7",
         "@fontsource/architects-daughter": "^5.2.7",
-        "@fontsource/cutive-mono": "^5.2.8",
         "@fontsource/kavivanar": "^5.2.8",
         "@fontsource/knewave": "^5.2.7",
         "@fontsource/redacted-script": "^5.2.8",
