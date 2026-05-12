@@ -1,6 +1,7 @@
 import { HourglassSimpleMediumIcon } from "@phosphor-icons/react";
 import { useAuth } from "../../hooks/useAuth";
 import { Modal } from "../ui/Modal";
+import { PasswordInput } from "../ui/PasswordInput";
 
 export function PasskeyModal() {
   const { unlock } = useAuth();
@@ -27,7 +28,7 @@ export function PasskeyModal() {
       </p>
       <div className="modal-action items-center gap-4">
         <form
-          className="form-control w-full inline-flex"
+          className="form-control w-full"
           onSubmit={async (e: React.SubmitEvent<HTMLFormElement>) => {
             e.preventDefault();
             const formData = new FormData(e.currentTarget);
@@ -36,22 +37,23 @@ export function PasskeyModal() {
             await unlock(password);
           }}
         >
-          <input
-            name="password"
-            required
-            type="password"
-            placeholder="password"
-            data-testid="passkey-input"
-            className="font-sans validator input input-bordered rounded-r-none"
-          />
-          <div className="validator-message text-xs text-error"></div>
-          <button
-            type="submit"
-            data-testid="passkey-submit-btn"
-            className="btn btn-primary rounded-l-none"
-          >
-            Unlock
-          </button>
+          <div className="join w-full">
+            <PasswordInput
+              name="password"
+              required
+              placeholder="password"
+              data-testid="passkey-input"
+              className="rounded-r-none w-full"
+            />
+            <button
+              type="submit"
+              data-testid="passkey-submit-btn"
+              className="btn btn-primary rounded-l-none"
+            >
+              Unlock
+            </button>
+          </div>
+          <div className="validator-message text-xs text-error mt-2"></div>
         </form>
       </div>
     </Modal>
