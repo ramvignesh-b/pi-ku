@@ -14,172 +14,175 @@ import { ROUTES } from "../config/routes";
 import { CryptoUtils } from "../utils/crypto";
 
 const registerSchema = z
-    .object({
-        full_name: z.string().min(2, "Name must be at least 2 characters"),
-        email: z.email("Please enter a valid email"),
-        password: z.string().min(8, "Password must be at least 8 characters"),
-        confirm_password: z.string(),
-    })
-    .refine((data) => data.password === data.confirm_password, {
-        message: "Passwords don't match",
-        path: ["confirm_password"],
-    });
+  .object({
+    full_name: z.string().min(2, "Name must be at least 2 characters"),
+    email: z.email("Please enter a valid email"),
+    password: z.string().min(8, "Password must be at least 8 characters"),
+    confirm_password: z.string(),
+  })
+  .refine((data) => data.password === data.confirm_password, {
+    message: "Passwords don't match",
+    path: ["confirm_password"],
+  });
 
 type RegisterInputs = z.infer<typeof registerSchema>;
 
 export default function Register() {
-    const navigate = useNavigate();
-    const [isLoading, setIsLoading] = useState(false);
-    const [apiError, setApiError] = useState<string | null>(null);
-    const [saajanMessage, setSaajanMessage] = useState<string>(
-        "I didn't think I'd be here either.\nAnd yet, here we are.",
-    );
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
+  const [saajanMessage, setSaajanMessage] = useState<string>(
+    "I didn't think I'd be here either.\nAnd yet, here we are.",
+  );
 
-    const {
-        register,
-        handleSubmit,
-        formState: { errors },
-    } = useForm<RegisterInputs>({
-        resolver: zodResolver(registerSchema),
-    });
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<RegisterInputs>({
+    resolver: zodResolver(registerSchema),
+  });
 
-    const onSubmit = async (data: RegisterInputs) => {
-        setSaajanMessage("Good. I'll remember that.");
-        setIsLoading(true);
-        setApiError(null);
-        try {
-            // we generate the key bundle here to get the authHash (password) to be haSHed and stored in the db.
-            const { authHash } = await CryptoUtils.deriveKeyBundle(
-                data.password,
-                data.email,
-            );
+  const onSubmit = async (data: RegisterInputs) => {
+    setSaajanMessage("Good. I'll remember that.");
+    setIsLoading(true);
+    setApiError(null);
+    try {
+      // we generate the key bundle here to get the authHash (password) to be haSHed and stored in the db.
+      const { authHash } = await CryptoUtils.deriveKeyBundle(
+        data.password,
+        data.email,
+      );
 
-            await publicApi.post(endpoints.REGISTER, {
-                full_name: data.full_name,
-                email: data.email,
-                password: authHash,
-            });
-            navigate(ROUTES.VERIFY_EMAIL, { replace: true });
-        } catch (err) {
-            let message = "Registration failed. Please try again.";
-            if (axios.isAxiosError(err)) {
-                message = err.response?.data?.message || message;
-            }
-            setApiError(message);
-        } finally {
-            setIsLoading(false);
-        }
-    };
+      await publicApi.post(endpoints.REGISTER, {
+        full_name: data.full_name,
+        email: data.email,
+        password: authHash,
+      });
+      navigate(ROUTES.VERIFY_EMAIL, { replace: true });
+    } catch (err) {
+      let message = "Registration failed. Please try again.";
+      if (axios.isAxiosError(err)) {
+        message = err.response?.data?.message || message;
+      }
+      setApiError(message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    return (
-        <div className="flex flex-col">
-            <Saajan message={saajanMessage} position="right" />
-            <div className="glass-card w-full max-w-sm p-2 transition-all duration-500 hover:shadow-2xl fade-zoom">
-                <form onSubmit={handleSubmit(onSubmit)} className="card-body px-2 gap-4">
-                    <div className="card-title font-display text-xl md:text-2xl justify-center text-primary/80 tracking-tight whitespace-nowrap">
-                        Create a<Logo type="logo" scale={0.6} />
-                        Account
-                    </div>
+  return (
+    <div className="flex flex-col">
+      <Saajan message={saajanMessage} position="right" />
+      <div className="glass-card w-full max-w-sm p-2 transition-all duration-500 hover:shadow-2xl fade-zoom">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="card-body px-2 gap-4"
+        >
+          <div className="card-title font-display text-xl md:text-2xl justify-center text-primary/80 tracking-tight whitespace-nowrap">
+            Create a<Logo type="logo" scale={0.6} />
+            Account
+          </div>
 
-                    {apiError && (
-                        <div className="alert alert-error text-xs py-2 rounded-md">
-                            <span>{apiError}</span>
-                        </div>
-                    )}
-
-                    <FormField
-                        label="Pen Name"
-                        placeholder="Word Smith"
-                        data-testid="pen-name-input"
-                        registration={register("full_name")}
-                        error={errors.full_name?.message}
-                        handleFocus={() =>
-                            setSaajanMessage("Hello friend. What should I call you?")
-                        }
-                    />
-
-                    <FormField
-                        label="Email"
-                        type="email"
-                        placeholder="f.kafka@wrongtrain.com"
-                        data-testid="email-input"
-                        registration={register("email")}
-                        error={errors.email?.message}
-                        handleFocus={() =>
-                            setSaajanMessage(
-                                "Where should I send your letters?\nNo empty lunchboxes, please.",
-                            )
-                        }
-                    />
-
-                    <FormField
-                        label="Password"
-                        type="password"
-                        placeholder="••••••••"
-                        data-testid="password-input"
-                        registration={register("password")}
-                        error={errors.password?.message}
-                        handleFocus={() =>
-                            setSaajanMessage(
-                                "Something only you know.\nI have one of those too.",
-                            )
-                        }
-                    />
-
-                    <FormField
-                        label="Confirm Password"
-                        type="password"
-                        placeholder="••••••••"
-                        data-testid="confirm-password-input"
-                        registration={register("confirm_password")}
-                        error={errors.confirm_password?.message}
-                        handleFocus={() =>
-                            setSaajanMessage(
-                                "Just once? Trust me, \nsome things are worth repeating twice.",
-                            )
-                        }
-                    />
-
-                    <div className="alert alert-warning items-start text-left p-3 gap-2 rounded-md border-warning/20">
-                        <InfoIcon size={20} weight="duotone" className="mt-0.5 shrink-0" />
-                        <p className="text-sm font-semibold">
-                            Choose a password you won't forget. <br />
-                            Just like life,&nbsp;
-                            <span className="underline decoration-2">there is no reset</span>
-                            &nbsp; here. If you lose it, your letters cannot be recovered.
-                        </p>
-                    </div>
-
-                    <div className="card-actions mt-4">
-                        <button
-                            type="submit"
-                            disabled={isLoading}
-                            aria-label="Register"
-                            data-testid="register-submit-btn"
-                            className="btn btn-primary w-full shadow-lg"
-                        >
-                            {isLoading ? (
-                                <span className="loading loading-spinner loading-sm" />
-                            ) : (
-                                "Begin"
-                            )}
-                        </button>
-                    </div>
-                    <div className="divider text-neutral my-0">or</div>
-                    <div className="text-center text-sm font-medium text-neutral">
-                        Been here before?&nbsp;
-                        <button
-                            type="button"
-                            name="register"
-                            onClick={() => navigate(ROUTES.LOGIN)}
-                            className="link link-primary"
-                        >
-                            Continue where you left off
-                        </button>
-                        .
-                    </div>
-                </form>
+          {apiError && (
+            <div className="alert alert-error text-xs py-2 rounded-md">
+              <span>{apiError}</span>
             </div>
-        </div>
-    );
+          )}
+
+          <FormField
+            label="Pen Name"
+            placeholder="Word Smith"
+            data-testid="pen-name-input"
+            registration={register("full_name")}
+            error={errors.full_name?.message}
+            handleFocus={() =>
+              setSaajanMessage("Hello friend. What should I call you?")
+            }
+          />
+
+          <FormField
+            label="Email"
+            type="email"
+            placeholder="f.kafka@wrongtrain.com"
+            data-testid="email-input"
+            registration={register("email")}
+            error={errors.email?.message}
+            handleFocus={() =>
+              setSaajanMessage(
+                "Where should I send your letters?\nNo empty lunchboxes, please.",
+              )
+            }
+          />
+
+          <FormField
+            label="Password"
+            type="password"
+            placeholder="••••••••"
+            data-testid="password-input"
+            registration={register("password")}
+            error={errors.password?.message}
+            handleFocus={() =>
+              setSaajanMessage(
+                "Something only you know.\nI have one of those too.",
+              )
+            }
+          />
+
+          <FormField
+            label="Confirm Password"
+            type="password"
+            placeholder="••••••••"
+            data-testid="confirm-password-input"
+            registration={register("confirm_password")}
+            error={errors.confirm_password?.message}
+            handleFocus={() =>
+              setSaajanMessage(
+                "Just once? Trust me, \nsome things are worth repeating twice.",
+              )
+            }
+          />
+
+          <div className="alert alert-warning items-start text-left p-3 gap-2 rounded-md border-warning/20">
+            <InfoIcon size={20} weight="duotone" className="mt-0.5 shrink-0" />
+            <p className="text-sm font-semibold">
+              Choose a password you won't forget. <br />
+              Just like life,&nbsp;
+              <span className="underline decoration-2">there is no reset</span>
+              &nbsp; here. If you lose it, your letters cannot be recovered.
+            </p>
+          </div>
+
+          <div className="card-actions mt-4">
+            <button
+              type="submit"
+              disabled={isLoading}
+              aria-label="Register"
+              data-testid="register-submit-btn"
+              className="btn btn-primary w-full shadow-lg"
+            >
+              {isLoading ? (
+                <span className="loading loading-spinner loading-sm" />
+              ) : (
+                "Begin"
+              )}
+            </button>
+          </div>
+          <div className="divider text-neutral my-0">or</div>
+          <div className="text-center text-sm font-medium text-neutral">
+            Been here before?&nbsp;
+            <button
+              type="button"
+              name="register"
+              onClick={() => navigate(ROUTES.LOGIN)}
+              className="link link-primary"
+            >
+              Continue where you left off
+            </button>
+            .
+          </div>
+        </form>
+      </div>
+    </div>
+  );
 }
