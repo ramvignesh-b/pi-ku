@@ -353,7 +353,7 @@ export default function Home() {
             </motion.div>
             {/*  Saajan */}
             <motion.div
-              className="fixed bottom-0 z-10 font-sans -mb-6 scale-85 md:scale-100 md:mb-0"
+              className="fixed bottom-0 z-10 font-sans -mb-6 md:scale-100 md:mb-0"
               style={{
                 opacity: useTransform(
                   scrollYProgress,

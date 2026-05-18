@@ -75,9 +75,12 @@ export default function Register() {
     <div className="flex flex-col">
       <Saajan message={saajanMessage} position="right" />
       <div className="glass-card w-full max-w-sm p-2 transition-all duration-500 hover:shadow-2xl fade-zoom">
-        <form onSubmit={handleSubmit(onSubmit)} className="card-body gap-4">
-          <div className="card-title font-display text-2xl justify-center text-primary/80 tracking-tight whitespace-nowrap">
-            Create a<Logo type="logo" scale={0.7} />
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="card-body px-2 gap-4"
+        >
+          <div className="card-title font-display text-xl md:text-2xl justify-center text-primary/80 tracking-tight whitespace-nowrap">
+            Create a<Logo type="logo" scale={0.6} />
             Account
           </div>
 

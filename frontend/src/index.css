@@ -66,7 +66,7 @@
 }
 
 .glass-card {
-  @apply bg-glass-bg max-w-xs md:max-w-sm backdrop-blur-xl border border-neutral-content/10 shadow-warm rounded-xl m-4;
+  @apply bg-glass-bg max-w-xs md:max-w-sm backdrop-blur-xl border border-neutral-content/10 shadow-warm rounded-xl m-2 md:m-4;
 }
 
 .ul-wavy {
