@@ -21,7 +21,7 @@ import { PostActionOverlay } from "../components/reader/PostActionOverlay";
 import { ShareModal } from "../components/reader/ShareModal";
 import { LogModal } from "../components/ui/LogModal";
 import { endpoints } from "../config/endpoints";
-import { PATHS } from "../config/routes";
+import { PATHS, ROUTES } from "../config/routes";
 import { useKeyStore } from "../store/useKeyStore";
 import { CryptoUtils } from "../utils/crypto";
 import { formatDate } from "../utils/dateFormat";
@@ -319,6 +319,19 @@ export default function Reader() {
         </div>
       )}
 
+      {revealState === "REVEALED" && !isAuthor && (
+        <button
+          data-testid="reader-cta-btn"
+          type="button"
+          className="btn btn-ghost btn-wide font-sans tracking-widest mx-auto cursor-pointer flex text-neutral hover:text-neutral-content focus:text-neutral-content"
+          onClick={() => {
+            navigate(ROUTES.HOME);
+          }}
+        >
+          write a letter
+        </button>
+      )}
+
       {shareLink && (
         <ShareModal shareLink={shareLink} setShareLink={setShareLink} />
       )}
@@ -360,8 +373,8 @@ export default function Reader() {
         </div>
       )}
 
-      <footer className="mt-16 text-center z-10 opacity-10 pointer-events-none">
-        <p className="text-xs font-sans uppercase tracking-widester">
+      <footer className="mt-16 text-center z-10 text-neutral pointer-events-none">
+        <p className="text-xxs font-sans uppercase font-extrabold tracking-widester">
           Read. Remember. Release.
         </p>
       </footer>

@@ -64,7 +64,9 @@ test.describe("Letter Drafting (Real Backend)", () => {
     await expect(page.getByTestId("opening-draft-overlay")).toBeHidden();
 
     // Check recipient
-    await expect(page.getByTestId("recipient-input")).toHaveValue(recipientName);
+    await expect(page.getByTestId("recipient-input")).toHaveValue(
+      recipientName,
+    );
 
     // Check canvas content
     // We wait for the content to appear in the textarea.

@@ -1,4 +1,4 @@
-import { type Page, expect } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 import pino from "pino";
 
 const logger = pino({
@@ -22,7 +22,9 @@ export async function revealEnvelope(page: Page) {
   await page.getByTestId("wax-seal").click();
 
   // Click letter to reveal
-  await page.getByTestId("envelope-letter").click({ position: { x: 30, y: 15 } });
+  await page
+    .getByTestId("envelope-letter")
+    .click({ position: { x: 30, y: 15 } });
 }
 
 /**
