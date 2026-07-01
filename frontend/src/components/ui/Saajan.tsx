@@ -45,7 +45,7 @@ export default function Saajan({ message, position = "right" }: SaajanProps) {
         <img
           src={sf_mini}
           alt="saajan"
-          className={`sepia-20 w-35 -mb-6 ${animate ? "animate-[pulse_.5s_ease_2]" : ""}`}
+          className={`sepia-20 w-30 -mb-6 ${animate ? "animate-[pulse_.5s_ease_2]" : ""}`}
         />
       </div>
     </div>

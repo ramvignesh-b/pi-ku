@@ -30,7 +30,7 @@ export default function Login() {
   const { setAuthStore } = useAuth();
   const [showWelcome, setShowWelcome] = useState(!!location.state?.firstTime);
   const [saajanMessage, setSaajanMessage] = useState<string>(
-    "I was wondering when you'd return.",
+    "I was wondering, if you'd ever return.",
   );
   const nextRoute = location.state?.redirectUrl || ROUTES.DRAWER;
 
@@ -82,9 +82,12 @@ export default function Login() {
       {!showWelcome && <Saajan message={saajanMessage} position="top" />}
       {showWelcome && <WelcomeModal setShowWelcome={setShowWelcome} />}
       <div className="glass-card w-full max-w-sm p-2 transition-all duration-500 hover:shadow-2xl fade-zoom">
-        <form onSubmit={handleSubmit(onSubmit)} className="card-body gap-4">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="card-body gap-4 px-2"
+        >
           <h1 className="flex items-center font-display text-2xl justify-center text-primary/80 tracking-tight">
-            &nbsp;&nbsp;Enter <Logo type="logo" scale={0.7} /> Archive
+            &nbsp;Unlock <Logo type="logo" scale={0.6} /> Archive
           </h1>
 
           {apiError && (

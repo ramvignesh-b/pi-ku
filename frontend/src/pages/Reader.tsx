@@ -21,7 +21,7 @@ import { PostActionOverlay } from "../components/reader/PostActionOverlay";
 import { ShareModal } from "../components/reader/ShareModal";
 import { LogModal } from "../components/ui/LogModal";
 import { endpoints } from "../config/endpoints";
-import { PATHS } from "../config/routes";
+import { PATHS, ROUTES } from "../config/routes";
 import { useKeyStore } from "../store/useKeyStore";
 import { CryptoUtils } from "../utils/crypto";
 import { formatDate } from "../utils/dateFormat";
@@ -114,27 +114,29 @@ export default function Reader() {
       images: LetterImageData[],
       encrypted_dek: string,
       cryptoUtils: CryptoUtils,
-    ) => {
-      if (!images?.length) return;
+    ): Promise<CanvasJSON> => {
+      if (!images?.length) return canvasData;
       const isShared = !!sharingKey;
       try {
         if (isShared) {
-          await decryptCanvasImagesWithSharingKey(
-            canvasData,
-            images,
-            sharingKey,
-            cryptoUtils,
-          );
-        } else {
-          await decryptCanvasImages(
-            canvasData,
-            images,
-            encrypted_dek,
-            // biome-ignore lint/style/noNonNullAssertion: masterKey is guaranteed to be non-null here as isDecryptionKeyAvailable is true
-            masterKey!,
-            cryptoUtils,
-          );
+          const { canvasDataWithDecryptedImages } =
+            await decryptCanvasImagesWithSharingKey(
+              canvasData,
+              images,
+              sharingKey,
+              cryptoUtils,
+            );
+          return canvasDataWithDecryptedImages;
         }
+        const { canvasDataWithDecryptedImages } = await decryptCanvasImages(
+          canvasData,
+          images,
+          encrypted_dek,
+          // biome-ignore lint/style/noNonNullAssertion: masterKey is guaranteed to be non-null here as isDecryptionKeyAvailable is true
+          masterKey!,
+          cryptoUtils,
+        );
+        return canvasDataWithDecryptedImages;
       } catch (err) {
         setLogTrace({
           message:
@@ -142,6 +144,7 @@ export default function Reader() {
           log: err instanceof Error ? err.message : "Unknown error",
           type: "WARN",
         });
+        return canvasData;
       }
     };
 
@@ -187,8 +190,13 @@ export default function Reader() {
           );
 
       const canvasData: CanvasJSON = JSON.parse(decryptedContent);
-      await decryptImages(canvasData, images, encrypted_dek, cryptoUtils);
-      setDecryptedCanvasData(canvasData);
+      const decryptedCanvasData = await decryptImages(
+        canvasData,
+        images,
+        encrypted_dek,
+        cryptoUtils,
+      );
+      setDecryptedCanvasData(decryptedCanvasData);
     };
 
     const processLetterData = async (data: LetterResponseData) => {
@@ -319,6 +327,19 @@ export default function Reader() {
         </div>
       )}
 
+      {revealState === "REVEALED" && !isAuthor && (
+        <button
+          data-testid="reader-cta-btn"
+          type="button"
+          className="btn btn-ghost btn-wide font-sans tracking-widest mx-auto cursor-pointer flex text-neutral hover:text-neutral-content focus:text-neutral-content"
+          onClick={() => {
+            navigate(ROUTES.HOME);
+          }}
+        >
+          write a letter
+        </button>
+      )}
+
       {shareLink && (
         <ShareModal shareLink={shareLink} setShareLink={setShareLink} />
       )}
@@ -360,8 +381,8 @@ export default function Reader() {
         </div>
       )}
 
-      <footer className="mt-16 text-center z-10 opacity-10 pointer-events-none">
-        <p className="text-xs font-sans uppercase tracking-widester">
+      <footer className="mt-16 text-center z-10 text-neutral pointer-events-none">
+        <p className="text-xxs font-sans uppercase font-extrabold tracking-widester">
           Read. Remember. Release.
         </p>
       </footer>

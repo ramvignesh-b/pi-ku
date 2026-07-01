@@ -1,7 +1,7 @@
 import { expect, type Page } from "@playwright/test";
 import pino from "pino";
-import { MailpitHelper } from "./mailpit";
 import { handleWelcomeLetter } from "./envelope";
+import { MailpitHelper } from "./mailpit";
 
 const logger = pino({
   transport: {

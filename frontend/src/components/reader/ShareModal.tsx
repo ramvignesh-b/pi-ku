@@ -68,7 +68,7 @@ export function ShareModal({ shareLink, setShareLink }: ShareModalProps) {
           </div>
         </div>
       </Modal>
-      <div className="absolute bottom-0 md:right-5/11 z-1000 font-sans w-full">
+      <div className="absolute bottom-0 z-1000 font-sans w-screen">
         <Saajan
           position="top"
           message={`Someone once said,\n"To send a letter is a good way to go somewhere without moving anything but your heart."\nThey were not wrong.`}
