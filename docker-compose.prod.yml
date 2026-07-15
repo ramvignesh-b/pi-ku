@@ -67,7 +67,7 @@ services:
       args:
         - VITE_API_URL=${VITE_API_URL}
     restart: always
-    depends_on:
+    # depends_on:
       # backend:
        # condition: service_healthy
     # healthcheck:
