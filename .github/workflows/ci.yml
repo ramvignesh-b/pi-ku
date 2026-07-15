@@ -11,7 +11,7 @@ jobs:
     name: Generate Certificates
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Generate SSL Certificates
         run: |
           sudo apt-get update && sudo apt-get install -y mkcert libnss3-tools
@@ -20,7 +20,7 @@ jobs:
           mkcert -cert-file certs/localhost.pem -key-file certs/localhost-key.pem localhost 127.0.0.1 ::1
 
       - name: Upload certificates
-        uses: christopherHX/gitea-upload-artifact@v4
+        uses: actions/upload-artifact@v4
         with:
           name: ssl-certs
           path: certs/
@@ -34,11 +34,11 @@ jobs:
       run:
         working-directory: ./frontend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: oven-sh/setup-bun@v2
 
       - name: Restore certificates
-        uses: christopherHX/gitea-download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: ssl-certs
           path: certs/
@@ -75,7 +75,7 @@ jobs:
       run:
         working-directory: ./backend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install uv
         uses: astral-sh/setup-uv@v5
         with:
@@ -83,7 +83,7 @@ jobs:
           cache-dependency-glob: "backend/uv.lock"
 
       - name: Restore certificates
-        uses: christopherHX/gitea-download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: ssl-certs
           path: certs/
@@ -115,10 +115,10 @@ jobs:
     # Skipping on Gitea pushes until cache server is configured
     if: github.server_url == 'https://github.com' || github.event_name == 'pull_request'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Restore Certificates
-        uses: christopherHX/gitea-download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: ssl-certs
           path: certs/
@@ -155,7 +155,7 @@ jobs:
 
       - name: Upload Playwright Report
         if: always()
-        uses: christopherHX/gitea-upload-artifact@v4
+        uses: actions/upload-artifact@v4
         with:
           name: playwright-report
           path: frontend/playwright-report/
