@@ -20,7 +20,7 @@ jobs:
           mkcert -cert-file certs/localhost.pem -key-file certs/localhost-key.pem localhost 127.0.0.1 ::1
 
       - name: Upload certificates
-        uses: actions/upload-artifact@v4
+        uses: forgejo/upload-artifact@v4
         with:
           name: ssl-certs
           path: certs/
@@ -38,7 +38,7 @@ jobs:
       - uses: oven-sh/setup-bun@v2
 
       - name: Restore certificates
-        uses: actions/download-artifact@v4
+        uses: forgejo/download-artifact@v4
         with:
           name: ssl-certs
           path: certs/
@@ -83,7 +83,7 @@ jobs:
           cache-dependency-glob: "backend/uv.lock"
 
       - name: Restore certificates
-        uses: actions/download-artifact@v4
+        uses: forgejo/download-artifact@v4
         with:
           name: ssl-certs
           path: certs/
@@ -112,12 +112,13 @@ jobs:
     name: E2E Tests
     runs-on: ubuntu-latest
     needs: setup-environment
-
+    # Skipping on Forgejo pushes until cache server is configured
+    if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v7
 
       - name: Restore Certificates
-        uses: actions/download-artifact@v4
+        uses: forgejo/download-artifact@v4
         with:
           name: ssl-certs
           path: certs/
@@ -127,19 +128,10 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
 
-      - name: Cache Playwright
-        id: playwright-cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('frontend/bun.lock') }}
-
       - name: Install Dependencies
         run: |
           (cd frontend && bun install)
-          if [ "${{ steps.playwright-cache.outputs.cache-hit }}" != "true" ]; then
-            (cd frontend && bun x playwright install --with-deps)
-          fi
+          (cd frontend && bun x playwright install --with-deps)
 
       - name: Run E2E
         run: |
@@ -151,7 +143,7 @@ jobs:
 
       - name: Upload Playwright Report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: forgejo/upload-artifact@v4
         with:
           name: playwright-report
           path: frontend/playwright-report/
