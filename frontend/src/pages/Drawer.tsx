@@ -191,7 +191,7 @@ export default function Drawer() {
         </span>
       </button>
 
-      <footer className="mt-25 font-sans text-[0.6rem] tracking-widester uppercase text-base-content/10 z-10">
+      <footer className="mt-12 md:mt-25 font-sans text-[0.6rem] tracking-widester uppercase text-base-content/10 z-10">
         For your unsaid.
       </footer>
       {!showWelcomeLetter && (
