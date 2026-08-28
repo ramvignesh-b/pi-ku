@@ -378,6 +378,21 @@ class LetterTaskTest(TestCase):
 
         self.assertEqual(len(unlocked_letters), 2)
 
+    def test_only_sealed_vault_letters_are_notified(self):
+        """
+        Test that the letters awaiting notification are limited to sealed vault letters.
+        """
+        from letters.tasks import get_vault_letters_to_notify
+
+        past = datetime.now(UTC) - timedelta(hours=1)
+        sealed_vault = Letter.objects.create(user=self.user, type="VAULT", status="SEALED", unlock_at=past)
+        Letter.objects.create(user=self.user, type="VAULT", status="DRAFT", unlock_at=past)
+        Letter.objects.create(user=self.user, type="KEPT", status="SEALED", unlock_at=past)
+
+        letters_to_notify = get_vault_letters_to_notify()
+
+        self.assertEqual([letter.public_id for letter in letters_to_notify], [sealed_vault.public_id])
+
     def test_notify_unlocked_letter(self):
         """
         Test that the task successfully notifies the user via email and updates the database field.

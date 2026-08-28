@@ -14,9 +14,14 @@ logger = structlog.get_logger(__name__)
 
 def get_vault_letters_to_notify():
     """
-    Identifies the vault letters that have been recently unlocked and not notified
+    Identifies the sealed vault letters that have been recently unlocked and not notified
     """
-    return Letter.objects.filter(unlock_at__lt=datetime.now(UTC), notified_at=None)
+    return Letter.objects.filter(
+        type=Letter.Type.VAULT,
+        status=Letter.Status.SEALED,
+        unlock_at__lt=datetime.now(UTC),
+        notified_at=None,
+    )
 
 
 def notify_unlocked_letter(letter):
