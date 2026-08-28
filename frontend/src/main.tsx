@@ -1,5 +1,5 @@
 import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
+import { createRoot, hydrateRoot } from "react-dom/client";
 
 import "./index.css";
 
@@ -9,11 +9,17 @@ import "@fontsource-variable/fraunces/wght.css";
 
 import App from "./App";
 
-const root = document.getElementById("root");
-if (root) {
-  createRoot(root).render(
+const rootElement = document.getElementById("root");
+if (rootElement) {
+  const app = (
     <StrictMode>
       <App />
-    </StrictMode>,
+    </StrictMode>
   );
+
+  if (rootElement.hasChildNodes()) {
+    hydrateRoot(rootElement, app);
+  } else {
+    createRoot(rootElement).render(app);
+  }
 }

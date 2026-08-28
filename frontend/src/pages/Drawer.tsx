@@ -160,7 +160,7 @@ export default function Drawer() {
                   unlock_at={formatRelativeDateWithoutTime(
                     letter.unlock_at || "",
                   )}
-                  isLocked={letter.unlock_at > new Date().toISOString()}
+                  isLocked={letter.unlock_at ? letter.unlock_at > new Date().toISOString() : false}
                 />
               ))}
             </DrawerSection>
