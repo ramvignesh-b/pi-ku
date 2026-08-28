@@ -28,7 +28,7 @@ def notify_unlocked_letter(letter):
         letter_link = f"{FRONTEND_URLS[0]}/read/{letter.public_id}"
         subject = "A letter. Written for this exact moment."
         context = {
-            "pen_name": letter.user.first_name,
+            "pen_name": letter.user.full_name,
             "cta": {"title": "View what you wrote", "link": letter_link},
             "footnote": True,
         }
