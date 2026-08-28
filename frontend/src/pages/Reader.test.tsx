@@ -4,6 +4,7 @@ import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { server } from "../../test/mocks/server";
 import { endpoints } from "../config/endpoints";
+import { useAuthStore } from "../store/useAuthStore";
 import { useKeyStore } from "../store/useKeyStore";
 import { CryptoUtils } from "../utils/crypto";
 import Reader from "./Reader";
@@ -168,7 +169,7 @@ describe("Reader Page", () => {
   });
 });
 
-describe("Reader Page - (write a letter) CTA", () => {
+describe("Reader Page - reader CTA", () => {
   let masterKey: CryptoKey;
   let utils: CryptoUtils;
 
@@ -179,6 +180,9 @@ describe("Reader Page - (write a letter) CTA", () => {
     await utils.initialize();
     const bundle = await CryptoUtils.deriveKeyBundle("password", "salt");
     masterKey = bundle.masterKey;
+
+    // Guest by default; individual tests opt into an authenticated session
+    useAuthStore.setState({ accessToken: null, user: null });
 
     vi.stubGlobal("location", {
       hash: "",
@@ -223,6 +227,53 @@ describe("Reader Page - (write a letter) CTA", () => {
 
     expect(ctaBtn).toHaveTextContent(/write a letter/i);
     expect(await screen.findByTestId("home-page")).toBeInTheDocument();
+  });
+
+  it("should display 'open your cabinet' CTA for a logged-in reader and navigate to the drawer", async () => {
+    const mockPublicId = "41123-e2c3-f2115";
+    const letterContent = JSON.stringify({ objects: [] });
+    const metadata = { recipient: "Guest" };
+    useKeyStore.setState({ masterKey: null });
+    useAuthStore.setState({
+      accessToken: "token",
+      user: {
+        public_id: "reader-id",
+        email: "reader@example.com",
+        full_name: "Reader",
+      },
+    });
+    const encryptedLetter = await utils.encryptLetter(letterContent, masterKey);
+    const encryptedMetadata = await utils.encryptMetadata(metadata, masterKey);
+    const sharingKey = encryptedLetter.sharingKey as string;
+    server.use(
+      http.get(`${API_URL}${endpoints.LETTERS}${mockPublicId}/`, () => {
+        return HttpResponse.json({
+          encrypted_content: encryptedLetter.encrypted_content,
+          encrypted_metadata: encryptedMetadata.encrypted_content,
+          encrypted_dek: encryptedLetter.encrypted_dek,
+          images: [],
+        });
+      }),
+    );
+    render(
+      <MemoryRouter initialEntries={[`/read/${mockPublicId}#${sharingKey}`]}>
+        <Routes>
+          <Route path="/read/:public_id" element={<Reader />} />
+          <Route
+            path="/drawer"
+            element={<div data-testid="drawer-page">Drawer Page</div>}
+          />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    const revealBtn = await screen.findByTestId("reveal-button");
+    revealBtn.click();
+    const ctaBtn = await screen.findByTestId("reader-cta-btn");
+    ctaBtn.click();
+
+    expect(ctaBtn).toHaveTextContent(/open your cabinet/i);
+    expect(await screen.findByTestId("drawer-page")).toBeInTheDocument();
   });
 
   it("should not display the CTA for the author of the letter", async () => {

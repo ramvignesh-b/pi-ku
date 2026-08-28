@@ -23,6 +23,7 @@ import { ShareModal } from "../components/reader/ShareModal";
 import { LogModal } from "../components/ui/LogModal";
 import { endpoints } from "../config/endpoints";
 import { PATHS, ROUTES } from "../config/routes";
+import { useAuth } from "../hooks/useAuth";
 import { useKeyStore } from "../store/useKeyStore";
 import { CryptoUtils } from "../utils/crypto";
 import { formatDate } from "../utils/dateFormat";
@@ -65,6 +66,7 @@ export default function Reader() {
   const [shareLink, setShareLink] = useState<string | null>(null);
 
   const { masterKey } = useKeyStore();
+  const { isAuthenticated } = useAuth();
 
   const isAuthor = !!masterKey && !sharingKey;
 
@@ -337,10 +339,10 @@ export default function Reader() {
           type="button"
           className="btn btn-ghost btn-wide font-sans tracking-widest mx-auto cursor-pointer flex text-neutral hover:text-neutral-content focus:text-neutral-content"
           onClick={() => {
-            navigate(ROUTES.HOME);
+            navigate(isAuthenticated ? ROUTES.DRAWER : ROUTES.HOME);
           }}
         >
-          write a letter
+          {isAuthenticated ? "open your cabinet" : "write a letter"}
         </button>
       )}
 
