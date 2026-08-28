@@ -409,3 +409,21 @@ class LetterTaskTest(TestCase):
             notify_unlocked_letter(letter_to_notify2)
 
             self.assertIsNone(letter_to_notify2.notified_at)
+
+    def test_vault_notification_greets_the_author_by_name(self):
+        """
+        Test that the vault unlock email addresses the author by their name.
+        """
+        from letters.tasks import notify_unlocked_letter
+
+        author = User.objects.create_user(email="ada@pi-ku.app", password="password1234", full_name="Ada Lovelace")
+        letter = Letter.objects.create(
+            user=author, type="VAULT", status="SEALED", unlock_at=datetime.now(UTC), notified_at=None
+        )
+
+        with patch("letters.tasks.send_mail") as mock_send_mail:
+            notify_unlocked_letter(letter)
+
+        body = mock_send_mail.call_args.kwargs["message"]
+        self.assertIn("Ada Lovelace", body)
+        self.assertNotIn("None,", body)
