@@ -29,7 +29,7 @@ const FONT_FAMILIES: Map<string, string> = new Map([
   ["Cursive", "Playwrite HR Lijeva Variable"],
   ["Handwriting", "Architects Daughter"],
   ["Slab", "Josefin Slab Variable"],
-  ["Mono", "Space Mono"],
+  ["Mono", "B612 Mono"],
   ["Ink", "Kavivanar"],
   ["Crazy(pls no)", "Redacted Script"],
 ]);

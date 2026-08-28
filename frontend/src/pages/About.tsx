@@ -31,7 +31,7 @@ import Logo from "../components/Logo";
 import { Modal } from "../components/ui/Modal";
 
 import "@fontsource/kavivanar/index.css";
-import "@fontsource/space-mono/index.css";
+import "@fontsource/b612-mono/index.css";
 import "@fontsource/redacted-script/index.css";
 import "@fontsource/architects-daughter/index.css";
 import { useNavigate } from "react-router-dom";

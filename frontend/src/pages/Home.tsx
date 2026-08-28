@@ -15,7 +15,7 @@ import Saajan from "../components/ui/Saajan";
 import { ROUTES } from "../config/routes";
 import { formatDate } from "../utils/dateFormat";
 
-import "@fontsource/space-mono/index.css";
+import "@fontsource/b612-mono/index.css";
 import "@fontsource/architects-daughter/index.css";
 
 export default function Home() {
