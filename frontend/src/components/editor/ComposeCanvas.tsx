@@ -4,8 +4,6 @@ import { useCallback, useEffect, useImperativeHandle, useRef } from "react";
 
 import "@fontsource/kavivanar/index.css";
 import "@fontsource/b612-mono/index.css";
-// NOTE: retained so letters sealed with the old "Mono" option still render as written
-import "@fontsource/space-mono/index.css";
 import "@fontsource-variable/josefin-slab/wght.css";
 import "@fontsource/architects-daughter/index.css";
 import "@fontsource/redacted-script/index.css";
