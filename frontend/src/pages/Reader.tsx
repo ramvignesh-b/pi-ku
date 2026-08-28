@@ -1,5 +1,6 @@
 import { FlameIcon, PaperPlaneTiltIcon } from "@phosphor-icons/react";
 import type { AxiosResponse } from "axios";
+import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import {
   type NavigateFunction,
@@ -281,30 +282,33 @@ export default function Reader() {
   return (
     <section className="min-h-fit w-full bg-base-100 px-4 py-8 md:py-16 font-serif relative overflow-hidden">
       <div className="fixed inset-0 bg-vig pointer-events-none z-0" />
-      <div
-        className={`transition-all delay-300 duration-1000 relative ${
-          revealState === "REVEALED"
-            ? "opacity-0 w-0 h-0 overflow-hidden invisible"
-            : "opacity-100"
-        }`}
-      >
+      <AnimatePresence mode="wait">
         {revealState === "SEALED" && (
-          <div className="h-[80vh] mx-auto flex-col items-center flex justify-center">
-            <div className="perspective-distant scale-80 duration-1000 transition-all animate-[pulse_2s_linear_1]">
-              <EnvelopeReveal
-                recipient={metadata?.recipient || "Someone dear"}
-                date={
-                  metadata?.updated_at
-                    ? formatDate(new Date(metadata.updated_at))
-                    : undefined
-                }
-                onRevealComplete={() => setRevealState("REVEALED")}
-                ignite={ignite}
-              />
-            </div>
-          </div>
+          <motion.div
+            key="envelope"
+            className="h-[80vh] mx-auto flex-col items-center flex justify-center perspective-distant"
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={{ scale: 0.8, opacity: 1 }}
+            exit={{
+              scale: 1,
+              opacity: 0,
+              transition: { duration: 0.5, ease: "easeOut" },
+            }}
+            transition={{ duration: 4, delay: 1 }}
+          >
+            <EnvelopeReveal
+              recipient={metadata?.recipient || "Someone dear"}
+              date={
+                metadata?.updated_at
+                  ? formatDate(new Date(metadata.updated_at))
+                  : undefined
+              }
+              onRevealComplete={() => setRevealState("REVEALED")}
+              ignite={ignite}
+            />
+          </motion.div>
         )}
-      </div>
+      </AnimatePresence>
 
       {ignite && <PostActionOverlay revealState={revealState} />}
 
