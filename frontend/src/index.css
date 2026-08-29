@@ -43,11 +43,21 @@
   --border: 1px;
 }
 
+@font-face {
+  font-family: "Geist Pixel Square";
+  src: url("./assets/fonts/geist-pixel/GeistPixel-Square.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 @theme {
   --font-display: "Playwrite HR Lijeva Variable", cursive;
   --font-sans: "Jost Variable", sans-serif;
   --font-serif: "Fraunces Variable", serif;
   --font-mono: "B612 Mono", monospace;
+  --font-pixel: "Geist Pixel Square", monospace;
+  --font-kalnia: "Kalnia Glaze Variable", serif;
   --font-ink: "Kavivanar", sans-serif;
   --font-redact: "Redacted Script", cursive;
   --font-slab: "Josefin Slab Variable", serif;
@@ -58,11 +68,21 @@
   --color-paper: oklch(97% 0.008 80);
   --text-xxs: 10px;
   --tracking-widester: 0.5em;
+  --tracking-editorial: 0.02em;
+  --word-spacing-editorial: 0.04em;
   --background-image-vig: radial-gradient(
     circle at center,
     transparent 0%,
     rgba(0, 0, 0, 0.4) 100%
   );
+}
+
+.word-spacing-editorial {
+  word-spacing: 0.04em;
+}
+
+.word-spacing-wide {
+  word-spacing: 0.12em;
 }
 
 .glass-card {
@@ -76,3 +96,33 @@
 a {
   @apply text-primary underline decoration-base-content/20 underline-offset-4 hover:decoration-primary/60 transition-colors;
 }
+
+.font-serif,
+[class*="font-serif"] {
+  font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+  font-kerning: normal;
+  text-rendering: optimizeLegibility;
+}
+
+.font-serif.italic,
+.font-serif em,
+.font-serif i,
+em.font-serif,
+i.font-serif,
+.font-serif [class*="italic"],
+[class*="font-serif"].italic,
+[class*="font-serif"] em,
+[class*="font-serif"] i {
+  font-feature-settings: "kern" 1, "liga" 1, "calt" 1, "dlig" 1;
+  font-variation-settings: "opsz" 72, "WONK" 1;
+}
+
+.fraunces-display-italic {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-feature-settings: "kern" 1, "liga" 1, "calt" 1, "dlig" 1, "swsh" 1;
+  font-variation-settings: "opsz" 144, "SOFT" 30, "WONK" 1;
+  font-kerning: normal;
+  text-rendering: optimizeLegibility;
+}
+
