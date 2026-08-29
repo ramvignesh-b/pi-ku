@@ -12,8 +12,8 @@ if [ -z "$CONTAINER_BIN" ]; then
     exit 1
 fi
 
-if [ "$CI" = "true" ]; then
-    CONTAINER_BIN=$(command -v docker || true)
+if [ "$CI" = "true" ] && command -v docker >/dev/null 2>&1; then
+    CONTAINER_BIN="docker"
 fi
 
 echo "Using $CONTAINER_BIN for container operations..."
