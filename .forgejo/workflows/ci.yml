@@ -46,6 +46,9 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: Install Playwright Chromium
+        run: bunx playwright install --with-deps chromium
+
       - name: Code Quality
         run: |
           cp ../.env.example ../.env
@@ -114,6 +117,21 @@ jobs:
     needs: setup-environment
     # Skipping on Forgejo pushes until cache server is configured
     if: github.event_name == 'pull_request'
+    services:
+      db:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: piku_test_db
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: password123
+        ports:
+          - 5443:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+      mailpit:
+        image: axllent/mailpit
+        ports:
+          - 8026:8025
+          - 1026:1025
     steps:
       - uses: actions/checkout@v7
 
@@ -136,6 +154,16 @@ jobs:
       - name: Run E2E
         run: |
           cp .env.e2e.example .env.e2e
+          # The Forgejo runner executes jobs inside a container on the same
+          # network as the services, so they resolve by service name on their
+          # native ports rather than via the mapped host ports.
+          if [ "$GITEA_ACTIONS" = "true" ]; then
+            sed -i "s/^DB_HOST=.*/DB_HOST=db/" .env.e2e
+            sed -i "s/^DB_PORT=.*/DB_PORT=5432/" .env.e2e
+            sed -i "s/^EMAIL_HOST=.*/EMAIL_HOST=mailpit/" .env.e2e
+            sed -i "s/^EMAIL_PORT=.*/EMAIL_PORT=1025/" .env.e2e
+            sed -i "s/^EMAIL_API_PORT=.*/EMAIL_API_PORT=8025/" .env.e2e
+          fi
           chmod +x ./scripts/run-e2e.sh
           ./scripts/run-e2e.sh
         env:
