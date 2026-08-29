@@ -27,7 +27,7 @@ export const WavyUnderline = ({
   drawRange,
   fadeRange,
   color,
-  duration = 1.6,
+  duration = 2.1,
   delay = 1.5,
   className = "",
 }: WavyUnderlineProps) => {
