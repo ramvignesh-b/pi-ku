@@ -1,0 +1,29 @@
+{
+	# This container sits behind the edge proxy that terminates TLS, so Caddy
+	# only ever speaks plain HTTP here. No admin API either - nothing drives
+	# this server at runtime, it just serves a directory.
+	auto_https off
+	admin off
+	persist_config off
+}
+
+:8080 {
+	encode zstd gzip
+
+	# Vite fingerprints everything under /assets, so those URLs can never
+	# change meaning. Anything else - index.html and the files copied from
+	# public/ - keeps its name across deploys and has to be revalidated.
+	handle /assets/* {
+		root * /srv
+		header Cache-Control "public, max-age=31536000, immutable"
+		file_server
+	}
+
+	handle {
+		root * /srv
+		header Cache-Control "no-cache"
+		# Client-side routes have no file on disk; hand them the app.
+		try_files {path} /index.html
+		file_server
+	}
+}

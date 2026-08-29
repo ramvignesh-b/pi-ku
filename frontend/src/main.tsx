@@ -1,5 +1,5 @@
 import { StrictMode } from "react";
-import { createRoot, hydrateRoot } from "react-dom/client";
+import { createRoot } from "react-dom/client";
 
 import "./index.css";
 
@@ -13,15 +13,11 @@ import App from "./App";
 
 const rootElement = document.getElementById("root");
 if (rootElement) {
-  const app = (
+  // The boot shell in index.html is markup, not a render of this app, so there
+  // is nothing to hydrate. React's first commit clears it in a single frame.
+  createRoot(rootElement).render(
     <StrictMode>
       <App />
-    </StrictMode>
+    </StrictMode>,
   );
-
-  if (rootElement.hasChildNodes()) {
-    hydrateRoot(rootElement, app);
-  } else {
-    createRoot(rootElement).render(app);
-  }
 }

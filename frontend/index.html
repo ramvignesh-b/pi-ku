@@ -32,6 +32,14 @@
     <meta name="twitter:description"
         content="Pi. Ku. is a minimal, secure, and beautiful way to write and seal your unsaid words into digital letters." />
     <meta name="twitter:image" content="https://writepiku.app/android-chrome-512x512.png" />
+
+    <!-- Pi. Ku. is a dark app and this stylesheet blocks the first paint, so
+         name the background here too. Without it the browser shows white until
+         the bundle lands. Mirrors --color-base-200 in src/index.css. -->
+    <style>
+        :root { color-scheme: dark; }
+        html, body { margin: 0; height: 100%; background: oklch(18% 0.014 33); }
+    </style>
 </head>
 
 <body>
