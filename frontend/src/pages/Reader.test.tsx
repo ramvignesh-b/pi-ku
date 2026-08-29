@@ -307,4 +307,70 @@ describe("Reader Page - reader CTA", () => {
 
     expect(screen.queryByTestId("reader-cta-btn")).toBeNull();
   });
+
+  it("should show a back-to-drawer nav for the author and navigate there on click", async () => {
+    const mockPublicId = "41123-e2c3-f2115";
+    const letterContent = JSON.stringify({ objects: [] });
+    const metadata = { recipient: "Guest" };
+    useKeyStore.setState({ masterKey });
+    const encryptedLetter = await utils.encryptLetter(letterContent, masterKey);
+    const encryptedMetadata = await utils.encryptMetadata(metadata, masterKey);
+    server.use(
+      http.get(`${API_URL}${endpoints.LETTERS}${mockPublicId}/`, () => {
+        return HttpResponse.json({
+          encrypted_content: encryptedLetter.encrypted_content,
+          encrypted_metadata: encryptedMetadata.encrypted_content,
+          encrypted_dek: encryptedLetter.encrypted_dek,
+          images: [],
+        });
+      }),
+    );
+    render(
+      <MemoryRouter initialEntries={[`/read/${mockPublicId}`]}>
+        <Routes>
+          <Route path="/read/:public_id" element={<Reader />} />
+          <Route
+            path="/drawer"
+            element={<div data-testid="drawer-page">Drawer Page</div>}
+          />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    const navBtn = await screen.findByRole("button", { name: /open drawer/i });
+    navBtn.click();
+
+    expect(await screen.findByTestId("drawer-page")).toBeInTheDocument();
+  });
+
+  it("should not show the back-to-drawer nav for a non-author reader", async () => {
+    const mockPublicId = "41123-e2c3-f2115";
+    const letterContent = JSON.stringify({ objects: [] });
+    const metadata = { recipient: "Guest" };
+    useKeyStore.setState({ masterKey: null });
+    const encryptedLetter = await utils.encryptLetter(letterContent, masterKey);
+    const encryptedMetadata = await utils.encryptMetadata(metadata, masterKey);
+    const sharingKey = encryptedLetter.sharingKey as string;
+    server.use(
+      http.get(`${API_URL}${endpoints.LETTERS}${mockPublicId}/`, () => {
+        return HttpResponse.json({
+          encrypted_content: encryptedLetter.encrypted_content,
+          encrypted_metadata: encryptedMetadata.encrypted_content,
+          encrypted_dek: encryptedLetter.encrypted_dek,
+          images: [],
+        });
+      }),
+    );
+    render(
+      <MemoryRouter initialEntries={[`/read/${mockPublicId}#${sharingKey}`]}>
+        <Routes>
+          <Route path="/read/:public_id" element={<Reader />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await screen.findByTestId("envelope-recipient");
+
+    expect(screen.queryByRole("button", { name: /open drawer/i })).toBeNull();
+  });
 });

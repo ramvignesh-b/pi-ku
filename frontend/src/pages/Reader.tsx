@@ -21,6 +21,7 @@ import { EnvelopeReveal } from "../components/reader/EnvelopeReveal";
 import { PostActionOverlay } from "../components/reader/PostActionOverlay";
 import { ShareModal } from "../components/reader/ShareModal";
 import { LogModal } from "../components/ui/LogModal";
+import { Navbar } from "../components/ui/Navbar";
 import { endpoints } from "../config/endpoints";
 import { PATHS, ROUTES } from "../config/routes";
 import { useAuth } from "../hooks/useAuth";
@@ -284,6 +285,7 @@ export default function Reader() {
   return (
     <section className="min-h-fit w-full bg-base-100 px-4 py-8 md:py-16 font-serif relative overflow-hidden">
       <div className="fixed inset-0 bg-vig pointer-events-none z-0" />
+      {isAuthor && <Navbar />}
       <AnimatePresence mode="wait">
         {revealState === "SEALED" && (
           <motion.div
