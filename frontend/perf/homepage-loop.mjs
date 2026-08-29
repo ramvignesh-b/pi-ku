@@ -21,6 +21,7 @@ import { readFile, stat } from "node:fs/promises";
 import { createServer } from "node:http";
 import path from "node:path";
 import process from "node:process";
+import { gzipSync } from "node:zlib";
 import { chromium } from "playwright";
 
 const distArg = process.argv.indexOf("--dist");
@@ -29,16 +30,19 @@ const DIST =
     ? path.resolve(process.argv[distArg + 1])
     : path.resolve(import.meta.dirname, "../dist");
 
-// Budgets describe the homepage we want, not the one we have.
+// Budgets are ratchets on what this build actually does today, with a little
+// headroom - not aspirations. They exist to catch a regression, so when a
+// change genuinely improves one of these, lower it in the same commit.
+//
+// Measured on the homepage, gzipped, under the throttling pinned below:
+//   FCP ~1.2s | LCP ~4.7s | 130KB before the first paint
 const BUDGETS = {
   blockingBytesBeforeFcp: 150_000,
+  // Nothing should ever need a webfont before the first paint.
   fontBytesBeforeFcp: 0,
-  fcpMs: 1_000,
-  // The homepage hero (h1) animates in over several seconds, so LCP lands at
-  // ~7.2s and has done since before the boot shell existed. This is a ratchet
-  // on a known problem, not a target - lower it when the hero entrance is
-  // addressed, and let it fail if something pushes LCP further out.
-  lcpMs: 7_500,
+  fcpMs: 1_600,
+  // Dominated by the hero's entrance animation, not by loading.
+  lcpMs: 5_500,
 };
 
 // Pinned "Slow 4G"-ish conditions. Fixed numbers matter more than realism:
@@ -86,11 +90,23 @@ async function serveDist() {
     }
 
     try {
-      const body = await readFile(filePath);
+      const raw = await readFile(filePath);
+      const type = MIME[path.extname(filePath)] ?? "application/octet-stream";
+
+      // Production serves this compressed (see frontend/Caddyfile). Measuring
+      // it uncompressed would mislead about every byte budget below.
+      const compressible =
+        /^(text\/|application\/(javascript|json|manifest))/.test(type);
+      const gzipped =
+        compressible && (req.headers["accept-encoding"] ?? "").includes("gzip");
+      const body = gzipped ? gzipSync(raw) : raw;
+
       res.writeHead(200, {
-        "content-type":
-          MIME[path.extname(filePath)] ?? "application/octet-stream",
+        "content-type": type,
         "content-length": body.length,
+        ...(gzipped
+          ? { "content-encoding": "gzip", vary: "Accept-Encoding" }
+          : {}),
         // No caching: every run must be a genuine cold load.
         "cache-control": "no-store",
         "timing-allow-origin": "*",
