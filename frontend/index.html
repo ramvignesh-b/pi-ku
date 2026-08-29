@@ -82,6 +82,12 @@
             color: oklch(82% 0.02 70);
         }
 
+        /* Set once a real route has rendered underneath; see BootShell.tsx. */
+        #boot.done {
+            animation: none; opacity: 0; pointer-events: none;
+            transition: opacity 300ms ease;
+        }
+
         @keyframes boot-pulse { 0%, 100% { opacity: 1 } 50% { opacity: 0.5 } }
 
         @media (prefers-reduced-motion: reduce) {
@@ -91,16 +97,15 @@
 </head>
 
 <body>
-    <div id="root">
-        <div id="boot">
-            <div class="mark" role="img" aria-label="Pi. Ku."><span>Pi</span><b></b><span>&nbsp;Ku</span><b></b></div>
-            <div class="wait">
-                <svg viewBox="0 0 256 256" width="40" height="40" aria-hidden="true"><path d="M226.22,92.67l-96-64a4,4,0,0,0-4.44,0l-96,64A4,4,0,0,0,28,96V200a12,12,0,0,0,12,12H216a12,12,0,0,0,12-12V96A4,4,0,0,0,226.22,92.67ZM103.63,152,36,199.76v-96Zm8.19,4h32.36l68,48H43.86Zm40.55-4L220,103.76v96ZM128,36.81,217,96.11,144.17,148H111.83L39.05,96.11Z"/></svg>
-                <span class="dots">...</span>
-                <p>Unsealing</p>
-            </div>
+    <div id="boot">
+        <div class="mark" role="img" aria-label="Pi. Ku."><span>Pi</span><b></b><span>&nbsp;Ku</span><b></b></div>
+        <div class="wait">
+            <svg viewBox="0 0 256 256" width="40" height="40" aria-hidden="true"><path d="M226.22,92.67l-96-64a4,4,0,0,0-4.44,0l-96,64A4,4,0,0,0,28,96V200a12,12,0,0,0,12,12H216a12,12,0,0,0,12-12V96A4,4,0,0,0,226.22,92.67ZM103.63,152,36,199.76v-96Zm8.19,4h32.36l68,48H43.86Zm40.55-4L220,103.76v96ZM128,36.81,217,96.11,144.17,148H111.83L39.05,96.11Z"/></svg>
+            <span class="dots">...</span>
+            <p>Unsealing</p>
         </div>
     </div>
+    <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
 </body>
 

@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useRef } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import BootShell from "./components/BootShell";
 import { AutoRedirectRoute, ProtectedRoute } from "./components/RouteGuards";
 import SplashScreen from "./components/SplashScreen";
 import { ROUTES } from "./config/routes";
@@ -33,6 +34,7 @@ export default function App() {
     <BrowserRouter>
       <main className="relative overflow-clip min-h-screen min-w-screen flex items-center justify-center w-full bg-base-200 before:absolute before:top-0 before:left-0 before:w-full before:h-full before:content-[''] before:opacity-[0.03] before:z-100 before:pointer-events-none before:bg-[url('assets/textures/noise.gif')]">
         <Suspense fallback={<SplashScreen />}>
+          <BootShell />
           <Routes>
             <Route
               path={ROUTES.HOME}
