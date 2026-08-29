@@ -202,7 +202,6 @@ export default function Home() {
                   scrollYProgress={scrollYProgress}
                   focusThreshold={0.23}
                   exitThreshold={0.36}
-                  delay={0.5}
                   className="font-kalnia font-bold text-primary not-italic"
                 >
                   safe space
@@ -256,7 +255,6 @@ export default function Home() {
                   scrollYProgress={scrollYProgress}
                   focusThreshold={0.36}
                   exitThreshold={0.49}
-                  delay={0.5}
                   className="font-display text-primary font-extralight"
                 >
                   letters
@@ -304,7 +302,6 @@ export default function Home() {
                   scrollYProgress={scrollYProgress}
                   focusThreshold={0.49}
                   exitThreshold={0.61}
-                  delay={0.5}
                   className="text-success font-pixel tracking-wider"
                 >
                   secure
@@ -323,7 +320,6 @@ export default function Home() {
                   scrollYProgress={scrollYProgress}
                   focusThreshold={0.49}
                   exitThreshold={0.61}
-                  delay={0.5}
                   className="text-info font-pixel tracking-wider"
                 >
                   private
@@ -372,7 +368,6 @@ export default function Home() {
                     scrollYProgress={scrollYProgress}
                     focusThreshold={0.61}
                     exitThreshold={0.74}
-                    delay={0.5}
                     className="font-display text-accent"
                   >
                     someone dear
@@ -398,7 +393,6 @@ export default function Home() {
                     scrollYProgress={scrollYProgress}
                     focusThreshold={0.7}
                     exitThreshold={0.78}
-                    delay={0.5}
                     className="font-display text-success"
                   >
                     yourself in the future
@@ -447,7 +441,6 @@ export default function Home() {
                   scrollYProgress={scrollYProgress}
                   focusThreshold={0.79}
                   exitThreshold={0.91}
-                  delay={0.5}
                   className="font-display text-error"
                 >
                   burn it
