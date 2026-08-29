@@ -1,4 +1,10 @@
-import { type MotionValue, motion, useTransform } from "motion/react";
+import {
+  type MotionValue,
+  motion,
+  useMotionValueEvent,
+  useTransform,
+} from "motion/react";
+import { useState } from "react";
 
 export interface WavyUnderlineProps {
   scrollYProgress: MotionValue<number>;
@@ -7,6 +13,8 @@ export interface WavyUnderlineProps {
   cycles?: number;
   color: string;
   strokeWidth?: number;
+  duration?: number;
+  delay?: number;
   className?: string;
 }
 
@@ -19,13 +27,21 @@ export const WavyUnderline = ({
   drawRange,
   fadeRange,
   color,
+  duration = 1.6,
+  delay = 1.0,
   className = "",
 }: WavyUnderlineProps) => {
-  // Reveal from 0% width (clip 100% from right) to 100% width (clip 0% from right)
-  const clipProgress = useTransform(scrollYProgress, drawRange, [100, 0], {
-    clamp: true,
+  const [isTriggered, setIsTriggered] = useState(false);
+
+  useMotionValueEvent(scrollYProgress, "change", (latest) => {
+    // Trigger drawing when word reaches full focal visibility
+    if (latest >= drawRange[1] - 0.01 && latest <= fadeRange[3]) {
+      setIsTriggered(true);
+    } else if (latest < drawRange[0] - 0.03 || latest > fadeRange[3] + 0.03) {
+      setIsTriggered(false);
+    }
   });
-  const clipPath = useTransform(clipProgress, (p) => `inset(0 ${p}% 0 0)`);
+
   const opacity = useTransform(
     scrollYProgress,
     [
@@ -42,6 +58,15 @@ export const WavyUnderline = ({
     <motion.span
       aria-hidden="true"
       className={`absolute left-0 -bottom-2 md:-bottom-2.5 w-full h-2.5 md:h-3 pointer-events-none z-20 ${className}`}
+      initial={{ clipPath: "inset(0 100% 0 0)" }}
+      animate={{
+        clipPath: isTriggered ? "inset(0 0% 0 0)" : "inset(0 100% 0 0)",
+      }}
+      transition={{
+        duration,
+        delay: isTriggered ? delay : 0,
+        ease: [0.22, 1, 0.36, 1],
+      }}
       style={{
         backgroundColor: color,
         WebkitMaskImage: `url("${MASK_SVG}")`,
@@ -50,7 +75,6 @@ export const WavyUnderline = ({
         maskRepeat: "repeat-x",
         WebkitMaskSize: "24px 10px",
         maskSize: "24px 10px",
-        clipPath,
         opacity,
       }}
     />
