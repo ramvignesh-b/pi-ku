@@ -136,6 +136,14 @@ jobs:
           (cd frontend && bun install)
           (cd frontend && bun x playwright install --with-deps)
 
+      - name: Install Docker CLI
+        # The Forgejo runner executes jobs in docker-in-docker mode: the job
+        # container is bare and doesn't ship the docker CLI, which
+        # run-e2e.sh needs to start the Postgres/Mailpit compose stack.
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker.io
+
       - name: Run E2E
         run: |
           cp .env.e2e.example .env.e2e
