@@ -28,7 +28,7 @@ export const WavyUnderline = ({
   fadeRange,
   color,
   duration = 2.1,
-  delay = 1.95,
+  delay = 1.45,
   className = "",
 }: WavyUnderlineProps) => {
   const [isTriggered, setIsTriggered] = useState(false);

@@ -163,7 +163,7 @@ export default function Home() {
               ),
             }}
           >
-            <div className="mt-6 text-4xl md:text-6xl text-base-content/70 italic font-serif tracking-normal word-spacing-editorial">
+            <div className="mt-6 text-4xl md:text-6xl text-base-content/60 italic font-serif tracking-normal word-spacing-editorial">
               and that's okay...
             </div>
           </motion.div>
