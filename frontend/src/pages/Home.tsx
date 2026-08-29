@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import letterSample from "../assets/screenshots/letter.webp";
 import Logo from "../components/Logo";
 import { EnvelopeReveal } from "../components/reader/EnvelopeReveal";
+import { HighlightedWord } from "../components/ui/HighlightedWord";
 import Saajan from "../components/ui/Saajan";
 import { WavyUnderline } from "../components/ui/WavyUnderline";
 import { ROUTES } from "../config/routes";
@@ -197,18 +198,15 @@ export default function Home() {
             <motion.div className="font-serif italic font-light mt-6 text-4xl md:text-6xl text-base-content/70 tracking-normal word-spacing-editorial">
               is a{" "}
               <span className="relative inline-block mx-0.5">
-                <motion.span
-                  className="relative z-10 font-kalnia font-bold text-primary not-italic"
-                  style={{
-                    filter: useTransform(
-                      scrollYProgress,
-                      [0.18, 0.23, 0.31, 0.36],
-                      ["blur(14px)", "blur(0px)", "blur(0px)", "blur(6px)"],
-                    ),
-                  }}
+                <HighlightedWord
+                  scrollYProgress={scrollYProgress}
+                  focusThreshold={0.23}
+                  exitThreshold={0.36}
+                  delay={0.5}
+                  className="font-kalnia font-bold text-primary not-italic"
                 >
                   safe space
-                </motion.span>
+                </HighlightedWord>
                 <WavyUnderline
                   scrollYProgress={scrollYProgress}
                   drawRange={[0.18, 0.23]}
@@ -254,18 +252,15 @@ export default function Home() {
             >
               pen down your unsaid words into{" "}
               <span className="relative inline-block mx-0.5">
-                <motion.span
-                  className="relative z-10 font-display text-primary font-extralight"
-                  style={{
-                    filter: useTransform(
-                      scrollYProgress,
-                      [0.31, 0.36, 0.44, 0.49],
-                      ["blur(14px)", "blur(0px)", "blur(0px)", "blur(6px)"],
-                    ),
-                  }}
+                <HighlightedWord
+                  scrollYProgress={scrollYProgress}
+                  focusThreshold={0.36}
+                  exitThreshold={0.49}
+                  delay={0.5}
+                  className="font-display text-primary font-extralight"
                 >
                   letters
-                </motion.span>
+                </HighlightedWord>
                 <WavyUnderline
                   scrollYProgress={scrollYProgress}
                   drawRange={[0.31, 0.36]}
@@ -305,18 +300,15 @@ export default function Home() {
             >
               seal it{" "}
               <span className="relative inline-block mx-0.5">
-                <motion.span
-                  className="relative z-10 text-success font-pixel tracking-wider"
-                  style={{
-                    filter: useTransform(
-                      scrollYProgress,
-                      [0.44, 0.49, 0.56, 0.61],
-                      ["blur(14px)", "blur(0px)", "blur(0px)", "blur(6px)"],
-                    ),
-                  }}
+                <HighlightedWord
+                  scrollYProgress={scrollYProgress}
+                  focusThreshold={0.49}
+                  exitThreshold={0.61}
+                  delay={0.5}
+                  className="text-success font-pixel tracking-wider"
                 >
                   secure
-                </motion.span>
+                </HighlightedWord>
                 <WavyUnderline
                   scrollYProgress={scrollYProgress}
                   drawRange={[0.44, 0.49]}
@@ -327,18 +319,15 @@ export default function Home() {
               </span>{" "}
               and{" "}
               <span className="relative inline-block mx-0.5">
-                <motion.span
-                  className="relative z-10 text-info font-pixel tracking-wider"
-                  style={{
-                    filter: useTransform(
-                      scrollYProgress,
-                      [0.44, 0.49, 0.56, 0.61],
-                      ["blur(14px)", "blur(0px)", "blur(0px)", "blur(6px)"],
-                    ),
-                  }}
+                <HighlightedWord
+                  scrollYProgress={scrollYProgress}
+                  focusThreshold={0.49}
+                  exitThreshold={0.61}
+                  delay={0.5}
+                  className="text-info font-pixel tracking-wider"
                 >
                   private
-                </motion.span>
+                </HighlightedWord>
                 <WavyUnderline
                   scrollYProgress={scrollYProgress}
                   drawRange={[0.44, 0.49]}
@@ -379,23 +368,15 @@ export default function Home() {
               <span className="inline-block whitespace-nowrap">
                 send it to{" "}
                 <span className="relative inline-block mx-0.5">
-                  <motion.span
-                    className="relative z-10 font-display text-accent"
-                    style={{
-                      color: useTransform(
-                        scrollYProgress,
-                        [0.66, 0.7],
-                        ["var(--color-accent)", "var(--color-neutral)"],
-                      ),
-                      filter: useTransform(
-                        scrollYProgress,
-                        [0.56, 0.61, 0.68, 0.74],
-                        ["blur(14px)", "blur(0px)", "blur(0px)", "blur(6px)"],
-                      ),
-                    }}
+                  <HighlightedWord
+                    scrollYProgress={scrollYProgress}
+                    focusThreshold={0.61}
+                    exitThreshold={0.74}
+                    delay={0.5}
+                    className="font-display text-accent"
                   >
                     someone dear
-                  </motion.span>
+                  </HighlightedWord>
                   <WavyUnderline
                     scrollYProgress={scrollYProgress}
                     drawRange={[0.56, 0.61]}
@@ -413,18 +394,15 @@ export default function Home() {
               >
                 <span className="font-display text-neutral">or </span>
                 <span className="relative inline-block mx-0.5 whitespace-nowrap">
-                  <motion.span
-                    className="relative z-10 font-display text-success"
-                    style={{
-                      filter: useTransform(
-                        scrollYProgress,
-                        [0.67, 0.7, 0.74, 0.78],
-                        ["blur(14px)", "blur(0px)", "blur(0px)", "blur(6px)"],
-                      ),
-                    }}
+                  <HighlightedWord
+                    scrollYProgress={scrollYProgress}
+                    focusThreshold={0.7}
+                    exitThreshold={0.78}
+                    delay={0.5}
+                    className="font-display text-success"
                   >
                     yourself in the future
-                  </motion.span>
+                  </HighlightedWord>
                   <WavyUnderline
                     scrollYProgress={scrollYProgress}
                     drawRange={[0.67, 0.7]}
@@ -465,18 +443,15 @@ export default function Home() {
             >
               and even{" "}
               <span className="relative inline-block mx-0.5">
-                <motion.span
-                  className="relative z-10 font-display text-error"
-                  style={{
-                    filter: useTransform(
-                      scrollYProgress,
-                      [0.74, 0.79, 0.87, 0.91],
-                      ["blur(14px)", "blur(0px)", "blur(0px)", "blur(6px)"],
-                    ),
-                  }}
+                <HighlightedWord
+                  scrollYProgress={scrollYProgress}
+                  focusThreshold={0.79}
+                  exitThreshold={0.91}
+                  delay={0.5}
+                  className="font-display text-error"
                 >
                   burn it
-                </motion.span>
+                </HighlightedWord>
                 <WavyUnderline
                   scrollYProgress={scrollYProgress}
                   drawRange={[0.74, 0.79]}
