@@ -90,7 +90,26 @@
 }
 
 .ul-wavy {
-  @apply decoration-primary/40 underline decoration-wavy underline-offset-4;
+  position: relative;
+  display: inline-block;
+}
+
+.ul-wavy::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -6px;
+  width: 100%;
+  height: 10px;
+  background-color: currentColor;
+  opacity: 0.85;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='10' viewBox='0 0 24 10'%3E%3Cpath d='M0 5 C4 1, 8 1, 12 5 C16 9, 20 9, 24 5' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='10' viewBox='0 0 24 10'%3E%3Cpath d='M0 5 C4 1, 8 1, 12 5 C16 9, 20 9, 24 5' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  -webkit-mask-repeat: repeat-x;
+  mask-repeat: repeat-x;
+  -webkit-mask-size: 26px 10px;
+  mask-size: 26px 10px;
+  pointer-events: none;
 }
 
 a {
@@ -99,7 +118,10 @@ a {
 
 .font-serif,
 [class*="font-serif"] {
-  font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+  font-feature-settings:
+    "kern" 1,
+    "liga" 1,
+    "calt" 1;
   font-kerning: normal;
   text-rendering: optimizeLegibility;
 }
@@ -113,16 +135,29 @@ i.font-serif,
 [class*="font-serif"].italic,
 [class*="font-serif"] em,
 [class*="font-serif"] i {
-  font-feature-settings: "kern" 1, "liga" 1, "calt" 1, "dlig" 1;
-  font-variation-settings: "opsz" 72, "WONK" 1;
+  font-feature-settings:
+    "kern" 1,
+    "liga" 1,
+    "calt" 1,
+    "dlig" 1;
+  font-variation-settings:
+    "opsz" 72,
+    "WONK" 1;
 }
 
 .fraunces-display-italic {
   font-family: var(--font-serif);
   font-style: italic;
-  font-feature-settings: "kern" 1, "liga" 1, "calt" 1, "dlig" 1, "swsh" 1;
-  font-variation-settings: "opsz" 144, "SOFT" 30, "WONK" 1;
+  font-feature-settings:
+    "kern" 1,
+    "liga" 1,
+    "calt" 1,
+    "dlig" 1,
+    "swsh" 1;
+  font-variation-settings:
+    "opsz" 144,
+    "SOFT" 30,
+    "WONK" 1;
   font-kerning: normal;
   text-rendering: optimizeLegibility;
 }
-
