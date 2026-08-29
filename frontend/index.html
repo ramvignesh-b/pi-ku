@@ -32,10 +32,75 @@
     <meta name="twitter:description"
         content="Pi. Ku. is a minimal, secure, and beautiful way to write and seal your unsaid words into digital letters." />
     <meta name="twitter:image" content="https://writepiku.app/android-chrome-512x512.png" />
+
+    <!-- The boot shell. This is SplashScreen, hand-written so it can paint from
+         the HTML alone - before any stylesheet or bundle arrives. React replaces
+         it with the real SplashScreen, which should look identical, so keep this
+         in step with src/components/SplashScreen.tsx and the piku theme tokens
+         in src/index.css. The font URL is stitched in at build; see vite.config.ts. -->
+    <style>
+        @font-face {
+            font-family: "KnewaveBoot";
+            src: url("__KNEWAVE_URL__") format("woff2");
+            font-display: block;
+        }
+
+        :root { color-scheme: dark; }
+        html, body { margin: 0; height: 100%; background: oklch(18% 0.014 33); }
+
+        #boot {
+            position: fixed; inset: 0; z-index: 9999;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 1.5rem;
+            animation: boot-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        #boot .mark {
+            display: inline-flex; align-items: baseline; line-height: 1;
+            font-family: "KnewaveBoot", serif; font-size: 1.875rem; font-weight: 300;
+            color: oklch(55% 0.06 325);
+        }
+        #boot .mark b {
+            display: inline-block; position: relative;
+            width: 12px; height: 12px; margin: 0 -1px; transform: translateY(0.25rem);
+        }
+        #boot .mark b::after {
+            content: ""; position: absolute; inset: 3.5px;
+            border-radius: 50%; background: oklch(67% 0.11 78);
+        }
+        #boot .wait {
+            display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+        }
+        #boot .wait svg { fill: oklch(67% 0.11 78 / 0.5); }
+        #boot .wait .dots {
+            line-height: 1; opacity: 0.4; color: oklch(82% 0.02 70);
+            font-family: Jost, ui-sans-serif, system-ui, sans-serif;
+        }
+        #boot .wait p {
+            margin: 0; font-size: 0.75rem; text-transform: uppercase;
+            letter-spacing: 0.2em; opacity: 0.4;
+            font-family: Jost, ui-sans-serif, system-ui, sans-serif;
+            color: oklch(82% 0.02 70);
+        }
+
+        @keyframes boot-pulse { 0%, 100% { opacity: 1 } 50% { opacity: 0.5 } }
+
+        @media (prefers-reduced-motion: reduce) {
+            #boot { animation: none }
+        }
+    </style>
 </head>
 
 <body>
-    <div id="root"></div>
+    <div id="root">
+        <div id="boot">
+            <div class="mark" role="img" aria-label="Pi. Ku."><span>Pi</span><b></b><span>&nbsp;Ku</span><b></b></div>
+            <div class="wait">
+                <svg viewBox="0 0 256 256" width="40" height="40" aria-hidden="true"><path d="M226.22,92.67l-96-64a4,4,0,0,0-4.44,0l-96,64A4,4,0,0,0,28,96V200a12,12,0,0,0,12,12H216a12,12,0,0,0,12-12V96A4,4,0,0,0,226.22,92.67ZM103.63,152,36,199.76v-96Zm8.19,4h32.36l68,48H43.86Zm40.55-4L220,103.76v96ZM128,36.81,217,96.11,144.17,148H111.83L39.05,96.11Z"/></svg>
+                <span class="dots">...</span>
+                <p>Unsealing</p>
+            </div>
+        </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
 </body>
 
