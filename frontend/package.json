@@ -11,6 +11,7 @@
     "lint": "biome lint --write ./src",
     "format": "biome format --write ./src",
     "check": "biome check --write ./src",
+    "check:ci": "biome ci ./src",
     "check-all": "biome check --write .",
     "preview": "vite preview",
     "test": "vitest run",
