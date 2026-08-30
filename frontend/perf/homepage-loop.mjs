@@ -35,7 +35,7 @@ const DIST =
 // change genuinely improves one of these, lower it in the same commit.
 //
 // Measured on the homepage, gzipped, under the throttling pinned below:
-//   FCP ~1.2s | LCP ~4.7s | 130KB before the first paint
+//   FCP ~1.3s | LCP ~3.5s | 130KB before the first paint
 const BUDGETS = {
   blockingBytesBeforeFcp: 150_000,
   // Nothing should ever need a webfont before the first paint.
@@ -43,7 +43,12 @@ const BUDGETS = {
   fcpMs: 1_600,
   // Dominated by the hero's entrance animation, not by loading.
   lcpMs: 5_500,
+  // Guards the preload. Without it the hero font arrives at ~4.6s, a second
+  // after the text it is meant to be set in.
+  heroFontMs: 2_600,
 };
+
+const HERO_FONT = /fraunces-latin-full-normal-.*\.woff2$/;
 
 // Pinned "Slow 4G"-ish conditions. Fixed numbers matter more than realism:
 // the loop needs the same verdict every run.
@@ -247,6 +252,7 @@ function report(m) {
   const allFonts = m.resources.filter(
     (r) => r.name.endsWith(".woff2") || r.name.endsWith(".woff"),
   );
+  const heroFont = m.resources.find((r) => HERO_FONT.test(r.name));
 
   console.log("\n  Homepage cold load\n  " + "-".repeat(52));
   console.log(`  First contentful paint      ${ms(m.fcp)}`);
@@ -269,11 +275,15 @@ function report(m) {
   console.log(
     `\n  Fonts over the whole load   ${kb(allFonts.reduce((s, r) => s + r.bytes, 0))}  (${allFonts.length} files)`,
   );
+  console.log(
+    `  Hero font ready             ${ms(heroFont ? heroFont.end : Number.NaN)}`,
+  );
 
   return {
     blockingBytes,
     fontBytes,
     fontCount: fonts.length,
+    heroFontMs: heroFont ? heroFont.end : Number.NaN,
     beforeFcp,
     allFonts,
   };
@@ -290,6 +300,7 @@ function assertBudgets(m, agg) {
     ["font bytes before FCP", agg.fontBytes, BUDGETS.fontBytesBeforeFcp, kb],
     ["first contentful paint", m.fcp, BUDGETS.fcpMs, ms],
     ["largest contentful paint", m.lcp, BUDGETS.lcpMs, ms],
+    ["hero font ready", agg.heroFontMs, BUDGETS.heroFontMs, ms],
   ];
 
   console.log("\n  Budgets\n  " + "-".repeat(52));
