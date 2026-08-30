@@ -3,7 +3,12 @@ import path from "node:path";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig, loadEnv } from "vite";
+import { preloadFont } from "./utils/preload-font";
 import { getBaseUrl } from "./utils/url-builder";
+
+// The homepage hero renders in Fraunces, and nothing asks for it until the Home
+// chunk mounts, so without this it lands a second after the hero has painted.
+const HERO_FONT = /fraunces-latin-full-normal-[^/]+\.woff2$/;
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, "../", "");
@@ -12,7 +17,7 @@ export default defineConfig(({ mode }) => {
   if (mode === "production") {
     return {
       envDir: "../",
-      plugins: [react(), tailwindcss()],
+      plugins: [react(), tailwindcss(), preloadFont(HERO_FONT)],
       server: {
         port: Number(env.FRONTEND_PORT),
         host: env.FRONTEND_DOMAIN,
@@ -35,7 +40,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     envDir: "../",
-    plugins: [react(), tailwindcss()],
+    plugins: [react(), tailwindcss(), preloadFont(HERO_FONT)],
     define: {
       "import.meta.env.VITE_API_URL": JSON.stringify(
         getBaseUrl(isSslEnabled, env.BACKEND_DOMAIN, env.BACKEND_PORT),
