@@ -43,6 +43,20 @@
   --border: 1px;
 }
 
+/* Subset of @fontsource-variable/kalnia-glaze, which ships 53KB for the two
+   words it sets on the homepage. Regenerate with pyftsubset if the copy ever
+   needs a character outside the range below. */
+@font-face {
+  font-family: "Kalnia Glaze Variable";
+  src: url("./assets/fonts/kalnia-glaze/KalniaGlaze-wght-subset.woff2")
+    format("woff2-variations");
+  font-weight: 100 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0020, U+0021, U+0027, U+002C-002E, U+003F, U+0041-005A,
+    U+0061-007A, U+2019;
+}
+
 @font-face {
   font-family: "Geist Pixel Square";
   src: url("./assets/fonts/geist-pixel/GeistPixel-Square.woff2") format("woff2");
