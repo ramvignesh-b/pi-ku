@@ -161,3 +161,100 @@ i.font-serif,
   font-kerning: normal;
   text-rendering: optimizeLegibility;
 }
+
+/* ---- Film grain --------------------------------------------------------- */
+
+/* One definition for the overlay that was duplicated across three components as
+   a long arbitrary-value class - one of which was missing its closing bracket
+   and so rendered no grain at all.
+ *
+ * Deliberately sets no `position`: this file is appended after the Tailwind
+ * utilities, so a `position` here would win the specificity tie and quietly
+ * strip `fixed` off anything it is applied to. Apply it only to an element
+ * that is already positioned. */
+.grain::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+  opacity: var(--noise, 0.03);
+  background-image: url("./assets/textures/noise.gif");
+}
+
+/* Over the app shell, the grain sits above page content rather than behind it. */
+.grain-front::before {
+  z-index: 100;
+}
+
+/* ---- Boot wave ---------------------------------------------------------- */
+
+.boot-wave {
+  width: 240px;
+  height: 24px;
+  overflow: hidden;
+}
+
+.boot-wave svg {
+  display: block;
+  transform-origin: center;
+  transition: transform 320ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.boot-wave path {
+  fill: none;
+  stroke: var(--color-primary);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  opacity: 0.7;
+}
+
+.boot-wave-track {
+  animation: boot-wave-travel 2.2s linear infinite;
+}
+
+/* Ready: the wave stops travelling and flattens. With no percentage to report,
+   this is the only thing it ever says. */
+.boot-wave[data-settling] .boot-wave-track {
+  animation-play-state: paused;
+}
+
+.boot-wave[data-settling] svg {
+  transform: scaleY(0.04);
+}
+
+@keyframes boot-wave-travel {
+  to {
+    transform: translateX(-120px);
+  }
+}
+
+/* The splash then fades off the app already rendered beneath it. */
+.splash {
+  transition: opacity 320ms ease;
+}
+
+.splash[data-settling] {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* A still line, and a single frame of grain. The floor stays: pacing is not
+     motion, and nobody asking for less animation asked for a faster boot. */
+  .boot-wave-track {
+    animation: none;
+  }
+
+  .boot-wave svg {
+    transform: scaleY(0.04);
+    transition: none;
+  }
+
+  .splash .animate-pulse {
+    animation: none;
+  }
+
+  .grain::before {
+    background-image: url("./assets/textures/noise-static.png");
+  }
+}

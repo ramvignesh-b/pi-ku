@@ -4,6 +4,7 @@ import { AutoRedirectRoute, ProtectedRoute } from "./components/RouteGuards";
 import SplashScreen from "./components/SplashScreen";
 import { ROUTES } from "./config/routes";
 import { useAuth } from "./hooks/useAuth";
+import { useBootSplash } from "./hooks/useBootSplash";
 
 const Activate = lazy(() => import("./pages/Activate"));
 const Drawer = lazy(() => import("./pages/Drawer"));
@@ -15,9 +16,23 @@ const Register = lazy(() => import("./pages/Register"));
 const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
 const About = lazy(() => import("./pages/About"));
 
+/**
+ * Sits inside the Suspense boundary, so its effect runs only once the lazy
+ * route chunk has resolved. That resolution is what "the app is ready" means -
+ * anything earlier would hand over to a page that has not rendered yet.
+ */
+function BootReady({ onReady }: { onReady: () => void }) {
+  useEffect(() => {
+    onReady();
+  }, [onReady]);
+
+  return null;
+}
+
 export default function App() {
   const { initialize, isInitializing } = useAuth();
   const authInitialized = useRef<boolean>(false);
+  const boot = useBootSplash();
 
   useEffect(() => {
     if (authInitialized.current) return;
@@ -25,79 +40,87 @@ export default function App() {
     initialize().then();
   }, [initialize]);
 
-  if (isInitializing) {
-    return <SplashScreen />;
-  }
-
   return (
-    <BrowserRouter>
-      <main className="relative overflow-clip min-h-screen min-w-screen flex items-center justify-center w-full bg-base-200 before:absolute before:top-0 before:left-0 before:w-full before:h-full before:content-[''] before:opacity-[0.03] before:z-100 before:pointer-events-none before:bg-[url('assets/textures/noise.gif')]">
-        <Suspense fallback={<SplashScreen />}>
-          <Routes>
-            <Route
-              path={ROUTES.HOME}
-              element={
-                <AutoRedirectRoute>
-                  <Home />
-                </AutoRedirectRoute>
-              }
-            />
+    <>
+      {!isInitializing && (
+        <BrowserRouter>
+          <main className="relative overflow-clip min-h-screen min-w-screen flex items-center justify-center w-full bg-base-200 grain grain-front">
+            <Suspense fallback={boot.visible ? null : <SplashScreen />}>
+              <BootReady onReady={boot.markReady} />
+              <Routes>
+                <Route
+                  path={ROUTES.HOME}
+                  element={
+                    <AutoRedirectRoute>
+                      <Home />
+                    </AutoRedirectRoute>
+                  }
+                />
 
-            <Route
-              path={ROUTES.ONBOARD}
-              element={
-                <AutoRedirectRoute>
-                  <Register />
-                </AutoRedirectRoute>
-              }
-            />
-            <Route
-              path={ROUTES.LOGIN}
-              element={
-                <AutoRedirectRoute>
-                  <Login />
-                </AutoRedirectRoute>
-              }
-            />
-            <Route
-              path={ROUTES.VERIFY_EMAIL}
-              element={
-                <AutoRedirectRoute>
-                  <VerifyEmail />
-                </AutoRedirectRoute>
-              }
-            />
-            <Route
-              path={ROUTES.ACTIVATE}
-              element={
-                <AutoRedirectRoute>
-                  <Activate />
-                </AutoRedirectRoute>
-              }
-            />
+                <Route
+                  path={ROUTES.ONBOARD}
+                  element={
+                    <AutoRedirectRoute>
+                      <Register />
+                    </AutoRedirectRoute>
+                  }
+                />
+                <Route
+                  path={ROUTES.LOGIN}
+                  element={
+                    <AutoRedirectRoute>
+                      <Login />
+                    </AutoRedirectRoute>
+                  }
+                />
+                <Route
+                  path={ROUTES.VERIFY_EMAIL}
+                  element={
+                    <AutoRedirectRoute>
+                      <VerifyEmail />
+                    </AutoRedirectRoute>
+                  }
+                />
+                <Route
+                  path={ROUTES.ACTIVATE}
+                  element={
+                    <AutoRedirectRoute>
+                      <Activate />
+                    </AutoRedirectRoute>
+                  }
+                />
 
-            <Route
-              path={ROUTES.DRAWER}
-              element={
-                <ProtectedRoute>
-                  <Drawer />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path={ROUTES.WRITE}
-              element={
-                <ProtectedRoute>
-                  <Editor />
-                </ProtectedRoute>
-              }
-            />
-            <Route path={ROUTES.READ} element={<Reader />} />
-            <Route path={ROUTES.ABOUT} element={<About />} />
-            <Route path="*" element={<Navigate to={ROUTES.HOME} replace />} />
-          </Routes>
-        </Suspense>
-      </main>
-    </BrowserRouter>
+                <Route
+                  path={ROUTES.DRAWER}
+                  element={
+                    <ProtectedRoute>
+                      <Drawer />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path={ROUTES.WRITE}
+                  element={
+                    <ProtectedRoute>
+                      <Editor />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route path={ROUTES.READ} element={<Reader />} />
+                <Route path={ROUTES.ABOUT} element={<About />} />
+                <Route
+                  path="*"
+                  element={<Navigate to={ROUTES.HOME} replace />}
+                />
+              </Routes>
+            </Suspense>
+          </main>
+        </BrowserRouter>
+      )}
+
+      {boot.visible && (
+        <SplashScreen variant="boot" settling={boot.phase === "settling"} />
+      )}
+    </>
   );
 }
