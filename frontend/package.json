@@ -18,7 +18,8 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui --ui-host=0.0.0.0 --ui-port=43008"
+    "test:e2e:ui": "playwright test --ui --ui-host=0.0.0.0 --ui-port=43008",
+    "lighthouse": "bunx @lhci/cli@0.15.1 autorun"
   },
   "dependencies": {
     "@fontsource-variable/fraunces": "^5.2.9",
