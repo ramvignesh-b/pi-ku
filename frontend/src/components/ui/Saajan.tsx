@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import sf_mini from "../../assets/sf_mini.png";
+import sf_mini from "../../assets/sf_mini.webp";
 
 interface SaajanProps {
   message: string;
@@ -45,6 +45,8 @@ export default function Saajan({ message, position = "right" }: SaajanProps) {
         <img
           src={sf_mini}
           alt="saajan"
+          width={240}
+          height={240}
           className={`sepia-20 w-30 -mb-6 ${animate ? "animate-[pulse_.5s_ease_2]" : ""}`}
         />
       </div>

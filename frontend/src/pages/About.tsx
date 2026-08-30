@@ -24,9 +24,9 @@ import {
 import { ReactLenis } from "lenis/react";
 import { AnimatePresence, motion, useScroll, useTransform } from "motion/react";
 import { useEffect, useRef, useState } from "react";
-import stamp from "../assets/envelope/stamp.png";
+import stamp from "../assets/envelope/stamp.webp";
 import e2eDiag from "../assets/screenshots/e2e.svg";
-import saajan from "../assets/sf.png";
+import saajan from "../assets/sf.webp";
 import Logo from "../components/Logo";
 import { Modal } from "../components/ui/Modal";
 

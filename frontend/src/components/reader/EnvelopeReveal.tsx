@@ -1,8 +1,8 @@
 import { WavesIcon } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
-import candle from "../../assets/envelope/candle.png";
-import stamp from "../../assets/envelope/stamp.png";
-import waxSeal from "../../assets/envelope/waxSeal.png";
+import candle from "../../assets/envelope/candle.webp";
+import stamp from "../../assets/envelope/stamp.webp";
+import waxSeal from "../../assets/envelope/waxSeal.webp";
 
 export interface EnvelopeRevealProps {
   recipient?: string;
