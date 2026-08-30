@@ -12,6 +12,18 @@ export interface LetterResponseData {
   images: LetterImageData[];
 }
 
+// Lifecycle and Disposition are independent axes. See CONTEXT.md.
+export type Lifecycle = LetterResponseData["status"];
+export type Disposition = LetterResponseData["type"];
+
+// What the author asked for. Resolves into one value on each axis.
+export type SaveIntent = "DRAFT" | "SEALED" | "VAULT";
+
+export interface ResolvedIntent {
+  lifecycle: Lifecycle;
+  disposition: Disposition;
+}
+
 export interface LetterImageData {
   public_id: string;
   file: string;

@@ -3,7 +3,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { Modal } from "../ui/Modal";
 import { PasswordInput } from "../ui/PasswordInput";
 
-export function PasskeyModal() {
+export function UnlockModal() {
   const { unlock } = useAuth();
 
   return (
@@ -14,7 +14,7 @@ export function PasskeyModal() {
         weight="duotone"
       />
       <h3
-        data-testid="passkey-modal-title"
+        data-testid="unlock-modal-title"
         className="font-bold text-lg font-display text-primary"
       >
         You've been away a while.
@@ -42,12 +42,12 @@ export function PasskeyModal() {
               name="password"
               required
               placeholder="password"
-              data-testid="passkey-input"
+              data-testid="unlock-input"
               className="rounded-r-none w-full"
             />
             <button
               type="submit"
-              data-testid="passkey-submit-btn"
+              data-testid="unlock-submit-btn"
               className="btn btn-primary rounded-l-none"
             >
               Unlock

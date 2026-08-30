@@ -1,18 +1,18 @@
 // Page Route PATTERNS
 export const ROUTES = {
   HOME: "/",
-  ONBOARD: "/onboard",
+  BEGIN: "/begin",
   VERIFY_EMAIL: "/verify-email",
   ACTIVATE: "/activate/:uidb64/:token",
-  LOGIN: "/login",
-  DRAWER: "/drawer",
+  UNLOCK: "/unlock",
+  ESCRITOIRE: "/escritoire",
   WRITE: "/quill/:public_id?",
-  READ: "/read/:public_id",
+  LETTER: "/letter/:public_id",
   ABOUT: "/know-piku",
 };
 
 // Dynamic path BUILDERS
 export const PATHS = {
   write: (public_id?: string) => `/quill/${public_id ?? ""}`,
-  read: (public_id: string) => `/read/${public_id}`,
+  letter: (public_id: string) => `/letter/${public_id}`,
 };

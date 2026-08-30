@@ -23,7 +23,7 @@ export function LetterItem({
   function handleNavigate(): void {
     if (isLocked) return;
     if (status === "SEALED") {
-      navigate(PATHS.read(id));
+      navigate(PATHS.letter(id));
     } else {
       navigate(PATHS.write(id));
     }

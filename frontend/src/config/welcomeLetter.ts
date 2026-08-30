@@ -1,5 +1,5 @@
 import trainImage from "../assets/screenshots/train.webp";
-import type { CanvasJSON } from "../components/editor/ComposeCanvas";
+import type { CanvasJSON } from "../components/quill/ComposeCanvas";
 
 export function getWelcomeLetterContent(userName: string): CanvasJSON {
   return {

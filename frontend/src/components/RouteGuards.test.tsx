@@ -10,11 +10,11 @@ function renderGuard(ui: React.ReactNode, mountPath: "/protected" | "/public") {
     <MemoryRouter initialEntries={[mountPath]}>
       <Routes>
         <Route
-          path="/login"
+          path="/unlock"
           element={<div data-testid="login-page">Login Page</div>}
         />
         <Route
-          path="/drawer"
+          path="/escritoire"
           element={<div data-testid="drawer-page">Drawer Page</div>}
         />
         <Route path="/protected" element={ui} />
@@ -100,7 +100,7 @@ describe("PublicRoute", () => {
     expect(screen.queryByTestId("mock-login-page")).not.toBeInTheDocument();
   });
 
-  it("should redirect authenticated users to /drawer", () => {
+  it("should redirect authenticated users to /escritoire", () => {
     useAuthStore.setState({
       isInitializing: false,
       accessToken: "token",

@@ -30,7 +30,7 @@ export function PostActionOverlay({ revealState }: PostActionOverlayProps) {
         <button
           type="button"
           className="btn btn-ghost text-sm text-neutral-content/60 font-sans"
-          onClick={() => navigate(ROUTES.DRAWER)}
+          onClick={() => navigate(ROUTES.ESCRITOIRE)}
         >
           Turn the page
         </button>

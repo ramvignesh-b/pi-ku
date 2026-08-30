@@ -33,15 +33,15 @@ jobs:
       - name: Unit Tests
         run: bun run test
 
-      # Lighthouse only needs a Chrome binary, and runner images ship one.
-      # Playwright's is the fallback, without --with-deps: the image already
-      # carries the shared libraries a browser needs.
+      # Lighthouse only needs a Chrome binary. The runner image ships none, and
+      # it lacks the shared libraries a browser needs (libglib-2.0.so.0), so the
+      # playwright fallback installs them with --with-deps, as the e2e job does.
       - name: Resolve Chrome
         if: github.event_name == 'pull_request'
         run: |
           CHROME=$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)
           if [ -z "$CHROME" ]; then
-            bun x playwright install chromium
+            bun x playwright install --with-deps chromium
             CHROME=$(node -e 'console.log(require("playwright").chromium.executablePath())')
           fi
           echo "CHROME_PATH=$CHROME" >> "$GITHUB_ENV"

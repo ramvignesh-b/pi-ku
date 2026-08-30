@@ -15,7 +15,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (isInitializing) return <SplashScreen />;
 
   if (!isAuthenticated) {
-    return <Navigate to={ROUTES.LOGIN} state={{ from: location }} replace />;
+    return <Navigate to={ROUTES.UNLOCK} state={{ from: location }} replace />;
   }
 
   return <>{children}</>;
@@ -31,7 +31,7 @@ export function AutoRedirectRoute({ children }: { children: React.ReactNode }) {
   if (isInitializing) return <SplashScreen />;
 
   if (isAuthenticated) {
-    return <Navigate to={ROUTES.DRAWER} replace />;
+    return <Navigate to={ROUTES.ESCRITOIRE} replace />;
   }
 
   return <>{children}</>;

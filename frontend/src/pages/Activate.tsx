@@ -70,7 +70,7 @@ export default function Activate() {
             data-testid="start-writing-btn"
             className="btn btn-primary w-full shadow-lg"
             onClick={() =>
-              navigate(ROUTES.LOGIN, {
+              navigate(ROUTES.UNLOCK, {
                 state: { firstTime: true },
                 replace: true,
               })
@@ -95,7 +95,7 @@ export default function Activate() {
           <button
             type="button"
             className="btn btn-ghost w-full"
-            onClick={() => navigate(ROUTES.ONBOARD)}
+            onClick={() => navigate(ROUTES.BEGIN)}
           >
             Register Again
           </button>

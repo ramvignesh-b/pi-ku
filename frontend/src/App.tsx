@@ -7,12 +7,12 @@ import { useAuth } from "./hooks/useAuth";
 import { useBootSplash } from "./hooks/useBootSplash";
 
 const Activate = lazy(() => import("./pages/Activate"));
-const Drawer = lazy(() => import("./pages/Drawer"));
-const Editor = lazy(() => import("./pages/Editor"));
+const Escritoire = lazy(() => import("./pages/Escritoire"));
+const Quill = lazy(() => import("./pages/Quill"));
 const Home = lazy(() => import("./pages/Home"));
-const Login = lazy(() => import("./pages/Login"));
-const Reader = lazy(() => import("./pages/Reader"));
-const Register = lazy(() => import("./pages/Register"));
+const Unlock = lazy(() => import("./pages/Unlock"));
+const Letter = lazy(() => import("./pages/Letter"));
+const Begin = lazy(() => import("./pages/Begin"));
 const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
 const About = lazy(() => import("./pages/About"));
 
@@ -58,18 +58,18 @@ export default function App() {
                 />
 
                 <Route
-                  path={ROUTES.ONBOARD}
+                  path={ROUTES.BEGIN}
                   element={
                     <AutoRedirectRoute>
-                      <Register />
+                      <Begin />
                     </AutoRedirectRoute>
                   }
                 />
                 <Route
-                  path={ROUTES.LOGIN}
+                  path={ROUTES.UNLOCK}
                   element={
                     <AutoRedirectRoute>
-                      <Login />
+                      <Unlock />
                     </AutoRedirectRoute>
                   }
                 />
@@ -91,10 +91,10 @@ export default function App() {
                 />
 
                 <Route
-                  path={ROUTES.DRAWER}
+                  path={ROUTES.ESCRITOIRE}
                   element={
                     <ProtectedRoute>
-                      <Drawer />
+                      <Escritoire />
                     </ProtectedRoute>
                   }
                 />
@@ -102,11 +102,11 @@ export default function App() {
                   path={ROUTES.WRITE}
                   element={
                     <ProtectedRoute>
-                      <Editor />
+                      <Quill />
                     </ProtectedRoute>
                   }
                 />
-                <Route path={ROUTES.READ} element={<Reader />} />
+                <Route path={ROUTES.LETTER} element={<Letter />} />
                 <Route path={ROUTES.ABOUT} element={<About />} />
                 <Route
                   path="*"

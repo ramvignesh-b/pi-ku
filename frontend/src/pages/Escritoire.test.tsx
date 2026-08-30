@@ -2,13 +2,13 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mockUser } from "../../test/fixtures/user.fixture";
-import type { WelcomeLetterOverlayProps } from "../components/drawer/WelcomeLetterOverlay";
+import type { WelcomeLetterOverlayProps } from "../components/escritoire/WelcomeLetterOverlay";
 import { useLetters } from "../hooks/useLetters";
 import { useAuthStore } from "../store/useAuthStore";
-import Drawer from "./Drawer";
+import Escritoire from "./Escritoire";
 
 vi.mock("../hooks/useLetters");
-vi.mock("../components/drawer/WelcomeLetterOverlay", () => ({
+vi.mock("../components/escritoire/WelcomeLetterOverlay", () => ({
   WelcomeLetterOverlay: ({ onComplete }: WelcomeLetterOverlayProps) => (
     <div data-testid="welcome-letter-overlay">
       <button
@@ -44,7 +44,7 @@ describe("Drawer Page", () => {
   it("renders the drawer sections and empty state message", () => {
     render(
       <MemoryRouter>
-        <Drawer />
+        <Escritoire />
       </MemoryRouter>,
     );
 
@@ -70,11 +70,11 @@ describe("Drawer Page", () => {
 
     render(
       <MemoryRouter>
-        <Drawer />
+        <Escritoire />
       </MemoryRouter>,
     );
 
-    expect(screen.getByTestId("drawer-loading-state")).toBeInTheDocument();
+    expect(screen.getByTestId("escritoire-loading-state")).toBeInTheDocument();
   });
 
   it("renders the authentication required modal when api requires auth", () => {
@@ -89,20 +89,22 @@ describe("Drawer Page", () => {
 
     render(
       <MemoryRouter>
-        <Drawer />
+        <Escritoire />
       </MemoryRouter>,
     );
 
-    expect(screen.getByTestId("passkey-modal-title")).toBeInTheDocument();
-    expect(screen.getByTestId("passkey-input")).toBeInTheDocument();
+    expect(screen.getByTestId("unlock-modal-title")).toBeInTheDocument();
+    expect(screen.getByTestId("unlock-input")).toBeInTheDocument();
   });
 
   it("renders the welcome letter when firstTime state is present", () => {
     render(
       <MemoryRouter
-        initialEntries={[{ pathname: "/drawer", state: { firstTime: true } }]}
+        initialEntries={[
+          { pathname: "/escritoire", state: { firstTime: true } },
+        ]}
       >
-        <Drawer />
+        <Escritoire />
       </MemoryRouter>,
     );
 
@@ -112,9 +114,11 @@ describe("Drawer Page", () => {
   it("renders the drawer content when the letter is closed", () => {
     render(
       <MemoryRouter
-        initialEntries={[{ pathname: "/drawer", state: { firstTime: true } }]}
+        initialEntries={[
+          { pathname: "/escritoire", state: { firstTime: true } },
+        ]}
       >
-        <Drawer />
+        <Escritoire />
       </MemoryRouter>,
     );
 

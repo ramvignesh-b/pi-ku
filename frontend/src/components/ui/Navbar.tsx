@@ -10,7 +10,7 @@ export const Navbar = ({ child }: { child?: React.ReactNode }) => {
         {/* Left: Back to Drawer */}
         <button
           type="button"
-          onClick={() => navigate(ROUTES.DRAWER)}
+          onClick={() => navigate(ROUTES.ESCRITOIRE)}
           className="group flex items-center gap-2 px-0 hover:bg-transparent cursor-pointer"
           aria-label="Open Drawer"
         >

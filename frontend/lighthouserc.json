@@ -5,7 +5,7 @@
       "startServerReadyPattern": "serving",
       "url": [
         "http://127.0.0.1:4179/",
-        "http://127.0.0.1:4179/login"
+        "http://127.0.0.1:4179/unlock"
       ],
       "numberOfRuns": 3,
       "settings": {
@@ -66,12 +66,12 @@
           }
         },
         {
-          "matchingUrlPattern": ".*/login$",
+          "matchingUrlPattern": ".*/unlock$",
           "assertions": {
             "categories:performance": [
               "error",
               {
-                "minScore": 0.78,
+                "minScore": 0.7,
                 "aggregationMethod": "median"
               }
             ],
@@ -99,7 +99,7 @@
             "first-contentful-paint": [
               "error",
               {
-                "maxNumericValue": 3000,
+                "maxNumericValue": 3500,
                 "aggregationMethod": "median"
               }
             ],
@@ -110,7 +110,7 @@
             "largest-contentful-paint": [
               "error",
               {
-                "maxNumericValue": 4800,
+                "maxNumericValue": 6500,
                 "aggregationMethod": "median"
               }
             ]

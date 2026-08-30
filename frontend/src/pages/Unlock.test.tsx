@@ -5,7 +5,7 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, describe, expect, it } from "vitest";
 import { server } from "../../test/mocks/server";
 import { endpoints } from "../config/endpoints";
-import Login from "./Login";
+import Unlock from "./Unlock";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -23,7 +23,7 @@ describe("Login Page", () => {
 
     render(
       <MemoryRouter>
-        <Login />
+        <Unlock />
       </MemoryRouter>,
     );
 
@@ -42,7 +42,7 @@ describe("Login Page", () => {
       nextRoute: "Drawer",
     },
     {
-      locationState: { redirectUrl: "/read/123" },
+      locationState: { redirectUrl: "/letter/123" },
       nextRoute: "Reader",
     },
   ])("should redirect to the next route when login is successful", async ({
@@ -68,19 +68,19 @@ describe("Login Page", () => {
       <MemoryRouter
         initialEntries={[
           {
-            pathname: "/login",
+            pathname: "/unlock",
             state: locationState,
           },
         ]}
       >
         <Routes>
-          <Route path="/login" element={<Login />} />
+          <Route path="/unlock" element={<Unlock />} />
           <Route
-            path="/drawer"
+            path="/escritoire"
             element={<div data-testid="drawer-page">Drawer</div>}
           />
           <Route
-            path="/read/:publicId"
+            path="/letter/:publicId"
             element={<div data-testid="reader-page">Reader</div>}
           />
         </Routes>

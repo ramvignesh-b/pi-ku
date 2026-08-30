@@ -27,7 +27,7 @@ const registerSchema = z
 
 type RegisterInputs = z.infer<typeof registerSchema>;
 
-export default function Register() {
+export default function Begin() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
@@ -174,7 +174,7 @@ export default function Register() {
             <button
               type="button"
               name="register"
-              onClick={() => navigate(ROUTES.LOGIN)}
+              onClick={() => navigate(ROUTES.UNLOCK)}
               className="link link-primary"
             >
               Continue where you left off

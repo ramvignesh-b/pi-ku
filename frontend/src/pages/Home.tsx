@@ -10,7 +10,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import letterSample from "../assets/screenshots/letter.webp";
 import Logo from "../components/Logo";
-import { EnvelopeReveal } from "../components/reader/EnvelopeReveal";
+import { EnvelopeReveal } from "../components/letter/EnvelopeReveal";
 import { HighlightedWord } from "../components/ui/HighlightedWord";
 import Saajan from "../components/ui/Saajan";
 import { WavyUnderline } from "../components/ui/WavyUnderline";
@@ -507,7 +507,7 @@ export default function Home() {
               <button
                 className="md:opacity-60 hover:opacity-100 btn rounded-full btn-primary btn-wide md:btn-xl md:grayscale-50 hover:grayscale-0 focus:grayscale-0 active:grayscale-0 hover:-translate-y-1 transition-all duration-700 cursor-pointer shadow-warm"
                 type="button"
-                onClick={() => navigate(ROUTES.ONBOARD, { replace: true })}
+                onClick={() => navigate(ROUTES.BEGIN, { replace: true })}
               >
                 I'm ready
               </button>

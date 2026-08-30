@@ -56,7 +56,7 @@ export function PostSealModal({
               type="button"
               data-testid="keep-it-btn"
               className="btn btn-ghost btn-sm"
-              onClick={() => navigate(ROUTES.DRAWER)}
+              onClick={() => navigate(ROUTES.ESCRITOIRE)}
             >
               Keep it to myself
             </button>
@@ -66,7 +66,7 @@ export function PostSealModal({
               className="btn btn-primary btn-sm"
               onClick={() => {
                 if (sealedTargetId) {
-                  navigate(PATHS.read(sealedTargetId));
+                  navigate(PATHS.letter(sealedTargetId));
                 }
               }}
             >
@@ -77,7 +77,7 @@ export function PostSealModal({
           <button
             type="button"
             className="btn btn-ghost btn-sm"
-            onClick={() => navigate(ROUTES.DRAWER)}
+            onClick={() => navigate(ROUTES.ESCRITOIRE)}
           >
             Step Away...
           </button>

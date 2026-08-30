@@ -7,9 +7,9 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { api, publicApi } from "../api/apiClient";
 import Logo from "../components/Logo";
-import WelcomeModal from "../components/login/WelcomeModal";
 import FormField from "../components/ui/FormField";
 import Saajan from "../components/ui/Saajan";
+import WelcomeModal from "../components/unlock/WelcomeModal";
 import { endpoints } from "../config/endpoints";
 import { ROUTES } from "../config/routes";
 import { useAuth } from "../hooks/useAuth";
@@ -22,7 +22,7 @@ const loginSchema = z.object({
 
 type LoginInputs = z.infer<typeof loginSchema>;
 
-export default function Login() {
+export default function Unlock() {
   const navigate = useNavigate();
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
@@ -32,7 +32,7 @@ export default function Login() {
   const [saajanMessage, setSaajanMessage] = useState<string>(
     "I was wondering, if you'd ever return.",
   );
-  const nextRoute = location.state?.redirectUrl || ROUTES.DRAWER;
+  const nextRoute = location.state?.redirectUrl || ROUTES.ESCRITOIRE;
 
   const {
     register,
@@ -87,7 +87,7 @@ export default function Login() {
           className="card-body gap-4 px-2"
         >
           <h1 className="flex items-center font-display text-2xl justify-center text-primary/80 tracking-tight">
-            &nbsp;Unlock <Logo type="logo" scale={0.6} /> Archive
+            &nbsp;Unlock <Logo type="logo" scale={0.6} /> Escritoire
           </h1>
 
           {apiError && (
@@ -140,7 +140,7 @@ export default function Login() {
             <button
               type="button"
               name="register"
-              onClick={() => navigate(ROUTES.ONBOARD)}
+              onClick={() => navigate(ROUTES.BEGIN)}
               className="link link-primary"
             >
               Start here

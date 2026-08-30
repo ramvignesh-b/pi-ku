@@ -7,10 +7,10 @@ import {
 } from "@phosphor-icons/react";
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { DrawerSection } from "../components/drawer/DrawerSection";
-import { LetterItem } from "../components/drawer/LetterItem";
-import { PasskeyModal } from "../components/drawer/PasskeyModal";
-import { WelcomeLetterOverlay } from "../components/drawer/WelcomeLetterOverlay";
+import { DrawerSection } from "../components/escritoire/DrawerSection";
+import { LetterItem } from "../components/escritoire/LetterItem";
+import { UnlockModal } from "../components/escritoire/UnlockModal";
+import { WelcomeLetterOverlay } from "../components/escritoire/WelcomeLetterOverlay";
 import Logo from "../components/Logo";
 import Saajan from "../components/ui/Saajan";
 import { PATHS } from "../config/routes";
@@ -21,7 +21,7 @@ import {
   formatRelativeDateWithoutTime,
 } from "../utils/dateFormat";
 
-export default function Drawer() {
+export default function Escritoire() {
   const { user, logout } = useAuth();
 
   const [openSection, setOpenSection] = useState<string | null>(null);
@@ -51,11 +51,11 @@ export default function Drawer() {
         />
       )}
 
-      {isAuthRequired && <PasskeyModal />}
+      {isAuthRequired && <UnlockModal />}
       <header className="text-center mb-12 z-10 animate-in fade-in slide-in-from-top-4 duration-500">
         <Logo />
         <div className="font-sans text-xs tracking-widester uppercase text-base-content/40 mt-2">
-          Personal Archive
+          Your Escritoire
         </div>
         <div className="mt-6 font-sans text-sm text-base-content flex items-center justify-center gap-2 opacity-60 hover:opacity-100 transition-opacity">
           Welcome Back&nbsp;
@@ -75,10 +75,10 @@ export default function Drawer() {
           <div className="flex-1 flex flex-col items-center justify-center p-12 gap-4">
             <span className="loading loading-ring loading-lg text-primary opacity-20"></span>
             <span
-              data-testid="drawer-loading-state"
+              data-testid="escritoire-loading-state"
               className="text-xxs uppercase tracking-widester font-sans text-base-content/20 animate-pulse"
             >
-              Opening your cabinet...
+              Opening your escritoire...
             </span>
           </div>
         ) : (

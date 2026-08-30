@@ -3,7 +3,7 @@ import type { LetterImageData } from "../api/response";
 import type {
   CanvasJSON,
   FabricImageJSON,
-} from "../components/editor/ComposeCanvas";
+} from "../components/quill/ComposeCanvas";
 import type { CryptoUtils } from "./crypto";
 import { blobUrlToFile } from "./fileUtils";
 

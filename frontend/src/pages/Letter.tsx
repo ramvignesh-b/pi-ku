@@ -10,16 +10,16 @@ import {
 } from "react-router-dom";
 import { api } from "../api/apiClient";
 import type { LetterImageData, LetterResponseData } from "../api/response";
+import Logo from "../components/Logo";
+import { BurnModal } from "../components/letter/BurnModal";
+import { EnvelopeReveal } from "../components/letter/EnvelopeReveal";
+import { PostActionOverlay } from "../components/letter/PostActionOverlay";
+import { ShareModal } from "../components/letter/ShareModal";
 import {
   type CanvasJSON,
   type CanvasTools,
   ComposeCanvas,
-} from "../components/editor/ComposeCanvas";
-import Logo from "../components/Logo";
-import { BurnModal } from "../components/reader/BurnModal";
-import { EnvelopeReveal } from "../components/reader/EnvelopeReveal";
-import { PostActionOverlay } from "../components/reader/PostActionOverlay";
-import { ShareModal } from "../components/reader/ShareModal";
+} from "../components/quill/ComposeCanvas";
 import { LogModal } from "../components/ui/LogModal";
 import { Navbar } from "../components/ui/Navbar";
 import { endpoints } from "../config/endpoints";
@@ -39,7 +39,7 @@ interface LetterMetadata {
 }
 
 const WAIT_FOR_BURN_MS = 18000;
-export default function Reader() {
+export default function Letter() {
   const { public_id } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
@@ -80,7 +80,9 @@ export default function Reader() {
     } catch {
       // shouldn't obstruct share if api operation fails (since it's client side share)
     } finally {
-      setShareLink(`${window.location.origin}${PATHS.read(public_id)}#${key}`);
+      setShareLink(
+        `${window.location.origin}${PATHS.letter(public_id)}#${key}`,
+      );
     }
   };
 
@@ -107,8 +109,8 @@ export default function Reader() {
 
   useEffect(() => {
     if (!(sharingKey || masterKey)) {
-      navigateRef.current("/login", {
-        state: { redirectUrl: `/read/${public_id}` },
+      navigateRef.current(ROUTES.UNLOCK, {
+        state: public_id ? { redirectUrl: PATHS.letter(public_id) } : undefined,
       });
       return;
     }
@@ -341,7 +343,7 @@ export default function Reader() {
           type="button"
           className="btn btn-ghost btn-wide font-sans tracking-widest mx-auto cursor-pointer flex text-neutral hover:text-neutral-content focus:text-neutral-content"
           onClick={() => {
-            navigate(isAuthenticated ? ROUTES.DRAWER : ROUTES.HOME);
+            navigate(isAuthenticated ? ROUTES.ESCRITOIRE : ROUTES.HOME);
           }}
         >
           {isAuthenticated ? "open your cabinet" : "write a letter"}

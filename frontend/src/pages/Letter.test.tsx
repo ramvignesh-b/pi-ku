@@ -7,9 +7,14 @@ import { endpoints } from "../config/endpoints";
 import { useAuthStore } from "../store/useAuthStore";
 import { useKeyStore } from "../store/useKeyStore";
 import { CryptoUtils } from "../utils/crypto";
-import Reader from "./Reader";
+import Letter from "./Letter";
 
-vi.mock("../components/reader/EnvelopeReveal", () => ({
+// Fabric.js cannot initialise in jsdom and throws after the test ends.
+vi.mock("../components/quill/ComposeCanvas", () => ({
+  ComposeCanvas: vi.fn(() => <div data-testid="canvas">Canvas</div>),
+}));
+
+vi.mock("../components/letter/EnvelopeReveal", () => ({
   EnvelopeReveal: ({
     recipient,
     onRevealComplete,
@@ -99,9 +104,9 @@ describe("Reader Page", () => {
     );
 
     render(
-      <MemoryRouter initialEntries={[`/read/${mockPublicId}#${sharingKey}`]}>
+      <MemoryRouter initialEntries={[`/letter/${mockPublicId}#${sharingKey}`]}>
         <Routes>
-          <Route path="/read/:public_id" element={<Reader />} />
+          <Route path="/letter/:public_id" element={<Letter />} />
         </Routes>
       </MemoryRouter>,
     );
@@ -121,9 +126,9 @@ describe("Reader Page", () => {
     );
 
     render(
-      <MemoryRouter initialEntries={[`/read/${mockPublicId}#${mockKey}`]}>
+      <MemoryRouter initialEntries={[`/letter/${mockPublicId}#${mockKey}`]}>
         <Routes>
-          <Route path="/read/:public_id" element={<Reader />} />
+          <Route path="/letter/:public_id" element={<Letter />} />
         </Routes>
       </MemoryRouter>,
     );
@@ -154,17 +159,17 @@ describe("Reader Page", () => {
     );
 
     render(
-      <MemoryRouter initialEntries={[`/read/${mockPublicId}`]}>
+      <MemoryRouter initialEntries={[`/letter/${mockPublicId}`]}>
         <Routes>
-          <Route path="/read/:public_id" element={<Reader />} />
-          <Route path="/login" element={<LocationTest />} />
+          <Route path="/letter/:public_id" element={<Letter />} />
+          <Route path="/unlock" element={<LocationTest />} />
         </Routes>
       </MemoryRouter>,
     );
 
     const stateComponent = screen.getByTestId("location-state");
     expect(stateComponent).toHaveTextContent(
-      `"redirectUrl":"/read/${mockPublicId}"`,
+      `"redirectUrl":"/letter/${mockPublicId}"`,
     );
   });
 });
@@ -209,9 +214,9 @@ describe("Reader Page - reader CTA", () => {
       }),
     );
     render(
-      <MemoryRouter initialEntries={[`/read/${mockPublicId}#${sharingKey}`]}>
+      <MemoryRouter initialEntries={[`/letter/${mockPublicId}#${sharingKey}`]}>
         <Routes>
-          <Route path="/read/:public_id" element={<Reader />} />
+          <Route path="/letter/:public_id" element={<Letter />} />
           <Route
             path="/"
             element={<div data-testid="home-page">Home Page</div>}
@@ -256,11 +261,11 @@ describe("Reader Page - reader CTA", () => {
       }),
     );
     render(
-      <MemoryRouter initialEntries={[`/read/${mockPublicId}#${sharingKey}`]}>
+      <MemoryRouter initialEntries={[`/letter/${mockPublicId}#${sharingKey}`]}>
         <Routes>
-          <Route path="/read/:public_id" element={<Reader />} />
+          <Route path="/letter/:public_id" element={<Letter />} />
           <Route
-            path="/drawer"
+            path="/escritoire"
             element={<div data-testid="drawer-page">Drawer Page</div>}
           />
         </Routes>
@@ -294,9 +299,9 @@ describe("Reader Page - reader CTA", () => {
       }),
     );
     render(
-      <MemoryRouter initialEntries={[`/read/${mockPublicId}`]}>
+      <MemoryRouter initialEntries={[`/letter/${mockPublicId}`]}>
         <Routes>
-          <Route path="/read/:public_id" element={<Reader />} />
+          <Route path="/letter/:public_id" element={<Letter />} />
         </Routes>
       </MemoryRouter>,
     );
@@ -326,11 +331,11 @@ describe("Reader Page - reader CTA", () => {
       }),
     );
     render(
-      <MemoryRouter initialEntries={[`/read/${mockPublicId}`]}>
+      <MemoryRouter initialEntries={[`/letter/${mockPublicId}`]}>
         <Routes>
-          <Route path="/read/:public_id" element={<Reader />} />
+          <Route path="/letter/:public_id" element={<Letter />} />
           <Route
-            path="/drawer"
+            path="/escritoire"
             element={<div data-testid="drawer-page">Drawer Page</div>}
           />
         </Routes>
@@ -362,9 +367,9 @@ describe("Reader Page - reader CTA", () => {
       }),
     );
     render(
-      <MemoryRouter initialEntries={[`/read/${mockPublicId}#${sharingKey}`]}>
+      <MemoryRouter initialEntries={[`/letter/${mockPublicId}#${sharingKey}`]}>
         <Routes>
-          <Route path="/read/:public_id" element={<Reader />} />
+          <Route path="/letter/:public_id" element={<Letter />} />
         </Routes>
       </MemoryRouter>,
     );

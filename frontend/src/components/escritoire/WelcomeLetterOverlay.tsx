@@ -2,8 +2,8 @@ import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { getWelcomeLetterContent } from "../../config/welcomeLetter";
 import { formatDate } from "../../utils/dateFormat";
-import { type CanvasTools, ComposeCanvas } from "../editor/ComposeCanvas";
-import { EnvelopeReveal } from "../reader/EnvelopeReveal";
+import { EnvelopeReveal } from "../letter/EnvelopeReveal";
+import { type CanvasTools, ComposeCanvas } from "../quill/ComposeCanvas";
 
 export interface WelcomeLetterOverlayProps {
   onComplete: () => void;

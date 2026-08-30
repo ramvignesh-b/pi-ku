@@ -11,18 +11,24 @@ import {
   useParams,
 } from "react-router-dom";
 import { api } from "../api/apiClient";
-import type { LetterResponseData } from "../api/response";
+import type {
+  Disposition,
+  LetterResponseData,
+  Lifecycle,
+  ResolvedIntent,
+  SaveIntent,
+} from "../api/response";
 import {
   type CanvasStyle,
   type CanvasTools,
   ComposeCanvas,
-} from "../components/editor/ComposeCanvas";
-import { PostSealModal } from "../components/editor/PostSealModal";
+} from "../components/quill/ComposeCanvas";
+import { PostSealModal } from "../components/quill/PostSealModal";
 import {
   LetterHead,
   ToolBar,
   VaultConfirmModal,
-} from "../components/editor/ToolBar";
+} from "../components/quill/ToolBar";
 import DateDisplay from "../components/ui/DateDisplay";
 import { LogModal } from "../components/ui/LogModal";
 import { Modal } from "../components/ui/Modal";
@@ -48,7 +54,7 @@ const toPlaceholderList = [
 ];
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
-export default function Editor() {
+export default function Quill() {
   const navigate = useNavigate();
   const navigateRef = useRef<NavigateFunction>(navigate);
   navigateRef.current = navigate;
@@ -66,9 +72,8 @@ export default function Editor() {
   const [isInitialLoading, setIsInitialLoading] = useState(false);
   const [sealedTargetId, setSealedTargetId] = useState<string | null>(null);
   const [lastSaved, setLastSaved] = useState<string | null>(null);
-  const [status, setLetterStatus] = useState<"DRAFT" | "SEALED" | "VAULT">(
-    "DRAFT",
-  );
+  const [lifecycle, setLifecycle] = useState<Lifecycle>("DRAFT");
+  const [disposition, setDisposition] = useState<Disposition>("KEPT");
   const [isSaveDatePulsing, setIsSaveDatePulsing] = useState(false);
   const [lastSavedPulseTick, setLastSavedPulseTick] = useState(0);
   const [sealBtnClicked, setSealBtnClicked] = useState<boolean>(false);
@@ -166,13 +171,14 @@ export default function Editor() {
       setIsInitialLoading(true);
       try {
         const res = await api.get(`${endpoints.LETTERS}${public_id}/`);
-        const letterData = res.data;
+        const letterData: LetterResponseData = res.data;
 
         setLastSaved(formatRelativeDate(new Date(letterData.updated_at)));
-        setLetterStatus(letterData.status);
+        setLifecycle(letterData.status);
+        setDisposition(letterData.type);
 
         if (letterData.status === "SEALED") {
-          navigateRef.current(PATHS.read(public_id), { replace: true });
+          navigateRef.current(PATHS.letter(public_id), { replace: true });
           return;
         }
 
@@ -245,9 +251,18 @@ export default function Editor() {
     }
   };
 
+  // A draft save keeps the letter's current disposition.
+  const resolveIntent = (intent: SaveIntent): ResolvedIntent => {
+    if (intent === "VAULT")
+      return { lifecycle: "SEALED", disposition: "VAULT" };
+    if (intent === "SEALED")
+      return { lifecycle: "SEALED", disposition: "KEPT" };
+    return { lifecycle: "DRAFT", disposition };
+  };
+
   const getRequestData = async (
     targetId: string,
-    status: string,
+    resolved: ResolvedIntent,
     vaultDate?: Date,
   ): Promise<FormData> => {
     const cryptoUtils = new CryptoUtils();
@@ -278,14 +293,12 @@ export default function Editor() {
     );
 
     const formData = new FormData();
-    if (status === "VAULT") {
+    formData.append("type", resolved.disposition);
+    formData.append("status", resolved.lifecycle);
+    // unlock_at is required only for a sealed vault letter.
+    if (resolved.disposition === "VAULT" && resolved.lifecycle === "SEALED") {
       const finalDate = vaultDate || unlockDate;
-      formData.append("type", "VAULT");
       if (finalDate) formData.append("unlock_at", finalDate.toISOString());
-      formData.append("status", "SEALED");
-    } else {
-      formData.append("type", "KEPT");
-      formData.append("status", status);
     }
 
     formData.append("public_id", targetId);
@@ -301,7 +314,7 @@ export default function Editor() {
   };
 
   const handleSave = async (
-    status: "SEALED" | "DRAFT" | "VAULT",
+    intent: SaveIntent,
     vaultDate?: Date,
   ): Promise<void> => {
     setSealBtnClicked(false);
@@ -310,11 +323,13 @@ export default function Editor() {
 
     if (saveOverlay === "SAVING" || !masterKey) return;
 
+    const resolved = resolveIntent(intent);
+
     setSaveOverlay("SAVING");
     setShowSaveOverlay(true);
 
     try {
-      const formData = await getRequestData(targetId, status, vaultDate);
+      const formData = await getRequestData(targetId, resolved, vaultDate);
       await api.put(`${endpoints.LETTERS}${targetId}/`, formData);
 
       justSavedRef.current = true;
@@ -324,10 +339,11 @@ export default function Editor() {
       }
 
       setLastSaved(formatRelativeDate(new Date()));
-      setLetterStatus(status);
+      setLifecycle(resolved.lifecycle);
+      setDisposition(resolved.disposition);
       setLastSavedPulseTick((prev) => prev + 1);
 
-      if (status === "SEALED" || status === "VAULT") {
+      if (resolved.lifecycle === "SEALED") {
         setSealedTargetId(targetId);
       }
       setSaveOverlay("SAVED");
@@ -454,7 +470,7 @@ export default function Editor() {
           <PostSealModal
             sealedTargetId={sealedTargetId}
             navigate={navigate}
-            type={status === "VAULT" ? "VAULT" : "KEPT"}
+            type={disposition === "VAULT" ? "VAULT" : "KEPT"}
           />
         )}
 
@@ -473,7 +489,7 @@ export default function Editor() {
                 type="text"
                 placeholder={toPlaceholderList[placeholderIndex]}
                 value={recipient}
-                disabled={status !== "DRAFT"}
+                disabled={lifecycle !== "DRAFT"}
                 onChange={(e) => setRecipient(e.target.value)}
                 className="bg-transparent border-none outline-none text-2xl md:text-3xl lg:text-4xl font-serif text-base-content placeholder:text-base-content/10 w-full disabled:opacity-50"
               />
@@ -481,7 +497,7 @@ export default function Editor() {
             <DateDisplay />
           </div>
 
-          {status === "DRAFT" ? (
+          {lifecycle === "DRAFT" ? (
             <ToolBar
               onAddImage={() => fileInputRef.current?.click()}
               sealBtnClicked={sealBtnClicked}
@@ -505,7 +521,7 @@ export default function Editor() {
 
           <ComposeCanvas
             ref={canvasRef}
-            readOnly={status !== "DRAFT"}
+            readOnly={lifecycle !== "DRAFT"}
             style={canvasFontStyle}
           />
         </div>

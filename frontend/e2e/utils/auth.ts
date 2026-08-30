@@ -23,7 +23,7 @@ async function registerAndLogin(
 ) {
   // Register the User
   logger.info(`[Auth] Registering user: ${email}`);
-  await page.goto("/onboard");
+  await page.goto("/begin");
   await page.getByTestId("pen-name-input").fill(fullName);
   await page.getByTestId("email-input").fill(email);
   await page.getByTestId("password-input").fill(password);
@@ -43,7 +43,7 @@ async function registerAndLogin(
 
   // Dismiss the Welcom Modal and Perform Login
   logger.info(`[Auth] Logging in...`);
-  await expect(page).toHaveURL(/\/login/);
+  await expect(page).toHaveURL(/\/unlock/);
 
   await page.getByTestId("welcome-dismiss-btn").click();
   await expect(page.getByTestId("welcome-dismiss-btn")).toBeHidden();
@@ -52,7 +52,7 @@ async function registerAndLogin(
   await page.getByTestId("password-input").fill(password);
   await page.getByTestId("login-submit-btn").click();
 
-  await expect(page).toHaveURL(/\/drawer/);
+  await expect(page).toHaveURL(/\/escritoire/);
   await handleWelcomeLetter(page);
   logger.info(`[Auth] Successfully authenticated ${email}`);
 }

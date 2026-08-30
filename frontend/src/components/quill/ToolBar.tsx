@@ -10,6 +10,7 @@ import {
   VaultIcon,
   XCircleIcon,
 } from "@phosphor-icons/react";
+import type { SaveIntent } from "../../api/response";
 import { Modal } from "../ui/Modal";
 import type { CanvasStyle } from "./ComposeCanvas";
 
@@ -17,7 +18,7 @@ interface ToolBarProps {
   onAddImage: () => void;
   sealBtnClicked: boolean;
   setSealBtnClicked: (v: boolean) => void;
-  onSave: (status: "SEALED" | "DRAFT" | "VAULT", date?: Date) => Promise<void>;
+  onSave: (intent: SaveIntent, date?: Date) => Promise<void>;
   setConfirmModal: (v: "VAULT" | "SEAL" | null) => void;
   onFontChange: (style: CanvasStyle) => void;
   latestFontStyle: CanvasStyle;
@@ -247,7 +248,7 @@ export function LetterHead() {
 }
 
 interface VaultConfirmModalProps {
-  onSave: (status: "SEALED" | "DRAFT" | "VAULT", date?: Date) => Promise<void>;
+  onSave: (intent: SaveIntent, date?: Date) => Promise<void>;
   setConfirmModal: (v: "VAULT" | "SEAL" | null) => void;
   setUnlockDate: (d: Date | null) => void;
 }

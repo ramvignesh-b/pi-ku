@@ -108,7 +108,7 @@ test.describe("Letter Drafting (Real Backend)", () => {
     await page.getByTestId("view-letter-btn").click();
 
     // Should be on Reader URL
-    await expect(page).toHaveURL(/\/read\/[a-f0-9-]{36}$/);
+    await expect(page).toHaveURL(/\/letter\/[a-f0-9-]{36}$/);
 
     // Open the envelope to reveal the letter
     await expect(page.getByTestId("decryption-overlay")).toBeHidden();
@@ -124,7 +124,7 @@ test.describe("Letter Drafting (Real Backend)", () => {
     await expect(page.getByTestId("share-letter-modal")).toBeVisible();
     const linkInput = page.locator("#share-link-input");
     const linkValue = await linkInput.inputValue();
-    expect(linkValue).toContain("/read/");
+    expect(linkValue).toContain("/letter/");
     expect(linkValue).toContain("#");
     logger.info(`>> [Seal] Sharing link: ${linkValue}`);
 
@@ -134,14 +134,15 @@ test.describe("Letter Drafting (Real Backend)", () => {
     await expect(page.getByTestId("share-letter-modal")).toBeHidden();
   });
 
-  test("should allow author to access sealed letter from drawer without sharing key", async ({
+  test("should allow author to access sealed letter from escritoire without sharing key", async ({
     page,
   }) => {
     const timestamp = Date.now() + Math.random();
     const email = `drawer-${timestamp}@example.com`;
     const name = `Drawer Author ${timestamp}`;
     const recipientName = "Drawer Test Recipient";
-    const letterContent = "This is a sealed letter accessed via the drawer.";
+    const letterContent =
+      "This is a sealed letter accessed via the escritoire.";
 
     await AuthHelper.registerAndLogin(page, email, name, password);
 
@@ -167,8 +168,8 @@ test.describe("Letter Drafting (Real Backend)", () => {
     logger.info(">> [Drawer] Opening Kept section...");
     await page.getByTestId("drawer-section-kept").click();
 
-    // Find the sealed letter in the drawer by recipient name and click it
-    logger.info(">> [Drawer] Clicking sealed letter in drawer...");
+    // Find the sealed letter by recipient name and click it
+    logger.info(">> [Escritoire] Clicking sealed letter in drawer...");
     const sealedItem = page
       .getByTestId(/^letter-item-/)
       .filter({ hasText: recipientName })
@@ -178,7 +179,7 @@ test.describe("Letter Drafting (Real Backend)", () => {
     // Verify it opens the Reader without a hash
     logger.info(">> [Drawer] Verifying Reader page...");
     // Give it a bit more time for decryption
-    await expect(page).toHaveURL(/\/read\/[a-f0-9-]{36}$/);
+    await expect(page).toHaveURL(/\/letter\/[a-f0-9-]{36}$/);
     // Reveal and check decrypted content in Reader
     await expect(page.getByTestId("decryption-overlay")).toBeHidden();
     // Flip the envelope and reveal the letter
@@ -186,14 +187,14 @@ test.describe("Letter Drafting (Real Backend)", () => {
     await expect(page.getByTestId("envelope-letter")).toBeHidden();
 
     // Also check if we are redirected to the Reader if we manually go to the Editor URL
-    const readerUrl = page.url();
-    const quillUrl = readerUrl.replace("/read/", "/quill/");
+    const letterUrl = page.url();
+    const quillUrl = letterUrl.replace("/letter/", "/quill/");
     logger.info(
       `>> [Drawer] Navigating to Editor URL (expecting redirect): ${quillUrl}`,
     );
     await page.goto(quillUrl);
 
     // It should redirect back to the reader
-    await expect(page).toHaveURL(readerUrl);
+    await expect(page).toHaveURL(letterUrl);
   });
 });

@@ -30,7 +30,7 @@ def notify_unlocked_letter(letter):
     """
     author = letter.user.get_username()
     try:
-        letter_link = f"{FRONTEND_URLS[0]}/read/{letter.public_id}"
+        letter_link = f"{FRONTEND_URLS[0]}/letter/{letter.public_id}"
         subject = "A letter. Written for this exact moment."
         context = {
             "pen_name": letter.user.full_name,
