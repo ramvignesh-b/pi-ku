@@ -73,25 +73,27 @@ export function EnvelopeReveal({
           >
             <input
               type="checkbox"
+              aria-label="Open the envelope"
               className="transition checkbox absolute h-full w-full text-transparent bg-transparent z-100"
               checked={isFlapOpen}
               onChange={() => setIsFlapOpen((prev) => !prev)}
               disabled={!isInteractive}
             />
           </div>
-          <img
-            data-testid="wax-seal"
+          <button
+            type="button"
+            aria-label="Break the seal"
             className={
               "translate-y-24 delay-2000 absolute z-6 peer-has-checked:pointer-events-none peer-has-checked:opacity-0 peer-has-checked:delay-0 transition-opacity duration-1000 cursor-pointer"
             }
-            src={waxSeal}
-            alt="Seal"
             onClick={() => setIsFlapOpen((prev) => !prev)}
-            onKeyDown={() => setIsFlapOpen((prev) => !prev)}
-          />
+          >
+            <img data-testid="wax-seal" src={waxSeal} alt="" />
+          </button>
           <button
             type="button"
             id="letter"
+            aria-label="Read the letter"
             data-testid="envelope-letter"
             className={`absolute mx-auto transition-all peer-has-checked:delay-800 peer-has-checked:duration-1000 duration-1000 mt-2 h-55 w-105 bg-paper peer-has-checked:-mt-12 hover:-mt-24 cursor-pointer ${revealLetter ? "duration-1000 peer-has-checked:duration-3000 w-screen max-w-4xl h-screen z-101 -translate-y-90" : "peer-has-checked:z-1"}`}
             onClick={handleClick}
@@ -105,11 +107,10 @@ export function EnvelopeReveal({
             id="env-left"
             className="absolute h-70 w-105 bg-base-300 mask mask-triangle-4 -ml-48 z-3 pointer-events-none"
           ></div>
-          <button
-            type="button"
+          <div
             id="env-bottom"
-            className="absolute h-70 w-45 bg-base-200 mask mask-triangle-2 scale-y-[-1] mt-15 scale-x-240 z-3"
-          ></button>
+            className="absolute h-70 w-45 bg-base-200 mask mask-triangle-2 scale-y-[-1] mt-15 scale-x-240 z-3 pointer-events-none"
+          ></div>
         </div>
 
         <button
