@@ -4,7 +4,8 @@
       "startServerCommand": "node perf/serve-dist.mjs --port 4179",
       "startServerReadyPattern": "serving",
       "url": [
-        "http://127.0.0.1:4179/"
+        "http://127.0.0.1:4179/",
+        "http://127.0.0.1:4179/login"
       ],
       "numberOfRuns": 3,
       "settings": {
@@ -12,47 +13,110 @@
       }
     },
     "assert": {
-      "assertions": {
-        "categories:performance": [
-          "error",
-          {
-            "minScore": 0.85,
-            "aggregationMethod": "median"
+      "assertMatrix": [
+        {
+          "matchingUrlPattern": ".*4179/$",
+          "assertions": {
+            "categories:performance": [
+              "error",
+              {
+                "minScore": 0.85,
+                "aggregationMethod": "median"
+              }
+            ],
+            "categories:accessibility": [
+              "error",
+              {
+                "minScore": 0.95,
+                "aggregationMethod": "median"
+              }
+            ],
+            "cumulative-layout-shift": [
+              "error",
+              {
+                "maxNumericValue": 0.05,
+                "aggregationMethod": "median"
+              }
+            ],
+            "total-blocking-time": [
+              "error",
+              {
+                "maxNumericValue": 500,
+                "aggregationMethod": "median"
+              }
+            ],
+            "first-contentful-paint": [
+              "error",
+              {
+                "maxNumericValue": 3000,
+                "aggregationMethod": "median"
+              }
+            ],
+            "modern-image-formats": "warn",
+            "uses-responsive-images": "warn",
+            "unused-javascript": "warn",
+            "render-blocking-resources": "warn",
+            "largest-contentful-paint": [
+              "error",
+              {
+                "maxNumericValue": 4200,
+                "aggregationMethod": "median"
+              }
+            ]
           }
-        ],
-        "cumulative-layout-shift": [
-          "error",
-          {
-            "maxNumericValue": 0.05,
-            "aggregationMethod": "median"
+        },
+        {
+          "matchingUrlPattern": ".*/login$",
+          "assertions": {
+            "categories:performance": [
+              "error",
+              {
+                "minScore": 0.78,
+                "aggregationMethod": "median"
+              }
+            ],
+            "categories:accessibility": [
+              "error",
+              {
+                "minScore": 0.95,
+                "aggregationMethod": "median"
+              }
+            ],
+            "cumulative-layout-shift": [
+              "error",
+              {
+                "maxNumericValue": 0.05,
+                "aggregationMethod": "median"
+              }
+            ],
+            "total-blocking-time": [
+              "error",
+              {
+                "maxNumericValue": 500,
+                "aggregationMethod": "median"
+              }
+            ],
+            "first-contentful-paint": [
+              "error",
+              {
+                "maxNumericValue": 3000,
+                "aggregationMethod": "median"
+              }
+            ],
+            "modern-image-formats": "warn",
+            "uses-responsive-images": "warn",
+            "unused-javascript": "warn",
+            "render-blocking-resources": "warn",
+            "largest-contentful-paint": [
+              "error",
+              {
+                "maxNumericValue": 4800,
+                "aggregationMethod": "median"
+              }
+            ]
           }
-        ],
-        "total-blocking-time": [
-          "error",
-          {
-            "maxNumericValue": 500,
-            "aggregationMethod": "median"
-          }
-        ],
-        "first-contentful-paint": [
-          "error",
-          {
-            "maxNumericValue": 3000,
-            "aggregationMethod": "median"
-          }
-        ],
-        "largest-contentful-paint": [
-          "error",
-          {
-            "maxNumericValue": 4200,
-            "aggregationMethod": "median"
-          }
-        ],
-        "modern-image-formats": "warn",
-        "uses-responsive-images": "warn",
-        "unused-javascript": "warn",
-        "render-blocking-resources": "warn"
-      }
+        }
+      ]
     },
     "upload": {
       "target": "filesystem",
