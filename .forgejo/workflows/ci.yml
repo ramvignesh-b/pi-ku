@@ -33,39 +33,28 @@ jobs:
       - name: Unit Tests
         run: bun run test
 
-  lighthouse:
-    name: Lighthouse
-    runs-on: ubuntu-latest
-    # Skipping on Forgejo pushes until cache server is configured
-    if: github.event_name == 'pull_request'
-    defaults:
-      run:
-        working-directory: ./frontend
-    steps:
-      - uses: actions/checkout@v7
-      - uses: oven-sh/setup-bun@v2
-
-      - name: Install Dependencies
+      # Lighthouse only needs a Chrome binary, and runner images ship one.
+      # Playwright's is the fallback, without --with-deps: the image already
+      # carries the shared libraries a browser needs.
+      - name: Resolve Chrome
+        if: github.event_name == 'pull_request'
         run: |
-          bun install --frozen-lockfile
-          bun x playwright install --with-deps chromium
-
-      - name: Build
-        run: |
-          cp ../.env.example ../.env
-          bun run build:ci
+          CHROME=$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)
+          if [ -z "$CHROME" ]; then
+            bun x playwright install chromium
+            CHROME=$(node -e 'console.log(require("playwright").chromium.executablePath())')
+          fi
+          echo "CHROME_PATH=$CHROME" >> "$GITHUB_ENV"
 
       # Budgets live in frontend/lighthouserc.json. dist is served by
       # perf/serve-dist.mjs, which gzips whatever the Caddyfile gzips, so the
       # audit sees the bytes production actually sends.
       - name: Lighthouse
-        run: |
-          CHROME_PATH=$(node -e 'console.log(require("playwright").chromium.executablePath())')
-          export CHROME_PATH
-          bun run lighthouse
+        if: github.event_name == 'pull_request'
+        run: bun run lighthouse
 
       - name: Upload Lighthouse Reports
-        if: always()
+        if: always() && github.event_name == 'pull_request'
         uses: forgejo/upload-artifact@v4
         with:
           name: lighthouse-report
