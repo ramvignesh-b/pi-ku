@@ -342,7 +342,9 @@ describe("Reader Page - reader CTA", () => {
       </MemoryRouter>,
     );
 
-    const navBtn = await screen.findByRole("button", { name: /open drawer/i });
+    const navBtn = await screen.findByRole("button", {
+      name: /open escritoire/i,
+    });
     navBtn.click();
 
     expect(await screen.findByTestId("drawer-page")).toBeInTheDocument();
@@ -376,6 +378,8 @@ describe("Reader Page - reader CTA", () => {
 
     await screen.findByTestId("envelope-recipient");
 
-    expect(screen.queryByRole("button", { name: /open drawer/i })).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: /open escritoire/i }),
+    ).toBeNull();
   });
 });

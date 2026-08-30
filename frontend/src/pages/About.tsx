@@ -28,6 +28,7 @@ import stamp from "../assets/envelope/stamp.webp";
 import e2eDiag from "../assets/screenshots/e2e.svg";
 import saajan from "../assets/sf.webp";
 import Logo from "../components/Logo";
+import { DefinitionCard } from "../components/ui/DefinitionCard";
 import { Modal } from "../components/ui/Modal";
 
 import "@fontsource/kavivanar/index.css";
@@ -506,8 +507,8 @@ function StorySection() {
           <Logo />
         </div>
         <div className="flex ml-10 font-ink text-2xl md:text-3xl group">
-          <button type="button" className={"flex flex-col flex-wrap ul-wavy"}>
-            பின்
+          <button type="button" className="flex flex-col items-center">
+            <span className="ul-wavy">பின்</span>
             <span
               className={
                 "font-sans transition-all duration-1000 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 text-xxs tracking-widester uppercase text-neutral-content/60 mt-2"
@@ -518,11 +519,8 @@ function StorySection() {
           </button>
           <ArrowBendDownLeftIcon className={"text-primary"} />
           <ArrowBendDownRightIcon className="ml-8 text-primary" />
-          <button
-            type="button"
-            className={"flex flex-col flex-wrap group ul-wavy"}
-          >
-            குறிப்பு
+          <button type="button" className="flex flex-col items-center">
+            <span className="ul-wavy">குறிப்பு</span>
             <span
               className={
                 "font-sans transition-all duration-1000 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 text-xxs tracking-[.2em] uppercase text-neutral-content/60 mt-2"
@@ -533,38 +531,27 @@ function StorySection() {
           </button>
         </div>
         {/* Dict Card */}
-        <div className="hover-3d -my-8 md:m-4 scale-75 md:scale-100 md:my-12 cursor-pointer">
-          <div className="card w-96 bg-base-200 bg-[radial-gradient(circle_at_bottom_left,#ffffff04_35%,transparent_36%),radial-gradient(circle_at_top_right,#ffffff04_35%,transparent_36%)] bg-size-[1.95em_1.95em]">
-            <div className="card-body">
-              <div className="mb-3 flex justify-between">
-                <div className="text-lg">pin·ku·rip·pu</div>
-              </div>
-              <div className="mb-4 text-lg opacity-40">
-                /noun/ <span className={"tracking-widest text-sm"}>tamil</span>
-              </div>
-
-              <ol className="flex flex-col gap-4 list-decimal list-inside p-0 m-0">
-                <li>
-                  postscript; a note written after the letter is signed.
-                  <br />
-                  <blockquote className="text-primary/50 italic mt-2 ml-2 border-l-primary/20 leading-none border-l">
-                    "the most honest thing was always in the&nbsp;
-                    <span className="font-ink">பி. கு.</span>"
-                  </blockquote>
-                </li>
-                <li>the thing you almost didn't say.</li>
-              </ol>
-            </div>
-          </div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-        </div>
+        <DefinitionCard
+          hover3d
+          word="pin·ku·rip·pu"
+          partOfSpeech="/noun/"
+          origin="tamil"
+          className="-my-8 md:m-4 scale-75 md:scale-100 md:my-12 cursor-pointer"
+          definitions={[
+            {
+              text: "postscript; a note written after the letter is signed.",
+              quote: (
+                <span>
+                  "the most honest thing was always in the&nbsp;
+                  <span className="font-ink">பி. கு.</span>"
+                </span>
+              ),
+            },
+            {
+              text: "the thing you almost didn't say.",
+            },
+          ]}
+        />
         <div
           className={
             "max-w-220 md:text-xl p-6 flex flex-col gap-4 md:gap-8 text-base-content/70 leading-relaxed"
@@ -989,8 +976,8 @@ function AttributionSection() {
           <p className={"text-right font-hand text-neutral text-lg md:text-xl"}>
             &mdash;Ram
           </p>
-          <p className="text-xs md:text-sm text-neutral/60 italic">
-            P.S. And just so we're clear&mdash;I wrote every word of this
+          <p className="text-xs md:text-sm text-neutral/60">
+            P.S.- And just so we're clear&mdash;I wrote every word of this
             myself&mdash;as I continue to back&nbsp;
             <a
               href="https://em-dash-appreciation.org/"
@@ -1022,7 +1009,7 @@ function AttributionSection() {
         <button
           type={"button"}
           onClick={() => navigate("/onboard")}
-          className="btn btn-base-100 btn-wide rounded-full px-14 font-mono"
+          className="btn btn-base-100 btn-wide rounded-full px-14 font-hand"
         >
           Begin
         </button>

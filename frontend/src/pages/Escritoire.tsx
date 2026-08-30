@@ -2,9 +2,11 @@ import {
   ArchiveIcon,
   FeatherIcon,
   FileDashedIcon,
+  InfoIcon,
   PaperPlaneTiltIcon,
   VaultIcon,
 } from "@phosphor-icons/react";
+import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { DrawerSection } from "../components/escritoire/DrawerSection";
@@ -12,6 +14,7 @@ import { LetterItem } from "../components/escritoire/LetterItem";
 import { UnlockModal } from "../components/escritoire/UnlockModal";
 import { WelcomeLetterOverlay } from "../components/escritoire/WelcomeLetterOverlay";
 import Logo from "../components/Logo";
+import { DefinitionCard } from "../components/ui/DefinitionCard";
 import Saajan from "../components/ui/Saajan";
 import { PATHS } from "../config/routes";
 import { useAuth } from "../hooks/useAuth";
@@ -25,6 +28,8 @@ export default function Escritoire() {
   const { user, logout } = useAuth();
 
   const [openSection, setOpenSection] = useState<string | null>(null);
+  const [showDefinition, setShowDefinition] = useState(false);
+
   const navigate = useNavigate();
   const location = useLocation();
   const [showWelcomeLetter, setShowWelcomeLetter] = useState(
@@ -52,12 +57,27 @@ export default function Escritoire() {
       )}
 
       {isAuthRequired && <UnlockModal />}
-      <header className="text-center mb-12 z-10 animate-in fade-in slide-in-from-top-4 duration-500">
+      <header className="text-center mb-6 z-10 animate-in fade-in slide-in-from-top-4 duration-500 flex flex-col items-center">
         <Logo />
-        <div className="font-sans text-xs tracking-widester uppercase text-base-content/40 mt-2">
-          Your Escritoire
+        <div className="mt-2 font-sans text-xs tracking-widester uppercase text-base-content/40 flex items-center justify-center gap-1.5">
+          <span>Your</span>
+          <button
+            type="button"
+            aria-expanded={showDefinition}
+            aria-controls="escritoire-definition"
+            onClick={() => setShowDefinition((prev) => !prev)}
+            data-testid="escritoire-definition-toggle"
+            className="cursor-pointer inline-flex items-center gap-1 text-accent hover:text-accent-focus transition-colors group"
+          >
+            <span className="ul-wavy uppercase">Escritoire</span>
+            <InfoIcon
+              size={13}
+              weight="duotone"
+              className="opacity-70 group-hover:opacity-100 transition-opacity"
+            />
+          </button>
         </div>
-        <div className="mt-6 font-sans text-sm text-base-content flex items-center justify-center gap-2 opacity-60 hover:opacity-100 transition-opacity">
+        <div className="mt-4 font-sans text-sm text-base-content flex items-center justify-center gap-2 opacity-60 hover:opacity-100 transition-opacity">
           Welcome Back&nbsp;
           <span className="font-semibold text-primary">{user.full_name}</span>
           <button
@@ -69,6 +89,37 @@ export default function Escritoire() {
           </button>
         </div>
       </header>
+
+      <AnimatePresence>
+        {showDefinition && (
+          <motion.div
+            id="escritoire-definition"
+            initial={{ opacity: 0, height: 0, y: -8 }}
+            animate={{ opacity: 1, height: "auto", y: 0 }}
+            exit={{ opacity: 0, height: 0, y: -8 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            className="w-full max-w-120 mb-8 z-20 overflow-hidden"
+          >
+            <DefinitionCard
+              testId="escritoire-definition-card"
+              word="es·cri·toire"
+              phonetic="/ˌɛskrɪˈtwɑːr/"
+              partOfSpeech="/noun/"
+              origin="french · from Old French"
+              onClose={() => setShowDefinition(false)}
+              definitions={[
+                {
+                  text: "a writing desk with small drawers and compartments for letters.",
+                  quote: "where an author's unsaid letters find their drawer.",
+                },
+                {
+                  text: "the whole of what you have written.",
+                },
+              ]}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="join join-vertical w-full max-w-120 bg-base-200 border border-base-content/10 shadow-2xl z-10 rounded-sm duration-500 delay-200 min-h-64 flex flex-col">
         {loading ? (

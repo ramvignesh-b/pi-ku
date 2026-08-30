@@ -1,4 +1,9 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitForElementToBeRemoved,
+} from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mockUser } from "../../test/fixtures/user.fixture";
@@ -128,5 +133,62 @@ describe("Drawer Page", () => {
     expect(
       screen.queryByTestId("welcome-letter-overlay"),
     ).not.toBeInTheDocument();
+  });
+
+  it("toggles the definition card when clicking the definition toggle button", async () => {
+    render(
+      <MemoryRouter>
+        <Escritoire />
+      </MemoryRouter>,
+    );
+
+    expect(
+      screen.queryByTestId("escritoire-definition-card"),
+    ).not.toBeInTheDocument();
+
+    const toggleBtn = screen.getByTestId("escritoire-definition-toggle");
+    fireEvent.click(toggleBtn);
+
+    expect(
+      screen.getByTestId("escritoire-definition-card"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("es·cri·toire")).toBeInTheDocument();
+    expect(
+      screen.getByText(/a writing desk with small drawers/i),
+    ).toBeInTheDocument();
+
+    const closeBtn = screen.getByRole("button", { name: /close definition/i });
+    fireEvent.click(closeBtn);
+
+    await waitForElementToBeRemoved(() =>
+      screen.queryByTestId("escritoire-definition-card"),
+    );
+  });
+
+  it("does not close definition card when clicking outside, and collapses when clicking the word again", async () => {
+    render(
+      <MemoryRouter>
+        <Escritoire />
+      </MemoryRouter>,
+    );
+
+    const toggleBtn = screen.getByTestId("escritoire-definition-toggle");
+    fireEvent.click(toggleBtn);
+
+    expect(
+      screen.getByTestId("escritoire-definition-card"),
+    ).toBeInTheDocument();
+
+    // Clicking outside should NOT close the card
+    fireEvent.mouseDown(document.body);
+    expect(
+      screen.getByTestId("escritoire-definition-card"),
+    ).toBeInTheDocument();
+
+    // Clicking the word toggle again collapses it
+    fireEvent.click(toggleBtn);
+    await waitForElementToBeRemoved(() =>
+      screen.queryByTestId("escritoire-definition-card"),
+    );
   });
 });
