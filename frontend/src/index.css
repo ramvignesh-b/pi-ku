@@ -92,6 +92,12 @@
   );
 }
 
+/* The reader locks scrolling while the envelope is up. Holding the gutter
+   keeps the page from shifting sideways when it unlocks. */
+html {
+  scrollbar-gutter: stable;
+}
+
 .word-spacing-editorial {
   word-spacing: 0.04em;
 }

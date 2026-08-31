@@ -94,10 +94,44 @@ const measureLogicalContentHeight = (
 
 const DEFAULT_INIT_TEXT = "Take a deep breath...";
 
+const applyImageControls = (canvas: fabric.Canvas, readOnly: boolean) => {
+  for (const img of canvas.getObjects("Image")) {
+    img.set({ hasControls: !readOnly, hasBorders: !readOnly });
+  }
+};
+
+interface AttachTextboxOptions {
+  readOnly: boolean;
+  onChanged: () => void;
+  onFocusRequest: (textbox: fabric.Textbox) => void;
+}
+
+const attachTextbox = (
+  canvas: fabric.Canvas,
+  textbox: fabric.Textbox,
+  { readOnly, onChanged, onFocusRequest }: AttachTextboxOptions,
+) => {
+  // readonly contraints applicable for post seal view
+  textbox.selectable = !readOnly;
+  textbox.evented = !readOnly;
+  textbox.editable = !readOnly;
+  textbox.hasBorders = false;
+
+  // observe and auto-resize the canvas height whenever typed
+  textbox.on("changed", onChanged);
+
+  // trapping the focus into the textbox wherever clicked on canvas (except images)
+  canvas.on("mouse:down", (e) => {
+    if (!e.target || e.target === textbox) onFocusRequest(textbox);
+  });
+};
+
 interface ComposeCanvasProps {
   readOnly?: boolean;
   initialData?: CanvasJSON | null;
   style?: CanvasStyle;
+  // fires once the content is laid out and the wrapper has its final height
+  onReady?: () => void;
   ref?: React.Ref<CanvasTools>;
 }
 
@@ -168,6 +202,24 @@ const createCompositionTextbox = (text = DEFAULT_INIT_TEXT): fabric.Textbox => {
   );
 };
 
+const resolveTextbox = async (
+  canvas: fabric.Canvas,
+  data: CanvasJSON | null,
+  readOnly: boolean,
+): Promise<fabric.Textbox | null> => {
+  if (data?.objects?.length) {
+    await canvas.loadFromJSON(data);
+    const existing = canvas.getObjects("Textbox")[0] as fabric.Textbox;
+    return existing ? withAlignedRendering(existing) : null;
+  }
+  // a read-only canvas with no data stays empty. the prompt belongs to the
+  // quill, and rendering it here would flash a placeholder letter.
+  if (readOnly) return null;
+  const textbox = createCompositionTextbox(DEFAULT_INIT_TEXT);
+  canvas.add(textbox);
+  return textbox;
+};
+
 const prepareFont = async (fontFamily: string, fontSize = 18) => {
   try {
     await document.fonts.load(`${fontSize}px "${fontFamily}"`);
@@ -181,6 +233,7 @@ export function ComposeCanvas({
   readOnly = false,
   initialData = null,
   style,
+  onReady,
   ref,
 }: ComposeCanvasProps) {
   // wrapper is the parent div box
@@ -194,6 +247,12 @@ export function ComposeCanvas({
     width: BASE_WIDTH,
     height: DEFAULT_LOGICAL_HEIGHT,
   });
+
+  // held in a ref so a new callback identity can't re-run the canvas init
+  const onReadyRef = useRef(onReady);
+  useEffect(() => {
+    onReadyRef.current = onReady;
+  }, [onReady]);
 
   // re-calculates height based on content and applies the zoom transform
   const syncViewport = useCallback(() => {
@@ -242,7 +301,7 @@ export function ComposeCanvas({
 
       // clean the canvas everytime and set fresh
       canvas.clear();
-      let textbox: fabric.Textbox | null = null;
+      canvas.off("mouse:down");
 
       // restore logical size from prev saved data if available (in case of existing letter)
       logicalSizeRef.current = {
@@ -250,51 +309,32 @@ export function ComposeCanvas({
         height: data?.canvasHeight ?? DEFAULT_LOGICAL_HEIGHT,
       };
 
-      if (data?.objects?.length) {
-        await canvas.loadFromJSON(data);
-        const existing = canvas.getObjects("Textbox")[0] as fabric.Textbox;
-        if (existing) {
-          textbox = withAlignedRendering(existing);
-        }
-      } else {
-        textbox = createCompositionTextbox(DEFAULT_INIT_TEXT);
-        canvas.add(textbox);
-      }
+      const textbox = await resolveTextbox(canvas, data, readOnly);
 
-      if (!textbox) return;
-
-      // readonly contraints applicable for post seal view
-      textbox.selectable = !readOnly;
-      textbox.evented = !readOnly;
-      textbox.editable = !readOnly;
-      textbox.hasBorders = false;
-
-      textboxRef.current = textbox;
-
-      // observe and auto-resize the canvas height whenever typed
-      textbox.on("changed", syncViewport);
-
-      // trapping the focus into the textbox wherever clicked on canvas (except images)
-      canvas.on("mouse:down", (e) => {
-        if (!e.target || e.target === textbox) {
-          focusTextbox(textbox);
-        }
-      });
-
-      for (const img of canvas.getObjects("Image")) {
-        img.set({
-          hasControls: !readOnly,
-          hasBorders: !readOnly,
+      if (textbox) {
+        textboxRef.current = textbox;
+        attachTextbox(canvas, textbox, {
+          readOnly,
+          onChanged: syncViewport,
+          onFocusRequest: focusTextbox,
         });
       }
 
+      applyImageControls(canvas, readOnly);
+
+      // NOTE: fabric refreshes fonts once the textbox is rendered after initial focus
       await document.fonts.ready;
       fabric.cache.clearFontCache();
-      textbox.initDimensions();
-      textbox.set("dirty", true);
+      textbox?.initDimensions();
+      textbox?.set("dirty", true);
       syncViewport();
 
-      if (!readOnly) {
+      // the wrapper has its final height now, so the letter can be shown without reflowing
+      onReadyRef.current?.();
+
+      // Hack: Fabric needs a small initial delay to mount before it will accept focus.
+      // otherwise it goes to the front
+      if (textbox && !readOnly) {
         setTimeout(() => focusTextbox(textbox), 200);
       }
     },
@@ -472,6 +512,15 @@ export function ComposeCanvas({
     <div
       ref={wrapperRef}
       className="relative bg-paper shadow-primary-content rounded-sm w-full outline-none overflow-hidden cursor-text"
+      // reserve the height the content will need, so the box never grows under the reader.
+      // fabric overwrites this with an explicit height once it has measured.
+      style={
+        initialData?.canvasWidth && initialData?.canvasHeight
+          ? {
+              aspectRatio: `${initialData.canvasWidth} / ${initialData.canvasHeight}`,
+            }
+          : undefined
+      }
     >
       <canvas
         ref={canvasRef}

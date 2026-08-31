@@ -13,18 +13,16 @@ import type { LetterImageData, LetterResponseData } from "../api/response";
 import Logo from "../components/Logo";
 import { BurnModal } from "../components/letter/BurnModal";
 import { EnvelopeReveal } from "../components/letter/EnvelopeReveal";
+import { LetterPaper } from "../components/letter/LetterPaper";
 import { PostActionOverlay } from "../components/letter/PostActionOverlay";
 import { ShareModal } from "../components/letter/ShareModal";
-import {
-  type CanvasJSON,
-  type CanvasTools,
-  ComposeCanvas,
-} from "../components/quill/ComposeCanvas";
+import type { CanvasJSON } from "../components/quill/ComposeCanvas";
 import { LogModal } from "../components/ui/LogModal";
 import { Navbar } from "../components/ui/Navbar";
 import { endpoints } from "../config/endpoints";
 import { PATHS, ROUTES } from "../config/routes";
 import { useAuth } from "../hooks/useAuth";
+import { type RevealState, useReveal } from "../hooks/useReveal";
 import { useKeyStore } from "../store/useKeyStore";
 import { CryptoUtils } from "../utils/crypto";
 import { formatDate } from "../utils/dateFormat";
@@ -39,6 +37,7 @@ interface LetterMetadata {
 }
 
 const WAIT_FOR_BURN_MS = 18000;
+
 export default function Letter() {
   const { public_id } = useParams();
   const location = useLocation();
@@ -46,12 +45,9 @@ export default function Letter() {
   const sharingKey = location.hash.replace("#", "");
 
   const navigateRef = useRef<NavigateFunction>(navigate);
-  const canvasRef = useRef<CanvasTools>(null);
 
   const [isDecrypting, setIsDecrypting] = useState(true);
-  const [revealState, setRevealState] = useState<
-    "SEALED" | "REVEALED" | "BURNED" | "BURNING"
-  >("SEALED");
+  const [revealState, setRevealState] = useState<RevealState>("SEALED");
   const [logTrace, setLogTrace] = useState<{
     type: "WARN" | "ERROR";
     message: string;
@@ -68,6 +64,18 @@ export default function Letter() {
 
   const { masterKey } = useKeyStore();
   const { isAuthenticated } = useAuth();
+
+  const {
+    paperRef,
+    envelopeLetterRef,
+    paperControls,
+    handleRevealComplete,
+    markCanvasReady,
+    isRevealed,
+    showInk,
+    inkTransition,
+    envelopeExit,
+  } = useReveal(revealState, setRevealState);
 
   const isAuthor = !!masterKey && !sharingKey;
 
@@ -238,17 +246,6 @@ export default function Letter() {
     loadAndDecryptLetter().then(() => setIsDecrypting(false));
   }, [public_id, sharingKey, masterKey]);
 
-  useEffect(() => {
-    if (
-      !isDecrypting &&
-      revealState === "REVEALED" &&
-      decryptedCanvasData &&
-      canvasRef.current
-    ) {
-      canvasRef.current.loadData(decryptedCanvasData);
-    }
-  }, [isDecrypting, revealState, decryptedCanvasData]);
-
   if (isDecrypting) {
     return (
       <div className="flex items-center h-screen w-screen justify-center bg-base-100 font-sans">
@@ -285,31 +282,32 @@ export default function Letter() {
   }
 
   return (
-    <section className="min-h-fit w-full bg-base-100 px-4 py-8 md:py-16 font-serif relative overflow-hidden">
+    <section
+      className={`min-h-screen w-full bg-base-100 px-4 pt-8 md:pt-16 font-serif relative overflow-hidden ${
+        isAuthor ? "pb-32" : "pb-8 md:pb-16"
+      }`}
+    >
       <div className="fixed inset-0 bg-vig pointer-events-none z-0" />
       {isAuthor && <Navbar />}
-      <AnimatePresence mode="wait">
+      <AnimatePresence>
         {revealState === "SEALED" && (
           <motion.div
             key="envelope"
-            className="h-[80vh] mx-auto flex-col items-center flex justify-center perspective-distant"
+            className="fixed inset-0 z-50 flex flex-col items-center justify-center perspective-distant pointer-events-none"
             initial={{ scale: 0.5, opacity: 0 }}
             animate={{ scale: 0.8, opacity: 1 }}
-            exit={{
-              scale: 1,
-              opacity: 0,
-              transition: { duration: 0.5, ease: "easeOut" },
-            }}
+            exit={envelopeExit}
             transition={{ duration: 4, delay: 1 }}
           >
             <EnvelopeReveal
+              letterRef={envelopeLetterRef}
               recipient={metadata?.recipient || "Someone dear"}
               date={
                 metadata?.updated_at
                   ? formatDate(new Date(metadata.updated_at))
                   : undefined
               }
-              onRevealComplete={() => setRevealState("REVEALED")}
+              onRevealComplete={handleRevealComplete}
               ignite={ignite}
             />
           </motion.div>
@@ -318,26 +316,20 @@ export default function Letter() {
 
       {ignite && <PostActionOverlay revealState={revealState} />}
 
-      {revealState === "REVEALED" && (
-        <div className="max-w-180 m-8 mx-auto space-y-8 h-full relative inset-0 z-100">
-          <div className="relative group perspective-1000">
-            <div className="absolute inset-0 bg-primary/5 blur-3xl rounded-full scale-75 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none" />
+      {/* mounted and measured behind the envelope, so the reveal is a fade
+          rather than a mount and a reflow */}
+      <LetterPaper
+        paperRef={paperRef}
+        controls={paperControls}
+        isRevealed={isRevealed}
+        showInk={showInk}
+        inkTransition={inkTransition}
+        data={decryptedCanvasData}
+        recipient={metadata?.recipient}
+        onCanvasReady={markCanvasReady}
+      />
 
-            <div className="bg-paper shadow-warm rounded-sm overflow-hidden animate-[opacity_1s_ease-in-out_1]">
-              <div className="p-1 md:p-2 bg-base-content/5 opacity-10 pointer-events-none absolute inset-0 z-10" />
-              <ComposeCanvas ref={canvasRef} readOnly />
-            </div>
-
-            {metadata?.recipient && (
-              <p className="text-center sm:hidden text-xxs uppercase tracking-widester text-base-content/20 mt-8">
-                For {metadata.recipient}
-              </p>
-            )}
-          </div>
-        </div>
-      )}
-
-      {revealState === "REVEALED" && !isAuthor && (
+      {isRevealed && !isAuthor && (
         <button
           data-testid="reader-cta-btn"
           type="button"
@@ -363,39 +355,47 @@ export default function Letter() {
       )}
 
       {isAuthor && revealState !== "BURNED" && (
-        <div className="flex justify-center gap-2 mt-8 z-10 relative">
-          <button
-            id="share-letter-btn"
-            data-testid="share-letter-btn"
-            type="button"
-            className="btn btn-ghost btn-sm text-base-content/30 hover:text-base-content hover:bg-base-content/10 gap-1.5"
-            onClick={handleShare}
-          >
-            <PaperPlaneTiltIcon size={16} weight="duotone" />
-            <span className="text-md uppercase font-sans tracking-widest">
-              Send to someone
-            </span>
-          </button>
-          <button
-            id="burn-letter-btn"
-            data-testid="burn-letter-btn"
-            type="button"
-            className="btn btn-ghost btn-sm text-error/40 hover:text-error hover:bg-error/10 gap-1.5"
-            onClick={() => setShowBurnModal(true)}
-          >
-            <FlameIcon size={16} weight="duotone" />
-            <span className="text-md uppercase font-sans tracking-widest">
-              Burn the letter
-            </span>
-          </button>
+        // Pinned in both states. In flow these sit below a fold the reader
+        // cannot scroll to while sealed, and would jump on opening. Near-opaque
+        // rather than the navbar's 60%: this bar crosses the letter, and the
+        // labels are faint tints that wash out over paper.
+        <div className="fixed inset-x-0 bottom-0 z-70 border-t border-base-content/5 bg-base-300/95 backdrop-blur-xl">
+          <div className="flex justify-center gap-2 py-3">
+            <button
+              id="share-letter-btn"
+              data-testid="share-letter-btn"
+              type="button"
+              className="btn btn-ghost btn-sm text-base-content/30 hover:text-base-content hover:bg-base-content/10 gap-1.5"
+              onClick={handleShare}
+            >
+              <PaperPlaneTiltIcon size={16} weight="duotone" />
+              <span className="text-md uppercase font-sans tracking-widest">
+                Send to someone
+              </span>
+            </button>
+            <button
+              id="burn-letter-btn"
+              data-testid="burn-letter-btn"
+              type="button"
+              className="btn btn-ghost btn-sm text-error/40 hover:text-error hover:bg-error/10 gap-1.5"
+              onClick={() => setShowBurnModal(true)}
+            >
+              <FlameIcon size={16} weight="duotone" />
+              <span className="text-md uppercase font-sans tracking-widest">
+                Burn the letter
+              </span>
+            </button>
+          </div>
         </div>
       )}
 
-      <footer className="mt-16 text-center z-10 text-neutral pointer-events-none">
-        <p className="text-xxs font-sans uppercase font-extrabold tracking-widester">
-          Read. Remember. Release.
-        </p>
-      </footer>
+      {isRevealed && (
+        <footer className="mt-16 text-center z-10 text-neutral pointer-events-none">
+          <p className="text-xxs font-sans uppercase font-extrabold tracking-widester">
+            Read. Remember. Release.
+          </p>
+        </footer>
+      )}
     </section>
   );
 }

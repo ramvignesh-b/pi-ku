@@ -9,7 +9,7 @@ export function PostActionOverlay({ revealState }: PostActionOverlayProps) {
   const navigate = useNavigate();
   return (
     <div
-      className={`flex flex-col items-center justify-center min-h-screen bg-base-100 ${revealState === "BURNED" ? "opacity-100" : "opacity-0"} transition-all delay-1000 duration-1000`}
+      className={`fixed inset-0 z-1000 flex flex-col items-center justify-center bg-base-100 ${revealState === "BURNED" ? "opacity-100" : "opacity-0 pointer-events-none"} transition-all delay-1000 duration-1000`}
     >
       <h1
         className={`text-6xl ${revealState === "BURNED" ? "opacity-100" : "opacity-0"} lg:text-9xl italic font-extralight text-base-content animate-[pulse_3s_ease-in-out_3]`}

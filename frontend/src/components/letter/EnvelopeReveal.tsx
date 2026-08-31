@@ -1,8 +1,12 @@
 import { WavesIcon } from "@phosphor-icons/react";
+import type * as React from "react";
 import { useEffect, useState } from "react";
 import candle from "../../assets/envelope/candle.webp";
 import stamp from "../../assets/envelope/stamp.webp";
 import waxSeal from "../../assets/envelope/waxSeal.webp";
+
+// the letter waits for the flap to finish opening before it rises
+const FLAP_MS = 800;
 
 export interface EnvelopeRevealProps {
   recipient?: string;
@@ -12,6 +16,8 @@ export interface EnvelopeRevealProps {
   isFlip?: boolean;
   isInteractive?: boolean;
   openFlap?: boolean;
+  // exposes the letter so a parent can pick the expansion up from its exact rect
+  letterRef?: React.Ref<HTMLButtonElement>;
 }
 
 export function EnvelopeReveal({
@@ -22,10 +28,13 @@ export function EnvelopeReveal({
   isFlip,
   isInteractive = true,
   openFlap = false,
+  letterRef,
 }: EnvelopeRevealProps) {
-  const [revealLetter, setRevealLetter] = useState(false);
   const [isFlipped, setIsFlipped] = useState(!!isFlip);
   const [isFlapOpen, setIsFlapOpen] = useState(!!openFlap);
+  const [hasRisen, setHasRisen] = useState(!!openFlap);
+  // once the parent's own paper takes over, this one stops painting at once
+  const [handedOver, setHandedOver] = useState(false);
 
   useEffect(() => {
     setIsFlipped(!!isFlip);
@@ -51,18 +60,34 @@ export function EnvelopeReveal({
     return () => clearInterval(burnInterval);
   }, [ignite]);
 
+  // held in state rather than a CSS delay, so hovering the letter never has to
+  // wait out the flap's timing
+  useEffect(() => {
+    if (!isFlapOpen) {
+      setHasRisen(false);
+      return;
+    }
+    const timer = setTimeout(() => setHasRisen(true), FLAP_MS);
+    return () => clearTimeout(timer);
+  }, [isFlapOpen]);
+
+  // The peek is owned by the envelope, not the letter. Hovering the letter
+  // itself flickers: it rises into the open flap, whose checkbox sits above it
+  // and takes the hover, so the letter drops back and rises again forever.
+  const peekMargin = !hasRisen
+    ? "mt-2"
+    : `-mt-12 ${isInteractive ? "group-hover:-mt-24" : ""}`;
+
   const handleClick = () => {
-    if (revealLetter) return;
-    setRevealLetter(true);
-    setTimeout(() => {
-      onRevealComplete();
-    }, 2500);
+    if (handedOver || !isInteractive) return;
+    setHandedOver(true);
+    onRevealComplete();
   };
 
   return (
     <>
       <div
-        className={`relative h-70 w-105 transform-3d transition-transform duration-2000 ${isFlipped ? "rotate-y-180" : ""}`}
+        className={`group pointer-events-auto relative h-70 w-105 transform-3d transition-transform duration-2000 ${isFlipped ? "rotate-y-180" : ""}`}
       >
         <div
           className={` flex backface-hidden rotate-y-180 justify-center transition-all duration-1000 ${isFlipped ? "" : "pointer-events-none"}`}
@@ -93,9 +118,13 @@ export function EnvelopeReveal({
           <button
             type="button"
             id="letter"
+            ref={letterRef}
             aria-label="Read the letter"
             data-testid="envelope-letter"
-            className={`absolute mx-auto transition-all peer-has-checked:delay-800 peer-has-checked:duration-1000 duration-1000 mt-2 h-55 w-105 bg-paper peer-has-checked:-mt-12 hover:-mt-24 cursor-pointer ${revealLetter ? "duration-1000 peer-has-checked:duration-3000 w-screen max-w-4xl h-screen z-101 -translate-y-90" : "peer-has-checked:z-1"}`}
+            className={`absolute mx-auto transition-all duration-600 h-55 w-105 bg-paper cursor-pointer ${hasRisen ? "z-1" : ""} ${peekMargin}`}
+            // the parent's paper picks up from this exact rect, so this one has to
+            // stop painting in the same frame — no fade, or both would show
+            style={handedOver ? { opacity: 0, transition: "none" } : undefined}
             onClick={handleClick}
           ></button>
 
