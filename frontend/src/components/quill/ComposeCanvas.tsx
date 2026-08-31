@@ -101,6 +101,82 @@ interface ComposeCanvasProps {
   ref?: React.Ref<CanvasTools>;
 }
 
+// Locks character rendering to measured bounds to prevent cursor drift
+const withAlignedRendering = (textbox: fabric.Textbox): fabric.Textbox => {
+  (textbox as unknown as { CACHE_FONT_SIZE: number }).CACHE_FONT_SIZE = 18;
+
+  (textbox as unknown as { _renderChars: unknown })._renderChars = function (
+    // biome-ignore lint/suspicious/noExplicitAny: Fabric internal private methods
+    this: any,
+    method: "fillText" | "strokeText",
+    ctx: CanvasRenderingContext2D,
+    line: string[],
+    left: number,
+    top: number,
+    lineIndex: number,
+  ) {
+    const isLtr = this.direction === "ltr";
+    const sign = isLtr ? 1 : -1;
+    let charLeft = left;
+    const adjustedTop =
+      top - this.getHeightOfLineImpl(lineIndex) * this._fontSizeFraction;
+
+    for (let i = 0; i < line.length; i++) {
+      const charBox = this.__charBounds?.[lineIndex]?.[i];
+      if (!charBox) continue;
+      this._renderChar(
+        method,
+        ctx,
+        lineIndex,
+        i,
+        line[i],
+        charLeft,
+        adjustedTop,
+      );
+      charLeft += sign * charBox.kernedWidth;
+    }
+  };
+
+  return textbox;
+};
+
+const createCompositionTextbox = (text = DEFAULT_INIT_TEXT): fabric.Textbox => {
+  return withAlignedRendering(
+    new fabric.Textbox(text, {
+      name: "main-textbox",
+      originX: "left",
+      originY: "top",
+      left: PAD,
+      top: PAD,
+      width: BASE_WIDTH - PAD * 2,
+      fontSize: 18,
+      fontWeight: 500,
+      fontFamily: DEFAULT_FONT_FAMILY,
+      fill: DEFAULT_FONT_COLOR,
+      lineHeight: 1.5,
+      splitByGrapheme: false,
+      lockMovementX: true,
+      lockMovementY: true,
+      lockScalingX: true,
+      lockScalingY: true,
+      lockRotation: true,
+      hasControls: false,
+      hasBorders: false,
+      objectCaching: false,
+      noScaleCache: false,
+    }),
+  );
+};
+
+const prepareFont = async (fontFamily: string, fontSize = 18) => {
+  try {
+    await document.fonts.load(`${fontSize}px "${fontFamily}"`);
+  } catch {
+    // Ignore font loading failure
+  }
+  fabric.cache.clearFontCache(fontFamily);
+};
+
 export function ComposeCanvas({
   readOnly = false,
   initialData = null,
@@ -176,32 +252,12 @@ export function ComposeCanvas({
 
       if (data?.objects?.length) {
         await canvas.loadFromJSON(data);
-        textbox = canvas.getObjects("Textbox")[0] as fabric.Textbox;
+        const existing = canvas.getObjects("Textbox")[0] as fabric.Textbox;
+        if (existing) {
+          textbox = withAlignedRendering(existing);
+        }
       } else {
-        // Create a fresh letter if no data exists
-        textbox = new fabric.Textbox(DEFAULT_INIT_TEXT, {
-          name: "main-textbox",
-          originX: "left",
-          originY: "top",
-          left: PAD,
-          top: PAD,
-          width: BASE_WIDTH - PAD * 2,
-          fontSize: 18,
-          fontWeight: 500,
-          fontFamily: DEFAULT_FONT_FAMILY,
-          fill: DEFAULT_FONT_COLOR,
-          lineHeight: 1.5,
-          splitByGrapheme: false,
-          lockMovementX: true,
-          lockMovementY: true,
-          lockScalingX: true,
-          lockScalingY: true,
-          lockRotation: true,
-          hasControls: false,
-          hasBorders: false,
-          objectCaching: false,
-          noScaleCache: false,
-        });
+        textbox = createCompositionTextbox(DEFAULT_INIT_TEXT);
         canvas.add(textbox);
       }
 
@@ -232,13 +288,12 @@ export function ComposeCanvas({
         });
       }
 
-      // NOTE: fabric refreshes fonts once the textbox is rendered after initial focus
       await document.fonts.ready;
+      fabric.cache.clearFontCache();
+      textbox.initDimensions();
       textbox.set("dirty", true);
       syncViewport();
 
-      // Hack: Fabric needs a small initial delay to mount before it will accept focus.
-      // otherwise it goes to the front
       if (!readOnly) {
         setTimeout(() => focusTextbox(textbox), 200);
       }
@@ -249,9 +304,17 @@ export function ComposeCanvas({
   useEffect(() => {
     if (style && textboxRef.current) {
       const textBox = textboxRef.current;
-      textBox.fontFamily = style.fontFamily || textBox.fontFamily;
-      textBox.fill = style.fontColor || textBox.fill;
-      syncViewport();
+      const nextFont = style.fontFamily || textBox.fontFamily;
+      const nextColor = style.fontColor || (textBox.fill as string);
+
+      prepareFont(nextFont).then(() => {
+        textBox.fontFamily = nextFont;
+        textBox.fill = nextColor;
+        textBox.initDimensions();
+        textBox.set("dirty", true);
+        syncViewport();
+        fabricRef.current?.requestRenderAll();
+      });
     }
   }, [style, syncViewport]);
 
