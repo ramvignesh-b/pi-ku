@@ -39,6 +39,7 @@ import { useKeyStore } from "../store/useKeyStore";
 import { CryptoUtils } from "../utils/crypto";
 import { formatRelativeDate } from "../utils/dateFormat";
 import { decryptCanvasImages, encryptCanvasImages } from "../utils/letterLogic";
+import { getLastRequestId, report } from "../utils/report";
 
 type SaveOverlay = "IDLE" | "SAVING" | "SAVED" | "ERROR";
 
@@ -66,8 +67,8 @@ export default function Quill() {
   const [decryptionStatus, setDecryptionStatus] = useState<{
     status: "SUCCESS" | "WARN" | "ERROR" | "RESET";
     message: string;
-    log: string;
-  }>({ status: "RESET", message: "", log: "" });
+    reference?: string;
+  }>({ status: "RESET", message: "" });
 
   const [isInitialLoading, setIsInitialLoading] = useState(false);
   const [sealedTargetId, setSealedTargetId] = useState<string | null>(null);
@@ -155,10 +156,11 @@ export default function Quill() {
         );
 
       if (isPartialFailure) {
+        report("warn", "canvas_image_decryption_partial", errors.join("; "));
         setDecryptionStatus({
           status: "WARN",
           message: "Failed to decrypt some elements. Please check the render.",
-          log: errors.toString(),
+          reference: getLastRequestId(),
         });
       }
 
@@ -186,10 +188,11 @@ export default function Quill() {
           await decryptAndLoadLetter(letterData, masterKey);
         }
       } catch (err) {
+        report("error", "letter_load_failed", err);
         setDecryptionStatus({
           status: "ERROR",
           message: "Failed to decrypt letter. Please try again later.",
-          log: err instanceof Error ? err.message : "Unknown error",
+          reference: getLastRequestId(),
         });
       } finally {
         setIsInitialLoading(false);
@@ -348,7 +351,8 @@ export default function Quill() {
       }
       setSaveOverlay("SAVED");
       setShowSaveOverlay(true);
-    } catch {
+    } catch (err) {
+      report("error", "letter_save_failed", err);
       setSaveOverlay("ERROR");
       setShowSaveOverlay(true);
     }
@@ -383,10 +387,8 @@ export default function Quill() {
         <LogModal
           status={decryptionStatus.status}
           message={decryptionStatus.message}
-          log={decryptionStatus.log}
-          onClose={() =>
-            setDecryptionStatus({ status: "RESET", message: "", log: "" })
-          }
+          reference={decryptionStatus.reference}
+          onClose={() => setDecryptionStatus({ status: "RESET", message: "" })}
           isOpen={decryptionStatus.status !== "RESET"}
         />
 
@@ -529,7 +531,6 @@ export default function Quill() {
       <LogModal
         status={logStatus.status}
         message={logStatus.message}
-        log={""}
         onClose={() =>
           setLogStatus({
             status: "RESET",

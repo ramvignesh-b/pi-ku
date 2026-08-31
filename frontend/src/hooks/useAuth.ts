@@ -10,6 +10,7 @@ import {
   loadMasterKey,
   saveMasterKey,
 } from "../utils/keystore";
+import { report } from "../utils/report";
 
 export const useAuth = () => {
   const { accessToken, user, isInitializing, setAuth, clearAuth } =
@@ -32,7 +33,9 @@ export const useAuth = () => {
   const logout = async () => {
     try {
       await api.post(endpoints.LOGOUT);
-    } catch {
+    } catch (err) {
+      // The local session is cleared either way; the server call is best effort.
+      report("warn", "logout_request_failed", err);
     } finally {
       clearAuth();
       setMasterKey(null);
@@ -48,7 +51,10 @@ export const useAuth = () => {
     try {
       const masterKey = await loadMasterKey();
       if (masterKey) setMasterKey(masterKey);
-    } catch {}
+    } catch (err) {
+      // Blocked storage lands here. The author is asked to unlock again.
+      report("warn", "master_key_restore_failed", err);
+    }
 
     // If session in memory, don't trigger refresh/me again
     if (accessToken && user) {
@@ -62,8 +68,9 @@ export const useAuth = () => {
         headers: { Authorization: `Bearer ${refreshData.access}` },
       });
       setAuth(refreshData.access, userData);
-    } catch {
+    } catch (err) {
       // grace for temporary network errors
+      report("warn", "session_restore_failed", err);
     } finally {
       setInitializing(false);
     }

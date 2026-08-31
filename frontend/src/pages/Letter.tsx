@@ -26,10 +26,12 @@ import { type RevealState, useReveal } from "../hooks/useReveal";
 import { useKeyStore } from "../store/useKeyStore";
 import { CryptoUtils } from "../utils/crypto";
 import { formatDate } from "../utils/dateFormat";
+import type { DecryptionResult } from "../utils/letterLogic";
 import {
   decryptCanvasImages,
   decryptCanvasImagesWithSharingKey,
 } from "../utils/letterLogic";
+import { getLastRequestId, report } from "../utils/report";
 
 interface LetterMetadata {
   recipient?: string;
@@ -37,6 +39,15 @@ interface LetterMetadata {
 }
 
 const WAIT_FOR_BURN_MS = 18000;
+
+// A per-image failure is collected, not thrown, so it never reaches a catch.
+// The reader still gets the letter; only the reporter hears about it.
+const takeDecryptedCanvas = (result: DecryptionResult): CanvasJSON => {
+  if (result.isPartialFailure) {
+    report("warn", "canvas_image_decryption_partial", result.errors.join("; "));
+  }
+  return result.canvasDataWithDecryptedImages;
+};
 
 export default function Letter() {
   const { public_id } = useParams();
@@ -51,7 +62,7 @@ export default function Letter() {
   const [logTrace, setLogTrace] = useState<{
     type: "WARN" | "ERROR";
     message: string;
-    log: string;
+    reference?: string;
   } | null>(null);
   const [metadata, setMetadata] = useState<LetterMetadata | null>(null);
   const [decryptedCanvasData, setDecryptedCanvasData] =
@@ -85,8 +96,9 @@ export default function Letter() {
     const key = await cryptoUtils.extractSharingKey(encryptedDek, masterKey);
     try {
       await api.patch(`${endpoints.LETTERS}${public_id}/`, { type: "SENT" });
-    } catch {
+    } catch (err) {
       // shouldn't obstruct share if api operation fails (since it's client side share)
+      report("error", "letter_send_failed", err);
     } finally {
       setShareLink(
         `${window.location.origin}${PATHS.letter(public_id)}#${key}`,
@@ -101,10 +113,12 @@ export default function Letter() {
       await api.patch(`${endpoints.LETTERS}${public_id}/`, {
         status: "BURNED",
       });
-    } catch {
+    } catch (err) {
       // should not obstruct burn if api operation fails
       // WHY?: it disconnects the UX. if you want to burn the letter, you should be able to burn the letter
+      // The letter still looks burned to the author, so the failure has to be recorded.
       // TODO: maybe say something like: "the wind is strong today, let's try again"? or maybe something less stupid :3
+      report("error", "letter_burn_failed", err);
     } finally {
       setIsBurning(false);
       setShowBurnModal(false);
@@ -133,29 +147,31 @@ export default function Letter() {
       const isShared = !!sharingKey;
       try {
         if (isShared) {
-          const { canvasDataWithDecryptedImages } =
+          return takeDecryptedCanvas(
             await decryptCanvasImagesWithSharingKey(
               canvasData,
               images,
               sharingKey,
               cryptoUtils,
-            );
-          return canvasDataWithDecryptedImages;
+            ),
+          );
         }
-        const { canvasDataWithDecryptedImages } = await decryptCanvasImages(
-          canvasData,
-          images,
-          encrypted_dek,
-          // biome-ignore lint/style/noNonNullAssertion: masterKey is guaranteed to be non-null here as isDecryptionKeyAvailable is true
-          masterKey!,
-          cryptoUtils,
+        return takeDecryptedCanvas(
+          await decryptCanvasImages(
+            canvasData,
+            images,
+            encrypted_dek,
+            // biome-ignore lint/style/noNonNullAssertion: masterKey is guaranteed to be non-null here as isDecryptionKeyAvailable is true
+            masterKey!,
+            cryptoUtils,
+          ),
         );
-        return canvasDataWithDecryptedImages;
       } catch (err) {
+        report("warn", "canvas_image_decryption_failed", err);
         setLogTrace({
           message:
             "Failed to decrypt elements. Images might not render in the letter as intended.",
-          log: err instanceof Error ? err.message : "Unknown error",
+          reference: getLastRequestId(),
           type: "WARN",
         });
         return canvasData;
@@ -235,9 +251,10 @@ export default function Letter() {
         );
         await processLetterData(response.data);
       } catch (err) {
+        report("error", "letter_load_failed", err);
         setLogTrace({
           message: `Failed to load letter ☹`,
-          log: err instanceof Error ? err.message : "Unknown error",
+          reference: getLastRequestId(),
           type: "ERROR",
         });
       }
@@ -275,7 +292,7 @@ export default function Letter() {
           setLogTrace(null);
         }}
         message={logTrace.message}
-        log={logTrace.log}
+        reference={logTrace.reference}
         status={logTrace.type}
       />
     );

@@ -4,7 +4,7 @@ import { Modal } from "./Modal";
 interface LogModalContent {
   status: "WARN" | "ERROR" | "RESET" | "SUCCESS";
   message: string;
-  log: string;
+  reference?: string;
   onClose: () => void;
   isOpen: boolean;
 }
@@ -12,7 +12,7 @@ interface LogModalContent {
 export const LogModal = ({
   isOpen,
   message,
-  log,
+  reference,
   onClose,
   status,
 }: LogModalContent) => {
@@ -25,17 +25,13 @@ export const LogModal = ({
           <WarningIcon className="text-warning" size={16} weight="duotone" />
         )}
         <span data-testid="log-modal-message">{message}</span>
-        {log && (
-          <>
-            <div className="divider text-primary-content text-xs uppercase tracking-widest">
-              Error Stack
-            </div>
-            <div className="mockup-code bg-base-100 text-error w-full">
-              <pre>
-                <code>{String(log)}</code>
-              </pre>
-            </div>
-          </>
+        {reference && (
+          <span
+            className="font-mono text-xs opacity-60 select-all"
+            data-testid="log-modal-reference"
+          >
+            Reference {reference}
+          </span>
         )}
       </div>
     </Modal>

@@ -1,6 +1,7 @@
 import axios from "axios";
 import { endpoints } from "../config/endpoints";
 import { useAuthStore } from "../store/useAuthStore";
+import { rememberRequestId } from "../utils/report";
 
 export const apiServerUrl = import.meta.env.VITE_API_URL;
 
@@ -9,6 +10,16 @@ export const publicApi = axios.create({
   baseURL: apiServerUrl,
   withCredentials: true,
 });
+publicApi.interceptors.response.use(
+  (response) => {
+    rememberRequestId(response.headers["x-request-id"]);
+    return response;
+  },
+  (error) => {
+    rememberRequestId(error.response?.headers?.["x-request-id"]);
+    return Promise.reject(error);
+  },
+);
 
 // api for all authenticated requests
 export const api = axios.create({
@@ -24,8 +35,12 @@ api.interceptors.request.use((config) => {
 });
 // auto handle 401 errors by attempting a silent refresh
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    rememberRequestId(response.headers["x-request-id"]);
+    return response;
+  },
   async (error) => {
+    rememberRequestId(error.response?.headers?.["x-request-id"]);
     const originalRequest = error.config;
 
     // if first time 401 and we haven't tried refreshing yet, we proceed with silent refresh
