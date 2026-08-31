@@ -101,6 +101,48 @@ interface ComposeCanvasProps {
   ref?: React.Ref<CanvasTools>;
 }
 
+// Ensure FabricText defaults to 1:1 font sizing for measurements
+if (fabric.FabricText?.ownDefaults) {
+  fabric.FabricText.ownDefaults.CACHE_FONT_SIZE = 18;
+}
+
+const patchTextboxRendering = (tb: fabric.Textbox) => {
+  (tb as unknown as { CACHE_FONT_SIZE: number }).CACHE_FONT_SIZE = 18;
+
+  // Align character rendering directly with __charBounds coordinates to prevent cursor drift
+  (tb as unknown as { _renderChars: unknown })._renderChars = function (
+    // biome-ignore lint/suspicious/noExplicitAny: Fabric internal private methods
+    this: any,
+    method: "fillText" | "strokeText",
+    ctx: CanvasRenderingContext2D,
+    line: string[],
+    left: number,
+    top: number,
+    lineIndex: number,
+  ) {
+    const isLtr = this.direction === "ltr";
+    const sign = isLtr ? 1 : -1;
+    let charLeft = left;
+    const adjustedTop =
+      top - this.getHeightOfLineImpl(lineIndex) * this._fontSizeFraction;
+
+    for (let i = 0; i < line.length; i++) {
+      const charBox = this.__charBounds?.[lineIndex]?.[i];
+      if (!charBox) continue;
+      this._renderChar(
+        method,
+        ctx,
+        lineIndex,
+        i,
+        line[i],
+        charLeft,
+        adjustedTop,
+      );
+      charLeft += sign * charBox.kernedWidth;
+    }
+  };
+};
+
 export function ComposeCanvas({
   readOnly = false,
   initialData = null,
@@ -207,6 +249,8 @@ export function ComposeCanvas({
 
       if (!textbox) return;
 
+      patchTextboxRendering(textbox);
+
       // readonly contraints applicable for post seal view
       textbox.selectable = !readOnly;
       textbox.evented = !readOnly;
@@ -234,6 +278,8 @@ export function ComposeCanvas({
 
       // NOTE: fabric refreshes fonts once the textbox is rendered after initial focus
       await document.fonts.ready;
+      fabric.cache.clearFontCache();
+      textbox.initDimensions();
       textbox.set("dirty", true);
       syncViewport();
 
@@ -249,9 +295,25 @@ export function ComposeCanvas({
   useEffect(() => {
     if (style && textboxRef.current) {
       const textBox = textboxRef.current;
-      textBox.fontFamily = style.fontFamily || textBox.fontFamily;
-      textBox.fill = style.fontColor || textBox.fill;
-      syncViewport();
+      const nextFont = style.fontFamily || textBox.fontFamily;
+      const nextColor = style.fontColor || (textBox.fill as string);
+
+      const applyStyle = async () => {
+        try {
+          await document.fonts.load(`18px "${nextFont}"`);
+        } catch {
+          // ignore font loading error
+        }
+        fabric.cache.clearFontCache(nextFont);
+        textBox.fontFamily = nextFont;
+        textBox.fill = nextColor;
+        textBox.initDimensions();
+        textBox.set("dirty", true);
+        syncViewport();
+        fabricRef.current?.requestRenderAll();
+      };
+
+      applyStyle();
     }
   }, [style, syncViewport]);
 
