@@ -19,7 +19,10 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import include, path
 
+from config.health import health
+
 urlpatterns = [
+    path("api/health/", health, name="health"),
     path("api/auth/", include("users.urls")),
     path("api/letters/", include("letters.urls")),
 ]

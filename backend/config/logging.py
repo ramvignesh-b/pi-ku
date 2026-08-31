@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 
 import structlog
@@ -6,6 +7,20 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 LOGS_DIR = BASE_DIR / "logs"
 
 LOGS_DIR.mkdir(parents=True, exist_ok=True)
+
+HEALTH_PATH = "/api/health/"
+
+
+class SkipHealthChecks(logging.Filter):
+    """
+    Drops request logging for the health endpoint, which is polled on an interval.
+    """
+
+    def filter(self, record):
+        if isinstance(record.msg, dict):
+            return HEALTH_PATH not in str(record.msg.get("request", ""))
+        return True
+
 
 structlog.configure(
     processors=[
@@ -27,6 +42,11 @@ structlog.configure(
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
+    "filters": {
+        "skip_health_checks": {
+            "()": SkipHealthChecks,
+        },
+    },
     "formatters": {
         "json_formatter": {
             "()": structlog.stdlib.ProcessorFormatter,
@@ -54,6 +74,12 @@ LOGGING = {
         },
     },
     "loggers": {
+        "django_structlog.middlewares.request": {
+            "handlers": ["console", "json_file"],
+            "filters": ["skip_health_checks"],
+            "level": "INFO",
+            "propagate": False,
+        },
         "letters.tasks": {
             "handlers": ["console", "json_file", "scheduler_log"],
             "level": "INFO",

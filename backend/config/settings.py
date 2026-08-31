@@ -32,6 +32,8 @@ if os.path.exists(env_file):
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["127.0.0.1"])
 ALLOWED_HOSTS.append(env("FRONTEND_DOMAIN", default="127.0.0.1"))
 ALLOWED_HOSTS.append(env("BACKEND_DOMAIN", default="127.0.0.1"))
+# The container healthcheck reaches the app over loopback.
+ALLOWED_HOSTS.append("localhost")
 # NOTE: Set to forward https when using reverse proxy
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
