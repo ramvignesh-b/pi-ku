@@ -49,9 +49,17 @@ def notify_unlocked_letter(letter):
         )
         letter.notified_at = datetime.now(UTC)
         letter.save()
-        logger.info(f"Successfully notified {author} of unlocked letter")
+        logger.info(
+            "vault_letter_notified",
+            letter_id=str(letter.public_id),
+            user_id=letter.user_id,
+        )
     except Exception:
-        logger.exception(f"Failed to notify {author} of unlocked letter")
+        logger.exception(
+            "vault_notification_failed",
+            letter_id=str(letter.public_id),
+            user_id=letter.user_id,
+        )
 
 
 def vault_unlock_notification_polling_scheduler():
@@ -67,7 +75,7 @@ def start_scheduler():
     """
     Starts the background scheduler for polling and notifying vault letters.
     """
-    logger.info("Starting vault polling scheduler...")
+    logger.info("scheduler_started")
     scheduler = BackgroundScheduler()
     scheduler.add_job(
         vault_unlock_notification_polling_scheduler,
