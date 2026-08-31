@@ -1,8 +1,10 @@
+import structlog
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.db import transaction
 from django.utils.http import urlsafe_base64_decode
 from rest_framework import generics, permissions, status
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
@@ -12,6 +14,7 @@ from users.utils import send_activation_email, set_response_cookies
 from .serializers import UserSerializer
 
 User = get_user_model()
+logger = structlog.get_logger(__name__)
 
 
 class RegisterView(generics.CreateAPIView):
@@ -58,16 +61,25 @@ class TokenGenerateView(TokenObtainPairView):
     permission_classes = (permissions.AllowAny,)
 
     def post(self, request, *args, **kwargs):
+        """
+        Issues a token pair. Every failure returns the same 400 so the client cannot tell
+        an unknown account from a wrong password.
+        """
         try:
             response = super().post(request, *args, **kwargs)
             if response.status_code == status.HTTP_200_OK:
                 refresh_token = response.data["refresh"]
                 response = set_response_cookies(response, refresh_token)
             return response
+        except AuthenticationFailed:
+            logger.warning("authentication_failed")
         except Exception:
-            return Response(
-                {"detail": "No active account found with the given credentials"}, status=status.HTTP_400_BAD_REQUEST
-            )
+            # Not a rejected credential. Something is broken.
+            logger.exception("authentication_error")
+        # Never log the submitted credentials: a mistyped password is in request.data.
+        return Response(
+            {"detail": "No active account found with the given credentials"}, status=status.HTTP_400_BAD_REQUEST
+        )
 
 
 class RefreshTokenView(TokenRefreshView):
