@@ -56,3 +56,42 @@ class ActivationTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(user.is_active)
+
+
+class ObservabilityTests(APITestCase):
+    def setUp(self):
+        self.password = "password123"
+        self.user = User.objects.create_user(
+            email="test@example.com", password=self.password, full_name="Test User", is_active=True
+        )
+        self.login_url = reverse("token_generate")
+
+    def test_response_carries_request_id_header(self):
+        """
+        Tests that the request id is echoed so a report can be traced to a log line.
+        """
+        response = self.client.post(self.login_url, {"email": self.user.email, "password": self.password})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.headers.get("X-Request-ID"))
+
+    def test_failed_login_is_logged_and_still_returns_400(self):
+        """
+        Tests that a rejected credential is logged without changing the flat response.
+        """
+        with self.assertLogs("users.views", level="WARNING") as logs:
+            response = self.client.post(self.login_url, {"email": self.user.email, "password": "wrong"})
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(len(logs.records), 1)
+        self.assertEqual(logs.records[0].msg["event"], "authentication_failed")
+
+    def test_failed_login_does_not_log_credentials(self):
+        """
+        Tests that a mistyped password never reaches the log.
+        """
+        with self.assertLogs("users.views", level="WARNING") as logs:
+            self.client.post(self.login_url, {"email": self.user.email, "password": "hunter2"})
+
+        self.assertNotIn("hunter2", logs.output[0])
+        self.assertNotIn(self.user.email, logs.output[0])

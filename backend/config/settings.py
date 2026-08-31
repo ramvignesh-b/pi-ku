@@ -60,6 +60,7 @@ DEBUG = env.bool("DEBUG", default=False)
 # Application definition
 
 INSTALLED_APPS = [
+    "config.apps.ObservabilityConfig",
     "django_apscheduler",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -123,6 +124,8 @@ DATABASES = {
 CORS_ALLOWED_ORIGINS = FRONTEND_URLS
 CSRF_TRUSTED_ORIGINS += FRONTEND_URLS
 CORS_ALLOW_CREDENTIALS = True
+# Custom response headers are invisible to browser JS unless exposed.
+CORS_EXPOSE_HEADERS = ["X-Request-ID"]
 
 AUTH_USER_MODEL = "users.User"
 
