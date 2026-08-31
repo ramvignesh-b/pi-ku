@@ -101,16 +101,11 @@ interface ComposeCanvasProps {
   ref?: React.Ref<CanvasTools>;
 }
 
-// Ensure FabricText defaults to 1:1 font sizing for measurements
-if (fabric.FabricText?.ownDefaults) {
-  fabric.FabricText.ownDefaults.CACHE_FONT_SIZE = 18;
-}
+// Locks character rendering to measured bounds to prevent cursor drift
+const withAlignedRendering = (textbox: fabric.Textbox): fabric.Textbox => {
+  (textbox as unknown as { CACHE_FONT_SIZE: number }).CACHE_FONT_SIZE = 18;
 
-const patchTextboxRendering = (tb: fabric.Textbox) => {
-  (tb as unknown as { CACHE_FONT_SIZE: number }).CACHE_FONT_SIZE = 18;
-
-  // Align character rendering directly with __charBounds coordinates to prevent cursor drift
-  (tb as unknown as { _renderChars: unknown })._renderChars = function (
+  (textbox as unknown as { _renderChars: unknown })._renderChars = function (
     // biome-ignore lint/suspicious/noExplicitAny: Fabric internal private methods
     this: any,
     method: "fillText" | "strokeText",
@@ -141,6 +136,45 @@ const patchTextboxRendering = (tb: fabric.Textbox) => {
       charLeft += sign * charBox.kernedWidth;
     }
   };
+
+  return textbox;
+};
+
+const createCompositionTextbox = (text = DEFAULT_INIT_TEXT): fabric.Textbox => {
+  return withAlignedRendering(
+    new fabric.Textbox(text, {
+      name: "main-textbox",
+      originX: "left",
+      originY: "top",
+      left: PAD,
+      top: PAD,
+      width: BASE_WIDTH - PAD * 2,
+      fontSize: 18,
+      fontWeight: 500,
+      fontFamily: DEFAULT_FONT_FAMILY,
+      fill: DEFAULT_FONT_COLOR,
+      lineHeight: 1.5,
+      splitByGrapheme: false,
+      lockMovementX: true,
+      lockMovementY: true,
+      lockScalingX: true,
+      lockScalingY: true,
+      lockRotation: true,
+      hasControls: false,
+      hasBorders: false,
+      objectCaching: false,
+      noScaleCache: false,
+    }),
+  );
+};
+
+const prepareFont = async (fontFamily: string, fontSize = 18) => {
+  try {
+    await document.fonts.load(`${fontSize}px "${fontFamily}"`);
+  } catch {
+    // Ignore font loading failure
+  }
+  fabric.cache.clearFontCache(fontFamily);
 };
 
 export function ComposeCanvas({
@@ -218,38 +252,16 @@ export function ComposeCanvas({
 
       if (data?.objects?.length) {
         await canvas.loadFromJSON(data);
-        textbox = canvas.getObjects("Textbox")[0] as fabric.Textbox;
+        const existing = canvas.getObjects("Textbox")[0] as fabric.Textbox;
+        if (existing) {
+          textbox = withAlignedRendering(existing);
+        }
       } else {
-        // Create a fresh letter if no data exists
-        textbox = new fabric.Textbox(DEFAULT_INIT_TEXT, {
-          name: "main-textbox",
-          originX: "left",
-          originY: "top",
-          left: PAD,
-          top: PAD,
-          width: BASE_WIDTH - PAD * 2,
-          fontSize: 18,
-          fontWeight: 500,
-          fontFamily: DEFAULT_FONT_FAMILY,
-          fill: DEFAULT_FONT_COLOR,
-          lineHeight: 1.5,
-          splitByGrapheme: false,
-          lockMovementX: true,
-          lockMovementY: true,
-          lockScalingX: true,
-          lockScalingY: true,
-          lockRotation: true,
-          hasControls: false,
-          hasBorders: false,
-          objectCaching: false,
-          noScaleCache: false,
-        });
+        textbox = createCompositionTextbox(DEFAULT_INIT_TEXT);
         canvas.add(textbox);
       }
 
       if (!textbox) return;
-
-      patchTextboxRendering(textbox);
 
       // readonly contraints applicable for post seal view
       textbox.selectable = !readOnly;
@@ -276,15 +288,12 @@ export function ComposeCanvas({
         });
       }
 
-      // NOTE: fabric refreshes fonts once the textbox is rendered after initial focus
       await document.fonts.ready;
       fabric.cache.clearFontCache();
       textbox.initDimensions();
       textbox.set("dirty", true);
       syncViewport();
 
-      // Hack: Fabric needs a small initial delay to mount before it will accept focus.
-      // otherwise it goes to the front
       if (!readOnly) {
         setTimeout(() => focusTextbox(textbox), 200);
       }
@@ -298,22 +307,14 @@ export function ComposeCanvas({
       const nextFont = style.fontFamily || textBox.fontFamily;
       const nextColor = style.fontColor || (textBox.fill as string);
 
-      const applyStyle = async () => {
-        try {
-          await document.fonts.load(`18px "${nextFont}"`);
-        } catch {
-          // ignore font loading error
-        }
-        fabric.cache.clearFontCache(nextFont);
+      prepareFont(nextFont).then(() => {
         textBox.fontFamily = nextFont;
         textBox.fill = nextColor;
         textBox.initDimensions();
         textBox.set("dirty", true);
         syncViewport();
         fabricRef.current?.requestRenderAll();
-      };
-
-      applyStyle();
+      });
     }
   }, [style, syncViewport]);
 
