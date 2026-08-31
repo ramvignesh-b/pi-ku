@@ -16,7 +16,8 @@ from pathlib import Path
 
 import environ
 
-from .logging import LOGGING
+# Django reads this off the settings module; the import is the definition.
+from .logging import LOGGING  # noqa: F401
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -55,8 +56,6 @@ SECRET_KEY = env("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool("DEBUG", default=False)
-
-LOGGING = LOGGING
 
 # Application definition
 

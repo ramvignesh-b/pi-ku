@@ -36,10 +36,6 @@ LOGGING = {
             "()": structlog.stdlib.ProcessorFormatter,
             "processor": structlog.dev.ConsoleRenderer(colors=True),
         },
-        "key_value": {
-            "()": structlog.stdlib.ProcessorFormatter,
-            "processor": structlog.processors.KeyValueRenderer(key_order=["timestamp", "level", "event", "logger"]),
-        },
     },
     "handlers": {
         "console": {
@@ -51,45 +47,21 @@ LOGGING = {
             "filename": LOGS_DIR / "json.log",
             "formatter": "json_formatter",
         },
-        "flat_line_file": {
-            "class": "logging.handlers.WatchedFileHandler",
-            "filename": LOGS_DIR / "flat_line.log",
-            "formatter": "key_value",
-        },
-        "letters_log": {
-            "class": "logging.handlers.WatchedFileHandler",
-            "filename": LOGS_DIR / "letters.log",
-            "formatter": "key_value",
-        },
         "scheduler_log": {
             "class": "logging.handlers.WatchedFileHandler",
             "filename": LOGS_DIR / "scheduler.log",
-            "formatter": "key_value",
+            "formatter": "json_formatter",
         },
     },
     "loggers": {
-        "django_structlog": {
-            "handlers": ["console", "flat_line_file", "json_file"],
-            "level": "INFO",
-            "propagate": False,
-        },
-        "django.core.mail": {
-            "handlers": ["console", "flat_line_file", "json_file"],
-            "level": "DEBUG",
-            "propagate": False,
-        },
         "letters.tasks": {
-            "handlers": ["console", "scheduler_log"],
+            "handlers": ["console", "json_file", "scheduler_log"],
             "level": "INFO",
             "propagate": False,
         },
-        "letters": {
-            "handlers": ["console", "flat_line_file", "json_file", "letters_log"],
-            "level": "INFO",
-            "propagate": False,
-        },
+        # Everything else, app and Django alike, lands here.
         "": {
-            "handlers": ["console"],
+            "handlers": ["console", "json_file"],
             "level": "INFO",
         },
     },

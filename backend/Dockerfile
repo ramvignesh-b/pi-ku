@@ -13,4 +13,4 @@ COPY . .
 EXPOSE 8000
 
 # NOTE: Exporting env var 'UVICORN_MAIN=true' is required for the scheduler to run on app start.
-CMD ["sh", "-c", "uv run manage.py migrate && UVICORN_MAIN=true uv run gunicorn --bind 0.0.0.0:8000 --access-logfile - --error-logfile - --capture-output --log-level debug config.wsgi:application"]
+CMD ["sh", "-c", "uv run manage.py migrate && UVICORN_MAIN=true uv run gunicorn --bind 0.0.0.0:8000 --access-logfile - --error-logfile - config.wsgi:application"]
