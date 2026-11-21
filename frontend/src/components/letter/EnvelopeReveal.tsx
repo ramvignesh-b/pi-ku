@@ -16,6 +16,7 @@ export interface EnvelopeRevealProps {
   isFlip?: boolean;
   isInteractive?: boolean;
   openFlap?: boolean;
+  insert?: React.ReactNode;
   // exposes the letter so a parent can pick the expansion up from its exact rect
   letterRef?: React.Ref<HTMLButtonElement>;
 }
@@ -28,6 +29,7 @@ export function EnvelopeReveal({
   isFlip,
   isInteractive = true,
   openFlap = false,
+  insert,
   letterRef,
 }: EnvelopeRevealProps) {
   const [isFlipped, setIsFlipped] = useState(!!isFlip);
@@ -115,18 +117,22 @@ export function EnvelopeReveal({
           >
             <img data-testid="wax-seal" src={waxSeal} alt="" />
           </button>
-          <button
-            type="button"
-            id="letter"
-            ref={letterRef}
-            aria-label="Read the letter"
-            data-testid="envelope-letter"
-            className={`absolute mx-auto transition-all duration-600 h-55 w-105 bg-paper cursor-pointer ${hasRisen ? "z-1" : ""} ${peekMargin}`}
-            // the parent's paper picks up from this exact rect, so this one has to
-            // stop painting in the same frame — no fade, or both would show
-            style={handedOver ? { opacity: 0, transition: "none" } : undefined}
-            onClick={handleClick}
-          ></button>
+          {insert ?? (
+            <button
+              type="button"
+              id="letter"
+              ref={letterRef}
+              aria-label="Read the letter"
+              data-testid="envelope-letter"
+              className={`absolute mx-auto transition-all duration-600 h-55 w-105 bg-paper cursor-pointer ${hasRisen ? "z-1" : ""} ${peekMargin}`}
+              // the parent's paper picks up from this exact rect, so this one has to
+              // stop painting in the same frame — no fade, or both would show
+              style={
+                handedOver ? { opacity: 0, transition: "none" } : undefined
+              }
+              onClick={handleClick}
+            ></button>
+          )}
 
           <div
             id="env-right"

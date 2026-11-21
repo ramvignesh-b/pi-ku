@@ -30,6 +30,7 @@ import saajan from "../assets/sf.webp";
 import Logo from "../components/Logo";
 import { DefinitionCard } from "../components/ui/DefinitionCard";
 import { Modal } from "../components/ui/Modal";
+import { ROUTES } from "../config/routes";
 
 import "@fontsource/kavivanar/index.css";
 import "@fontsource/b612-mono/index.css";
@@ -1008,7 +1009,7 @@ function AttributionSection() {
       <div className="mt-40 mb-44 w-full justify-center flex">
         <button
           type={"button"}
-          onClick={() => navigate("/onboard")}
+          onClick={() => navigate(ROUTES.BEGIN)}
           className="btn btn-base-100 btn-wide rounded-full px-14 font-hand"
         >
           Begin

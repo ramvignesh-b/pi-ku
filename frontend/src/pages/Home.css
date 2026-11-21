@@ -1,0 +1,57 @@
+.home-quill-cta::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border: 1px solid color-mix(in oklch, var(--color-primary) 40%, transparent);
+  border-radius: inherit;
+  box-shadow:
+    0 0 8px color-mix(in oklch, var(--color-primary) 38%, transparent),
+    0 0 16px color-mix(in oklch, var(--color-primary) 20%, transparent);
+  pointer-events: none;
+}
+
+.home-ready-cta {
+  box-shadow:
+    0 0 12px color-mix(in oklch, var(--color-primary) 48%, transparent),
+    0 0 28px color-mix(in oklch, var(--color-primary) 28%, transparent);
+}
+
+.home-envelope .group {
+  transform: rotateY(var(--flip));
+  transition: none;
+  pointer-events: none;
+}
+
+.home-letter-mockup .mockup-phone {
+  height: 978px;
+  width: 462px;
+}
+
+.home-envelope :is(#env-top, #env-left, #env-right, #env-bottom) {
+  opacity: var(--pocket-opacity);
+  top: var(--pocket-rise);
+}
+
+.home-envelope #env-top {
+  transform-origin: top;
+  scale: 2.34 var(--flap);
+  z-index: var(--flap-layer);
+  transition: none;
+}
+
+.home-envelope button:has([data-testid="wax-seal"]) {
+  opacity: var(--wax);
+  transition: none;
+}
+
+.home-letter-mockup .mockup-phone-display {
+  position: relative;
+}
+
+.home-letter-mockup .mockup-phone-display img {
+  position: absolute;
+  left: 0;
+  display: block;
+  width: 100%;
+  height: auto;
+}
