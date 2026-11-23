@@ -100,6 +100,22 @@ const applyImageControls = (canvas: fabric.Canvas, readOnly: boolean) => {
   }
 };
 
+const placeFooterImage = (
+  canvas: fabric.Canvas,
+  textbox: fabric.Textbox | null,
+  imageName?: string,
+) => {
+  if (!(textbox && imageName)) return;
+
+  const image = canvas
+    .getObjects("Image")
+    .find((candidate) => candidate.get("name") === imageName);
+  if (!image) return;
+
+  image.set("top", textbox.top + textbox.getScaledHeight() + PAD);
+  image.setCoords();
+};
+
 interface AttachTextboxOptions {
   readOnly: boolean;
   onChanged: () => void;
@@ -129,6 +145,7 @@ const attachTextbox = (
 interface ComposeCanvasProps {
   readOnly?: boolean;
   initialData?: CanvasJSON | null;
+  footerImageName?: string;
   style?: CanvasStyle;
   // fires once the content is laid out and the wrapper has its final height
   onReady?: () => void;
@@ -137,6 +154,8 @@ interface ComposeCanvasProps {
 
 // Locks character rendering to measured bounds to prevent cursor drift
 const withAlignedRendering = (textbox: fabric.Textbox): fabric.Textbox => {
+  // Draw text directly so reopened letters match the editor at the same zoom.
+  textbox.objectCaching = false;
   (textbox as unknown as { CACHE_FONT_SIZE: number }).CACHE_FONT_SIZE = 18;
 
   (textbox as unknown as { _renderChars: unknown })._renderChars = function (
@@ -174,6 +193,47 @@ const withAlignedRendering = (textbox: fabric.Textbox): fabric.Textbox => {
   return textbox;
 };
 
+const fitTextboxToPaper = (textbox: fabric.Textbox, paperWidth: number) => {
+  const availableWidth = Math.max(1, paperWidth - textbox.left - PAD);
+  textbox.width = Math.min(textbox.width, availableWidth);
+
+  // Keep the original whitespace in the wrapped lines so Fabric can map caret
+  // and style offsets across breaks inside a long word.
+  textbox.splitByGrapheme = true;
+  textbox.getGraphemeDataForRender = function (lines) {
+    const wordsData = lines.map((line, lineIndex) => {
+      const graphemes = this.graphemeSplit(line);
+      const space = /^[ \t\r]$/;
+      const words = [];
+      let start = 0;
+
+      for (let end = 1; end < graphemes.length; end++) {
+        if (space.test(graphemes[end - 1]) && !space.test(graphemes[end])) {
+          words.push(graphemes.slice(start, end));
+          start = end;
+        }
+      }
+      words.push(graphemes.slice(start));
+
+      let offset = 0;
+      return words.flatMap((word) => {
+        const wordOffset = offset;
+        const width = this._measureWord(word, lineIndex, wordOffset);
+        offset += word.length;
+        if (width <= this.width) return [{ word, width }];
+
+        return word.map((grapheme, index) => ({
+          word: [grapheme],
+          width: this._measureWord([grapheme], lineIndex, wordOffset + index),
+        }));
+      });
+    });
+
+    // The paper sets the width. Fabric's intrinsic minimum must never widen it.
+    return { wordsData, largestWordWidth: 0 };
+  };
+};
+
 const createCompositionTextbox = (text = DEFAULT_INIT_TEXT): fabric.Textbox => {
   return withAlignedRendering(
     new fabric.Textbox(text, {
@@ -196,7 +256,6 @@ const createCompositionTextbox = (text = DEFAULT_INIT_TEXT): fabric.Textbox => {
       lockRotation: true,
       hasControls: false,
       hasBorders: false,
-      objectCaching: false,
       noScaleCache: false,
     }),
   );
@@ -210,7 +269,10 @@ const resolveTextbox = async (
   if (data?.objects?.length) {
     await canvas.loadFromJSON(data);
     const existing = canvas.getObjects("Textbox")[0] as fabric.Textbox;
-    return existing ? withAlignedRendering(existing) : null;
+    if (!existing) return null;
+    const savedTextbox = data.objects.find(({ type }) => type === "Textbox");
+    existing.width = savedTextbox?.width ?? existing.width;
+    return withAlignedRendering(existing);
   }
   // a read-only canvas with no data stays empty. the prompt belongs to the
   // quill, and rendering it here would flash a placeholder letter.
@@ -232,6 +294,7 @@ const prepareFont = async (fontFamily: string, fontSize = 18) => {
 export function ComposeCanvas({
   readOnly = false,
   initialData = null,
+  footerImageName,
   style,
   onReady,
   ref,
@@ -312,6 +375,7 @@ export function ComposeCanvas({
       const textbox = await resolveTextbox(canvas, data, readOnly);
 
       if (textbox) {
+        fitTextboxToPaper(textbox, logicalSizeRef.current.width);
         textboxRef.current = textbox;
         attachTextbox(canvas, textbox, {
           readOnly,
@@ -327,6 +391,7 @@ export function ComposeCanvas({
       fabric.cache.clearFontCache();
       textbox?.initDimensions();
       textbox?.set("dirty", true);
+      placeFooterImage(canvas, textbox, footerImageName);
       syncViewport();
 
       // the wrapper has its final height now, so the letter can be shown without reflowing
@@ -338,7 +403,7 @@ export function ComposeCanvas({
         setTimeout(() => focusTextbox(textbox), 200);
       }
     },
-    [readOnly, syncViewport, focusTextbox],
+    [readOnly, footerImageName, syncViewport, focusTextbox],
   );
 
   useEffect(() => {
