@@ -1,7 +1,8 @@
 import {
-  cubicBezier,
+  easeInOut,
   type MotionValue,
   motion,
+  useReducedMotion,
   useTransform,
 } from "motion/react";
 
@@ -20,6 +21,16 @@ export const WavyUnderline = ({
   color,
   className = "",
 }: WavyUnderlineProps) => {
+  const reduceMotion = useReducedMotion();
+  const draw = useTransform(progress, [0.32, 1], [0, 1], {
+    ease: easeInOut,
+  });
+  const clipPath = useTransform(
+    draw,
+    (value) => `inset(0 ${(1 - value) * 100}% 0 0)`,
+  );
+  const fade = useTransform(draw, [0, 1], [0, 0.85]);
+
   return (
     <motion.span
       aria-hidden="true"
@@ -32,13 +43,8 @@ export const WavyUnderline = ({
         maskRepeat: "repeat-x",
         WebkitMaskSize: "24px 10px",
         maskSize: "24px 10px",
-        opacity: 0.85,
-        clipPath: useTransform(
-          progress,
-          [0.28, 0.4],
-          ["inset(0 100% 0 0)", "inset(0 0% 0 0)"],
-          { ease: cubicBezier(0.22, 1, 0.36, 1) },
-        ),
+        opacity: reduceMotion ? fade : 0.85,
+        clipPath: reduceMotion ? undefined : clipPath,
       }}
     />
   );

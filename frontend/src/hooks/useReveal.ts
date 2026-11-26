@@ -12,9 +12,9 @@ export type RevealState = "SEALED" | "REVEALED" | "BURNED" | "BURNING";
 // The reveal, in beats. The letter comes out of the envelope widthways first
 // and only then unfolds top and bottom, the way a folded sheet opens — so the
 // two axes are deliberately staggered rather than scaled together.
-const WIDEN_S = 1;
-const EXPAND_S = 2.2;
-const INK_S = 1.6;
+const WIDEN_S = 1.25;
+const EXPAND_S = 2.65;
+const INK_S = 1.8;
 // a canvas that never reports ready still gets its words
 const INK_FALLBACK_MS = 1500;
 
@@ -108,11 +108,18 @@ export function useReveal(
     paperRef,
     envelopeLetterRef,
     paperControls,
-    reduceMotion,
     handleRevealComplete,
     markCanvasReady: useCallback(() => setIsCanvasReady(true), []),
     isRevealed,
     showInk,
+    fadeIn: {
+      initial: { opacity: reduceMotion ? 1 : 0 },
+      animate: { opacity: 1 },
+      transition: {
+        duration: reduceMotion ? 0 : 0.8,
+        ease: "easeInOut" as const,
+      },
+    },
     // the words follow the paper rather than arriving with it
     inkTransition: {
       duration: reduceMotion ? 0 : INK_S,
@@ -126,7 +133,7 @@ export function useReveal(
       opacity: 0,
       transition: reduceMotion
         ? { duration: 0 }
-        : { delay: 1.2, duration: 0.9, ease: "easeOut" as const },
+        : { delay: 1.45, duration: 1.05, ease: "easeOut" as const },
     },
   };
 }

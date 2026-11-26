@@ -1,5 +1,6 @@
 import {
   animate,
+  easeInOut,
   type MotionStyle,
   type MotionValue,
   motion,
@@ -28,6 +29,7 @@ type Phase =
   | "opening"
   | "rising"
   | "ready"
+  | "drawing"
   | "handed-over";
 
 export interface EnvelopeRevealProps {
@@ -53,7 +55,7 @@ function useEnvelopeBurn(
   useEffect(() => {
     if (!(ignite && onBurnComplete)) return;
     const animation = animate(localBurn, 1, {
-      duration: reduceMotion ? 0 : 5,
+      duration: reduceMotion ? 0 : 6.2,
       ease: "linear",
       onComplete: onBurnComplete,
     });
@@ -79,7 +81,9 @@ function useEnvelopeBurn(
       [0, 1, 1, 0],
     ),
   } as MotionStyle;
-  const candleOpacity = useTransform(burn, [0, 0.08, 0.82, 1], [0, 1, 1, 0]);
+  const candleOpacity = useTransform(burn, [0, 0.12, 0.78, 1], [0, 1, 1, 0], {
+    ease: easeInOut,
+  });
   return { maskStyle, candleOpacity };
 }
 
@@ -94,13 +98,13 @@ function useEnvelopeOpening(
   const localPaperRef = useRef<HTMLButtonElement>(null);
   const paperRef = letterRef ?? localPaperRef;
   const keyboard = useRef(false);
-  const revealed = useRef(false);
+  const handoff = useRef<"idle" | "drawing" | "done">("idle");
   const canFlip = canOpen && phase === "front";
   const canBreakSeal = canOpen && phase === "sealed";
   const canRead = canOpen && phase === "ready";
   const isBack = phase !== "front";
-  const paperUp =
-    phase === "rising" || phase === "ready" || phase === "handed-over";
+  const paperDrawn = phase === "drawing" || phase === "handed-over";
+  const paperUp = phase === "rising" || phase === "ready" || paperDrawn;
   const flapOpen = phase === "opening" || paperUp;
   const handedOver = phase === "handed-over";
 
@@ -126,12 +130,24 @@ function useEnvelopeOpening(
     setPhase(reduceMotion ? "ready" : "opening");
   };
 
-  const reveal = () => {
-    if (!canRead || revealed.current) return;
-    revealed.current = true;
+  const finishReveal = () => {
+    if (handoff.current !== "drawing") return;
+    handoff.current = "done";
     // The destination paper takes over in the same frame at this exact rect.
     setPhase("handed-over");
     onRevealComplete?.();
+  };
+
+  const reveal = () => {
+    if (!canRead || handoff.current !== "idle") return;
+    handoff.current = "drawing";
+    if (reduceMotion) finishReveal();
+    else setPhase("drawing");
+  };
+
+  const finishPaperMotion = () => {
+    if (phase === "drawing") finishReveal();
+    else advance("rising", "ready");
   };
 
   return {
@@ -143,7 +159,9 @@ function useEnvelopeOpening(
     isBack,
     flapOpen,
     paperUp,
+    paperDrawn,
     handedOver,
+    finishPaperMotion,
     advance,
     flip,
     open,
@@ -164,8 +182,8 @@ export function EnvelopeReveal({
 }: EnvelopeRevealProps) {
   const reduceMotion = useReducedMotion();
   const duration = reduceMotion
-    ? { flip: 0, flap: 0, rise: 0 }
-    : { flip: 0.7, flap: 0.5, rise: 0.35 };
+    ? { flip: 0, flap: 0, paper: 0 }
+    : { flip: 1.15, flap: 0.9, paper: 0.88 };
   const {
     sealRef,
     paperRef,
@@ -175,7 +193,9 @@ export function EnvelopeReveal({
     isBack,
     flapOpen,
     paperUp,
+    paperDrawn,
     handedOver,
+    finishPaperMotion,
     advance,
     flip,
     open,
@@ -208,30 +228,35 @@ export function EnvelopeReveal({
         >
           <div className="envelope-face envelope-back">
             {insert ?? (
-              <motion.button
-                type="button"
-                ref={paperRef}
-                aria-label="Read the letter"
-                aria-hidden={!canRead}
-                disabled={!canRead}
-                data-testid="envelope-letter"
-                className="envelope-paper envelope-hotspot"
-                initial={false}
-                animate={
-                  paperUp
-                    ? { top: "0%", y: "-100%" }
-                    : { top: "var(--envelope-notch)", y: "0%" }
-                }
-                transition={{
-                  duration: duration.rise,
-                  ease: "easeOut",
-                }}
-                style={{ visibility: handedOver ? "hidden" : undefined }}
-                onAnimationComplete={() => advance("rising", "ready")}
-                onClick={reveal}
-              />
+              <div className="envelope-paper-slot">
+                <motion.button
+                  type="button"
+                  ref={paperRef}
+                  aria-label="Read the letter"
+                  aria-hidden={!canRead}
+                  disabled={!canRead}
+                  data-testid="envelope-letter"
+                  className="envelope-paper envelope-hotspot"
+                  initial={false}
+                  animate={{
+                    "--paper-rise": Number(paperUp),
+                    "--paper-draw": Number(paperDrawn),
+                  }}
+                  transition={{
+                    duration: duration.paper,
+                    ease: "easeInOut",
+                  }}
+                  style={{ visibility: handedOver ? "hidden" : undefined }}
+                  onAnimationComplete={finishPaperMotion}
+                  onClick={reveal}
+                />
+              </div>
             )}
-            <div className="envelope-folds" aria-hidden="true">
+            <div
+              className="envelope-folds"
+              aria-hidden="true"
+              data-cover-paper={canRead || undefined}
+            >
               <div className="envelope-fold-bottom" />
             </div>
             <motion.div

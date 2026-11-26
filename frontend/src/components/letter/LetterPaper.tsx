@@ -44,7 +44,7 @@ export function LetterPaper({
         style={{ transformOrigin: "top left" }}
         aria-hidden={!isRevealed}
       >
-        <div className="absolute inset-0 bg-primary/5 blur-3xl rounded-full scale-75 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none" />
+        <div className="absolute inset-0 bg-primary/5 blur-3xl rounded-full scale-75 opacity-0 group-hover:opacity-100 transition-opacity duration-1200 ease-in-out motion-reduce:transition-none pointer-events-none" />
 
         <div className="bg-paper shadow-warm rounded-sm overflow-hidden">
           <div className="p-1 md:p-2 bg-base-content/5 opacity-10 pointer-events-none absolute inset-0 z-10" />

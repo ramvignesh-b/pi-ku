@@ -61,7 +61,7 @@ const INSERT_END = 0.46;
 const PHONE_PAPER_WIDTH_RATIO = 0.76;
 const INSERTED_PAPER_WIDTH_RATIO = 0.8;
 const FLAP_CLOSE_START = 0.462;
-const FLAP_CLOSED = 0.474;
+const FLAP_CLOSED = 0.484;
 const TITLE_EXIT = 0.105;
 const TITLE_ZOOM_RANGE = [0.005, 0.06, TITLE_EXIT];
 const FUTURE_ME_START = 0.6425;
@@ -72,19 +72,20 @@ const OUTRO_START = 0.945;
 
 function useScene(scroll: MotionValue<number>, start: number, end: number) {
   const progress = useTransform(scroll, [start, end], [0, 1]);
-  const phases = [0, 0.2, 0.8, 1];
+  const phases = [0, 0.24, 0.76, 1];
+  const transition = { ease: easeInOut };
   return {
     progress,
     style: {
-      opacity: useTransform(progress, phases, [0, 1, 1, 0]),
-      y: useTransform(progress, phases, [25, 0, 0, -20]),
-      scale: useTransform(progress, phases, [0.98, 1, 1, 0.98]),
-      filter: useTransform(progress, phases, [
-        "blur(14px)",
-        "blur(0px)",
-        "blur(0px)",
-        "blur(6px)",
-      ]),
+      opacity: useTransform(progress, phases, [0, 1, 1, 0], transition),
+      y: useTransform(progress, phases, [25, 0, 0, -20], transition),
+      scale: useTransform(progress, phases, [0.98, 1, 1, 0.98], transition),
+      filter: useTransform(
+        progress,
+        phases,
+        ["blur(14px)", "blur(0px)", "blur(0px)", "blur(6px)"],
+        transition,
+      ),
     },
   };
 }
@@ -108,13 +109,15 @@ function useOpeningReveal(
   delay: number,
 ) {
   const timed = useMotionValue(0);
-  const scrolled = useTransform(scroll, [0, 0.012], [0, 1]);
+  const scrolled = useTransform(scroll, [0, 0.032], [0, 1], {
+    ease: easeInOut,
+  });
   const progress = useTransform(() => Math.max(timed.get(), scrolled.get()));
   useEffect(() => {
     const animation = animate(timed, 1, {
       duration,
       delay,
-      ease: [0.16, 1, 0.3, 1],
+      ease: [0.25, 0.65, 0.35, 1],
     });
     return () => animation.stop();
   }, [timed, duration, delay]);
@@ -144,7 +147,7 @@ function useScrollEntrance(
       animation?.stop();
       animation = animate(progress, Number(visible), {
         delay: visible && !reduceMotion ? delay : 0,
-        duration: reduceMotion ? 0 : visible ? duration : 0.22,
+        duration: reduceMotion ? 0 : visible ? duration : 0.58,
         ease: "linear",
       });
     };
@@ -249,15 +252,11 @@ export default function Home() {
     pocketHeight,
     pocketEntry,
   ]);
-  const letterEmphasis = useTransform(
-    scrollYProgress,
-    [0.325, 0.347, 0.368],
-    [0.2, 0.28, 0.4],
-  );
+  const letterEmphasis = useTransform(scrollYProgress, [0.304, 0.386], [0, 1]);
   const phoneReveal = useScrollEntrance(scrollYProgress, {
     start: 0.31,
-    delay: 0.42,
-    duration: 0.95,
+    delay: 0.5,
+    duration: 1.2,
     reduceMotion,
   });
   // Finish the entrance before the paper lifts, even if the reader skips ahead.
@@ -344,25 +343,19 @@ export default function Home() {
   });
   const okay = useScene(scrollYProgress, 0.08, 0.205);
   const safe = useScene(scrollYProgress, 0.18, 0.29);
+  const safeEmphasis = useTransform(safe.progress, [0.14, 0.74], [0, 1]);
   const letters = useScene(scrollYProgress, 0.28, 0.44);
   const captionY = useTransform(
     () => letters.style.y.get() + captionShift.get(),
   );
-  const seal = useScene(scrollYProgress, 0.405, 0.555);
-  const sealCaptionEnter = useTransform(
-    scrollYProgress,
-    [INSERT_END, FLAP_CLOSED],
-    [0, 1],
-  );
-  const sealCaptionOpacity = useTransform(
-    () => seal.style.opacity.get() * sealCaptionEnter.get(),
-  );
+  const seal = useScene(scrollYProgress, INSERT_END, 0.56);
   const sealEmphasis = useTransform(
     scrollYProgress,
-    [0.476, 0.487, 0.503],
-    [0.2, 0.28, 0.4],
+    [FLAP_CLOSED - 0.009, FLAP_CLOSED + 0.055],
+    [0, 1],
   );
   const dear = useScene(scrollYProgress, 0.53, 0.655);
+  const dearEmphasis = useTransform(dear.progress, [0.12, 0.75], [0, 1]);
   const flapAngle = useTransform(
     scrollYProgress,
     [FLAP_CLOSE_START, FLAP_CLOSED],
@@ -375,7 +368,7 @@ export default function Home() {
     reduceMotion ? (angle >= 90 ? "180deg" : "0deg") : `${angle}deg`,
   );
   const flapLayer = useTransform(flapAngle, (angle) => (angle >= 90 ? 1 : 4));
-  const flipAngle = useTransform(dear.progress, [0.2, 0.4], [180, 0], {
+  const flipAngle = useTransform(dear.progress, [0.14, 0.49], [180, 0], {
     ease: easeInOut,
   });
   const flipRotation = useTransform(flipAngle, (angle) =>
@@ -383,7 +376,9 @@ export default function Home() {
   );
   const address = useScene(scrollYProgress, 0.53, 0.755);
   const future = useScene(scrollYProgress, 0.63, 0.755);
+  const futureEmphasis = useTransform(future.progress, [0.08, 0.74], [0, 1]);
   const burn = useScene(scrollYProgress, 0.73, 0.905);
+  const burnEmphasis = useTransform(burn.progress, [0.14, 0.72], [0, 1]);
   const burnProgress = useTransform(
     scrollYProgress,
     [BURN_START, 0.92],
@@ -410,7 +405,7 @@ export default function Home() {
     }
     return mixOrbColors(
       progress,
-      0.618,
+      0.6,
       FUTURE_ME_START,
       "var(--orb-rose)",
       "var(--orb-green)",
@@ -436,19 +431,19 @@ export default function Home() {
   const outroProgress = useScrollEntrance(scrollYProgress, {
     start: OUTRO_START,
     delay: 0.8,
-    duration: 1.4,
+    duration: 2.55,
     reduceMotion,
   });
-  const outroEntry = useTransform(outroProgress, [0, 0.72], [0, 1], {
-    ease: easeOut,
+  const outroEntry = useTransform(outroProgress, [0, 0.64], [0, 1], {
+    ease: easeInOut,
   });
-  const outroEmphasis = useTransform(
-    outroProgress,
-    [0.46, 0.66, 0.85],
-    [0.2, 0.28, 0.4],
-  );
-  const outroActions = useTransform(outroProgress, [0.85, 1], [0, 1]);
-  const ctaScroll = useTransform(scrollYProgress, [0.96, 0.99], [0, 1]);
+  const outroEmphasis = useTransform(outroProgress, [0.22, 0.89], [0, 1]);
+  const outroActions = useTransform(outroProgress, [0.69, 1], [0, 1], {
+    ease: easeInOut,
+  });
+  const ctaScroll = useTransform(scrollYProgress, [0.96, 0.995], [0, 1], {
+    ease: easeInOut,
+  });
   const ctaProgress = useTransform(() =>
     Math.min(ctaScroll.get(), outroActions.get()),
   );
@@ -456,6 +451,7 @@ export default function Home() {
     scrollYProgress,
     [0.95, 0.98, 1],
     [0, 0.7, 1],
+    { ease: easeInOut },
   );
   const saajanOpacity = useTransform(
     () => saajanScroll.get() * outroActions.get(),
@@ -479,19 +475,19 @@ export default function Home() {
     >
       <section
         ref={sectionContainer1}
-        className="home-story relative w-full h-[1200vh] bg-base-100 font-serif text-neutral-content/90"
+        className="home-story relative w-full h-[1360vh] bg-base-100 font-serif text-neutral-content/90"
       >
         <Link
           to={ROUTES.UNLOCK}
           aria-label="Unlock"
-          className="home-quill-cta group btn btn-ghost btn-lg absolute top-4 right-4 z-40 h-14 min-w-14 gap-0 rounded-full px-0 text-primary/24! no-underline! hover:text-primary! focus-visible:text-primary! md:top-6 md:right-6"
+          className="home-quill-cta group btn btn-ghost btn-lg absolute top-4 right-4 z-40 h-14 min-w-14 gap-0 rounded-full px-0 text-primary/24! no-underline! duration-700 ease-in-out hover:text-primary! focus-visible:text-primary! motion-reduce:transition-none md:top-6 md:right-6"
         >
           <span className="grid size-14 shrink-0 place-items-center">
             <FeatherIcon aria-hidden="true" size={32} weight="duotone" />
           </span>
           <span
             aria-hidden="true"
-            className="grid grid-cols-[0fr] opacity-0 transition-[grid-template-columns,opacity] duration-500 group-hover:grid-cols-[1fr] group-hover:opacity-100 group-focus-visible:grid-cols-[1fr] group-focus-visible:opacity-100 motion-reduce:transition-none"
+            className="grid grid-cols-[0fr] opacity-0 transition-[grid-template-columns,opacity] duration-700 ease-in-out group-hover:grid-cols-[1fr] group-hover:opacity-100 group-focus-visible:grid-cols-[1fr] group-focus-visible:opacity-100 motion-reduce:transition-none"
           >
             <span className="overflow-hidden whitespace-nowrap font-hand">
               <span className="pr-5">Unlock</span>
@@ -510,18 +506,23 @@ export default function Home() {
                 scrollYProgress,
                 TITLE_ZOOM_RANGE,
                 [1, 0.85, 0],
+                { ease: easeInOut },
               ),
               scale: useTransform(
                 scrollYProgress,
                 TITLE_ZOOM_RANGE,
-                [1, 1.35, 7],
+                [1, 1.3, 5],
+                { ease: easeInOut },
               ),
-              y: useTransform(scrollYProgress, [0.08, TITLE_EXIT], [0, -40]),
-              filter: useTransform(scrollYProgress, TITLE_ZOOM_RANGE, [
-                "blur(0px)",
-                "blur(1px)",
-                "blur(10px)",
-              ]),
+              y: useTransform(scrollYProgress, [0.06, TITLE_EXIT], [0, -40], {
+                ease: easeInOut,
+              }),
+              filter: useTransform(
+                scrollYProgress,
+                TITLE_ZOOM_RANGE,
+                ["blur(0px)", "blur(1px)", "blur(10px)"],
+                { ease: easeInOut },
+              ),
             }}
           >
             <motion.div
@@ -590,13 +591,13 @@ export default function Home() {
               is a{" "}
               <span className="relative inline-block mx-0.5">
                 <HighlightedWord
-                  progress={safe.progress}
+                  progress={safeEmphasis}
                   className="font-kalnia font-bold text-primary not-italic"
                 >
                   safe space
                 </HighlightedWord>
                 <WavyUnderline
-                  progress={safe.progress}
+                  progress={safeEmphasis}
                   color="var(--color-primary)"
                 />
               </span>
@@ -604,7 +605,9 @@ export default function Home() {
               <motion.span
                 className="text-2xl md:text-5xl font-hand tracking-widest italic text-base-content/70"
                 style={{
-                  opacity: useTransform(safe.progress, [0.32, 0.58], [0, 0.9]),
+                  opacity: useTransform(safe.progress, [0.26, 0.7], [0, 0.9], {
+                    ease: easeInOut,
+                  }),
                 }}
               >
                 where you can
@@ -638,7 +641,7 @@ export default function Home() {
 
             {/* Beat 5: "seal it secure and private." */}
             <motion.h2
-              style={{ ...seal.style, opacity: sealCaptionOpacity }}
+              style={seal.style}
               className="absolute text-4xl md:text-6xl text-center px-10 leading-tight tracking-normal word-spacing-editorial"
             >
               seal it{" "}
@@ -679,13 +682,13 @@ export default function Home() {
                 send it to{" "}
                 <span className="relative inline-block mx-0.5">
                   <HighlightedWord
-                    progress={dear.progress}
+                    progress={dearEmphasis}
                     className="font-display text-accent"
                   >
                     someone dear
                   </HighlightedWord>
                   <WavyUnderline
-                    progress={dear.progress}
+                    progress={dearEmphasis}
                     color="var(--color-accent)"
                   />
                 </span>
@@ -693,20 +696,24 @@ export default function Home() {
               <motion.span
                 className="block mt-2"
                 style={{
-                  opacity: useTransform(future.progress, [0, 0.2], [0, 1]),
-                  y: useTransform(future.progress, [0, 0.2], [14, 0]),
+                  opacity: useTransform(future.progress, [0, 0.32], [0, 1], {
+                    ease: easeInOut,
+                  }),
+                  y: useTransform(future.progress, [0, 0.32], [14, 0], {
+                    ease: easeInOut,
+                  }),
                 }}
               >
                 <span className="font-display text-neutral">or </span>
                 <span className="relative inline-block mx-0.5 md:whitespace-nowrap">
                   <HighlightedWord
-                    progress={future.progress}
+                    progress={futureEmphasis}
                     className="font-display text-success"
                   >
                     yourself in the future
                   </HighlightedWord>
                   <WavyUnderline
-                    progress={future.progress}
+                    progress={futureEmphasis}
                     color="var(--color-success)"
                   />
                 </span>
@@ -722,13 +729,13 @@ export default function Home() {
               and even{" "}
               <span className="relative inline-block mx-0.5">
                 <HighlightedWord
-                  progress={burn.progress}
+                  progress={burnEmphasis}
                   className="font-display text-error"
                 >
                   burn it
                 </HighlightedWord>
                 <WavyUnderline
-                  progress={burn.progress}
+                  progress={burnEmphasis}
                   color="var(--color-error)"
                 />
               </span>{" "}
@@ -778,7 +785,7 @@ export default function Home() {
               }}
             >
               <button
-                className="btn btn-ghost btn-wide md:btn-xl rounded-full bg-primary/12 hover:bg-primary/20 font-extralight hover:-translate-y-1 transition-all duration-700 cursor-pointer"
+                className="btn btn-ghost btn-wide md:btn-xl rounded-full bg-primary/12 hover:bg-primary/20 font-extralight motion-safe:hover:-translate-y-1 transition-all duration-900 ease-in-out motion-reduce:transition-none cursor-pointer"
                 type="button"
                 onClick={() => navigate(ROUTES.ABOUT, { replace: true })}
               >
@@ -786,7 +793,7 @@ export default function Home() {
                 Tell me More
               </button>
               <button
-                className="home-ready-cta btn rounded-full btn-primary btn-wide md:btn-xl hover:-translate-y-1 transition-all duration-700 cursor-pointer"
+                className="home-ready-cta btn rounded-full btn-primary btn-wide md:btn-xl motion-safe:hover:-translate-y-1 transition-all duration-900 ease-in-out motion-reduce:transition-none cursor-pointer"
                 type="button"
                 onClick={() => navigate(ROUTES.BEGIN, { replace: true })}
               >
@@ -806,8 +813,9 @@ export default function Home() {
                   scale: envelopeScale,
                   opacity: useTransform(
                     scrollYProgress,
-                    [0.28, 0.31, BURN_FADE_START, BURN_END],
+                    [0.28, 0.33, BURN_FADE_START, BURN_END],
                     [0, 1, 1, 0],
+                    { ease: easeInOut },
                   ),
                   "--pocket-opacity": pocketOpacity,
                   "--pocket-rise": pocketOffset,
@@ -815,8 +823,9 @@ export default function Home() {
                   "--flap-layer": flapLayer,
                   "--wax": useTransform(
                     scrollYProgress,
-                    [FLAP_CLOSED + 0.003, FLAP_CLOSED + 0.013],
+                    [FLAP_CLOSED + 0.002, FLAP_CLOSED + 0.026],
                     [0, 1],
+                    { ease: easeInOut },
                   ),
                   "--flip": flipRotation,
                 } as MotionStyle
@@ -892,7 +901,9 @@ export default function Home() {
               className="fixed bottom-0 z-10 font-sans -mb-6 md:scale-100 md:mb-0"
               style={{
                 opacity: saajanOpacity,
-                y: useTransform(scrollYProgress, [0.95, 1], [40, -10]),
+                y: useTransform(scrollYProgress, [0.95, 1], [40, -10], {
+                  ease: easeInOut,
+                }),
               }}
             >
               <Saajan
@@ -920,6 +931,7 @@ export default function Home() {
                     scrollYProgress,
                     [BURN_FADE_START, OUTRO_START],
                     [0.3, 0.045],
+                    { ease: easeInOut },
                   ),
                 } as MotionStyle
               }

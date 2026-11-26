@@ -1,5 +1,5 @@
 import {
-  cubicBezier,
+  easeInOut,
   type MotionValue,
   motion,
   useTransform,
@@ -18,16 +18,15 @@ export const HighlightedWord = ({
 }: HighlightedWordProps) => {
   return (
     <motion.span
-      className={`relative z-10 inline-block ${className}`}
+      className={`relative z-10 inline-block motion-reduce:filter-none! motion-reduce:transform-none! ${className}`}
       style={{
-        filter: useTransform(
-          progress,
-          [0.2, 0.28],
-          ["blur(8px)", "blur(0px)"],
-          { ease: cubicBezier(0.16, 1, 0.3, 1) },
-        ),
-        opacity: useTransform(progress, [0.2, 0.28], [0.15, 1]),
-        y: useTransform(progress, [0.2, 0.28], [2, 0]),
+        filter: useTransform(progress, [0, 0.55], ["blur(4px)", "blur(0px)"], {
+          ease: easeInOut,
+        }),
+        opacity: useTransform(progress, [0, 0.55], [0.4, 1], {
+          ease: easeInOut,
+        }),
+        y: useTransform(progress, [0, 0.55], [2, 0], { ease: easeInOut }),
       }}
     >
       {children}

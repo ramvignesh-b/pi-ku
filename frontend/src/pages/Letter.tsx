@@ -66,11 +66,11 @@ export default function Letter() {
     paperRef,
     envelopeLetterRef,
     paperControls,
-    reduceMotion,
     handleRevealComplete,
     markCanvasReady,
     isRevealed,
     showInk,
+    fadeIn,
     inkTransition,
     envelopeExit,
   } = useReveal(revealState, setRevealState);
@@ -252,7 +252,7 @@ export default function Letter() {
             <span className="loading loading-ring loading-md text-primary/40"></span>
             <p
               data-testid="decryption-overlay"
-              className="text-xs uppercase tracking-widest text-base-content/20 animate-pulse"
+              className="text-xs uppercase tracking-widest text-base-content/20 motion-safe:animate-[pulse_3s_ease-in-out_infinite]"
             >
               Breaking the seal...
             </p>
@@ -290,14 +290,12 @@ export default function Letter() {
           <motion.div
             key="envelope"
             className="fixed inset-0 z-50 grid place-items-center pointer-events-none"
-            initial={{ opacity: reduceMotion ? 1 : 0 }}
-            animate={{ opacity: 1 }}
+            {...fadeIn}
             exit={
               isBurning
                 ? { opacity: 0, transition: { duration: 0 } }
                 : envelopeExit
             }
-            transition={{ duration: reduceMotion ? 0 : 0.25 }}
           >
             <EnvelopeReveal
               key={isBurning ? "burn" : "read"}
@@ -333,16 +331,17 @@ export default function Letter() {
       />
 
       {isRevealed && !isAuthor && (
-        <button
+        <motion.button
           data-testid="reader-cta-btn"
           type="button"
-          className="btn btn-ghost btn-wide font-sans tracking-widest mx-auto cursor-pointer flex text-neutral hover:text-neutral-content focus:text-neutral-content"
+          {...fadeIn}
+          className="btn btn-ghost btn-wide font-sans tracking-widest mx-auto cursor-pointer flex text-neutral hover:text-neutral-content focus:text-neutral-content duration-500 ease-in-out motion-reduce:transition-none"
           onClick={() => {
             navigate(isAuthenticated ? ROUTES.ESCRITOIRE : ROUTES.HOME);
           }}
         >
           {isAuthenticated ? "open your cabinet" : "write a letter"}
-        </button>
+        </motion.button>
       )}
 
       {shareLink && (
@@ -392,11 +391,14 @@ export default function Letter() {
       )}
 
       {isRevealed && (
-        <footer className="mt-16 text-center z-10 text-neutral pointer-events-none">
+        <motion.footer
+          {...fadeIn}
+          className="mt-16 text-center z-10 text-neutral pointer-events-none"
+        >
           <p className="text-xxs font-sans uppercase font-extrabold tracking-widester">
             Read. Remember. Release.
           </p>
-        </footer>
+        </motion.footer>
       )}
     </section>
   );

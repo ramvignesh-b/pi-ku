@@ -3,7 +3,7 @@
   --envelope-hinge: 53%;
   --envelope-notch: 42%;
   position: relative;
-  width: min(22rem, 100vw - 2.75rem, 74dvh);
+  width: min(22rem, 100vw - 2.75rem, 74dvh, max(7rem, 82dvh - 5.5rem));
   aspect-ratio: 11 / 7;
   container-type: inline-size;
   pointer-events: none;
@@ -134,6 +134,11 @@
   clip-path: polygon(0 0, 50% var(--envelope-notch), 100% 0, 100% 100%, 0 100%);
 }
 
+/* The pocket catches pointer hits aimed at the covered part of the sheet. */
+.envelope-folds[data-cover-paper] {
+  pointer-events: auto;
+}
+
 .envelope-fold-bottom {
   position: absolute;
   inset: 0;
@@ -183,7 +188,7 @@
   aspect-ratio: 1;
   border-radius: 50%;
   translate: 0 -50%;
-  transition: opacity 180ms ease-out;
+  transition: opacity 550ms ease-in-out;
 }
 
 .envelope-seal img {
@@ -198,14 +203,50 @@
   opacity: 0;
 }
 
-.envelope-paper {
+.envelope-paper-slot {
   position: absolute;
   z-index: 2;
-  top: 0;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  clip-path: inset(-100dvh -1.25rem 0);
+}
+
+.envelope-paper {
+  --paper-peek: clamp(44px, 14cqw, 62px);
+  --paper-tuck: 10px;
+  position: absolute;
+  top: calc(
+    var(--envelope-notch) *
+    (1 - var(--paper-rise, 0) - var(--paper-draw, 0)) -
+    var(--paper-peek) *
+    var(--paper-rise, 0) -
+    var(--paper-tuck) *
+    var(--paper-draw, 0)
+  );
   width: 84%;
-  height: clamp(44px, 22%, 62px);
+  height: calc(var(--envelope-notch) + var(--paper-peek) + var(--paper-tuck));
   border-radius: 0.125rem 0.125rem 0 0;
   background: var(--color-paper);
+}
+
+@media (hover: hover) {
+  .envelope-paper:enabled:hover {
+    box-shadow: 0 0 1.25rem
+      color-mix(in oklch, var(--color-primary) 24%, transparent);
+  }
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .envelope-paper {
+    transition:
+      translate 650ms ease-in-out,
+      box-shadow 650ms ease-in-out;
+  }
+
+  .envelope-paper:enabled:hover {
+    translate: 0 -7px;
+  }
 }
 
 .envelope-hotspot:enabled {

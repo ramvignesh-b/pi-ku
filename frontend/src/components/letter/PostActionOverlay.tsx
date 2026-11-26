@@ -17,7 +17,7 @@ export function PostActionOverlay() {
       className="fixed inset-0 z-1000 flex flex-col items-center justify-center bg-base-100"
       initial={{ opacity: reduceMotion ? 1 : 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: reduceMotion ? 0 : 0.35 }}
+      transition={{ duration: reduceMotion ? 0 : 0.85, ease: "easeInOut" }}
     >
       <h1
         ref={title}

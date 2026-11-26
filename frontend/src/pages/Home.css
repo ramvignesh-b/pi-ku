@@ -32,8 +32,8 @@
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
   .home-ambient-orb {
     transition:
-      scale 1.5s ease-in-out,
-      opacity 1.5s ease-in-out;
+      scale 1.9s ease-in-out,
+      opacity 1.9s ease-in-out;
   }
 
   .home-story:has(.home-ready-cta:hover) .home-ambient-orb {

@@ -27,11 +27,11 @@ export function WelcomeLetterOverlay({
     paperRef,
     envelopeLetterRef,
     paperControls,
-    reduceMotion,
     handleRevealComplete,
     markCanvasReady,
     isRevealed,
     showInk,
+    fadeIn,
     inkTransition,
     envelopeExit,
   } = useReveal(revealState, setRevealState);
@@ -45,10 +45,8 @@ export function WelcomeLetterOverlay({
           <motion.div
             key="envelope"
             className="absolute inset-0 z-10 grid place-items-center pointer-events-none"
-            initial={{ opacity: reduceMotion ? 1 : 0 }}
-            animate={{ opacity: 1 }}
+            {...fadeIn}
             exit={envelopeExit}
-            transition={{ duration: reduceMotion ? 0 : 0.25 }}
           >
             <EnvelopeReveal
               letterRef={envelopeLetterRef}
@@ -76,11 +74,12 @@ export function WelcomeLetterOverlay({
 
         {isRevealed && (
           <div className="flex justify-center">
-            <button
+            <motion.button
               type="button"
               data-testid="dismiss-welcome-letter-btn"
               onClick={onComplete}
-              className="btn btn-ghost relative h-7 min-w-32 rounded-full border-transparent bg-primary/12 px-5 font-serif text-xs font-light tracking-wider text-base-content/85 transition-colors after:absolute after:inset-x-0 after:-inset-y-[9px] after:content-[''] hover:bg-primary/20 focus-visible:outline-primary md:h-11 md:min-w-44 md:px-8 md:text-base md:after:hidden"
+              {...fadeIn}
+              className="btn btn-ghost relative h-7 min-w-32 rounded-full border-transparent bg-primary/12 px-5 font-serif text-xs font-light tracking-wider text-base-content/85 transition-colors duration-500 ease-in-out motion-reduce:transition-none after:absolute after:inset-x-0 after:-inset-y-[9px] after:content-[''] hover:bg-primary/20 focus-visible:outline-primary md:h-11 md:min-w-44 md:px-8 md:text-base md:after:hidden"
             >
               <motion.span
                 aria-hidden="true"
@@ -102,7 +101,7 @@ export function WelcomeLetterOverlay({
                 viewport={{ amount: 0.6 }}
               />
               <span className="relative">I'll see you</span>
-            </button>
+            </motion.button>
           </div>
         )}
       </div>
