@@ -16,39 +16,85 @@
     0 0 28px color-mix(in oklch, var(--color-primary) 28%, transparent);
 }
 
-.home-envelope .group {
+.home-ambient-orb {
+  --orb-purple: oklch(57% 0.105 305);
+  --orb-rose: oklch(61% 0.105 335);
+  --orb-green: oklch(67% 0.105 148);
+  --orb-ember: oklch(61% 0.12 30);
+  background-color: var(--orb-earlier-color);
+  opacity: var(--orb-opacity, 0.3);
+}
+
+.home-ambient-orb[data-future-me] {
+  background-color: var(--orb-future-color);
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .home-ambient-orb {
+    transition:
+      scale 1.5s ease-in-out,
+      opacity 1.5s ease-in-out;
+  }
+
+  .home-story:has(.home-ready-cta:hover) .home-ambient-orb {
+    scale: 2.35;
+    opacity: 0.25;
+  }
+}
+
+.home-envelope .envelope-rotor {
   transform: rotateY(var(--flip));
-  transition: none;
-  pointer-events: none;
 }
 
-.home-letter-mockup .mockup-phone {
-  height: 978px;
-  width: 462px;
-}
-
-.home-envelope :is(#env-top, #env-left, #env-right, #env-bottom) {
+.home-envelope .envelope-folds {
   opacity: var(--pocket-opacity);
+  transform: translateY(var(--pocket-rise));
+}
+
+.home-envelope .envelope-flap {
   top: var(--pocket-rise);
-}
-
-.home-envelope #env-top {
-  transform-origin: top;
-  scale: 2.34 var(--flap);
+  opacity: var(--pocket-opacity);
+  transform: rotateX(var(--flap));
   z-index: var(--flap-layer);
-  transition: none;
 }
 
-.home-envelope button:has([data-testid="wax-seal"]) {
+.home-envelope .envelope-seal {
+  top: calc(var(--pocket-rise) + var(--envelope-hinge));
   opacity: var(--wax);
   transition: none;
 }
 
-.home-letter-mockup .mockup-phone-display {
+.home-phone {
   position: relative;
+  border-radius: 2.5rem;
+  background: var(--color-base-100);
+  box-shadow:
+    inset 0 0 0 1px
+    color-mix(in oklch, var(--color-base-content) 28%, var(--color-base-100)),
+    0 0.75rem 2rem rgb(0 0 0 / 22%);
 }
 
-.home-letter-mockup .mockup-phone-display img {
+.home-phone-camera {
+  position: absolute;
+  z-index: 1;
+  top: 0.9rem;
+  left: 50%;
+  width: 3.6rem;
+  height: 0.72rem;
+  border-radius: 999px;
+  background: var(--color-base-100);
+  transform: translateX(-50%);
+}
+
+.home-phone-display {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 2.1875rem;
+  background: var(--color-base-200);
+}
+
+.home-phone-display img {
   position: absolute;
   left: 0;
   display: block;

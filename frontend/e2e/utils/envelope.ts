@@ -13,18 +13,22 @@ const logger = pino({
 /**
  * Reveal a letter from an envelope.
  */
-export async function revealEnvelope(page: Page) {
+export async function revealEnvelope(
+  page: Page,
+  input: "mouse" | "touch" = "mouse",
+) {
   logger.info("[Envelope] Revealing envelope...");
   // Click envelope to flip
-  await page.getByTestId("envelope-front").click();
+  const flip = page.getByRole("button", { name: /^Flip envelope/ });
+  const seal = page.getByRole("button", { name: "Break the seal" });
+  const read = page.getByRole("button", { name: "Read the letter" });
+  await expect(seal).toHaveCount(0);
+  await expect(read).toHaveCount(0);
 
-  // Click seal to open flap
-  await page.getByTestId("wax-seal").click();
-
-  // Click letter to reveal
-  await page
-    .getByTestId("envelope-letter")
-    .click({ position: { x: 30, y: 15 } });
+  for (const target of [flip, seal, read]) {
+    if (input === "touch") await target.tap();
+    else await target.click();
+  }
 }
 
 /**

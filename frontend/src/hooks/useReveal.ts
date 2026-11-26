@@ -1,5 +1,11 @@
 import { useAnimationControls, useReducedMotion } from "motion/react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 
 export type RevealState = "SEALED" | "REVEALED" | "BURNED" | "BURNING";
 
@@ -41,7 +47,7 @@ export function useReveal(
     const to = paperRef.current?.getBoundingClientRect();
 
     paperControls.set(
-      from && to && to.width > 0 && to.height > 0
+      !reduceMotion && from && to && to.width > 0 && to.height > 0
         ? {
             opacity: 1,
             x: from.left - to.left,
@@ -77,9 +83,10 @@ export function useReveal(
   }, [isRevealed]);
 
   // burning re-seals the letter, which puts the envelope back in view
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (isRevealed) {
       wasRevealedRef.current = true;
+      paperRef.current?.focus({ preventScroll: true });
       return;
     }
     if (!wasRevealedRef.current) return;
@@ -101,6 +108,7 @@ export function useReveal(
     paperRef,
     envelopeLetterRef,
     paperControls,
+    reduceMotion,
     handleRevealComplete,
     markCanvasReady: useCallback(() => setIsCanvasReady(true), []),
     isRevealed,

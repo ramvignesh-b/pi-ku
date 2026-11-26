@@ -1,4 +1,5 @@
 import { EnvelopeOpenIcon } from "@phosphor-icons/react";
+import stamp from "../assets/envelope/stamp.webp";
 import BootWave from "./BootWave";
 import Logo from "./Logo";
 
@@ -31,12 +32,13 @@ export default function SplashScreen({
         <div className="flex flex-col items-center gap-2">
           {isBoot ? (
             <>
-              {/* In flow rather than absolute, so the mark, the envelope and
-                  the wave stack as one object. */}
-              <EnvelopeOpenIcon
-                weight="thin"
-                className="text-primary/50"
-                size={40}
+              {/* Reserve the artwork's space while the image loads. */}
+              <img
+                src={stamp}
+                alt=""
+                width={56}
+                height={56}
+                className="rotate-6"
               />
               <BootWave settling={settling} />
             </>

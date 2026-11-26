@@ -1,7 +1,7 @@
 import { FlameIcon, PaperPlaneTiltIcon } from "@phosphor-icons/react";
 import type { AxiosResponse } from "axios";
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   type NavigateFunction,
   useLocation,
@@ -36,8 +36,6 @@ interface LetterMetadata {
   updated_at?: string;
 }
 
-const WAIT_FOR_BURN_MS = 18000;
-
 export default function Letter() {
   const { public_id } = useParams();
   const location = useLocation();
@@ -57,7 +55,6 @@ export default function Letter() {
   const [decryptedCanvasData, setDecryptedCanvasData] =
     useState<CanvasJSON | null>(null);
   const [showBurnModal, setShowBurnModal] = useState(false);
-  const [isBurning, setIsBurning] = useState(false);
   const [ignite, setIgnite] = useState(false);
   const [encryptedDek, setEncryptedDek] = useState<string | null>(null);
   const [shareLink, setShareLink] = useState<string | null>(null);
@@ -69,6 +66,7 @@ export default function Letter() {
     paperRef,
     envelopeLetterRef,
     paperControls,
+    reduceMotion,
     handleRevealComplete,
     markCanvasReady,
     isRevealed,
@@ -78,6 +76,8 @@ export default function Letter() {
   } = useReveal(revealState, setRevealState);
 
   const isAuthor = !!masterKey && !sharingKey;
+  const isBurning = revealState === "BURNING";
+  const finishBurn = useCallback(() => setRevealState("BURNED"), []);
 
   const handleShare = async () => {
     if (!(encryptedDek && masterKey && public_id)) return;
@@ -96,7 +96,7 @@ export default function Letter() {
 
   const burnLetter = async () => {
     if (!public_id || isBurning) return;
-    setIsBurning(true);
+    setRevealState("BURNING");
     try {
       await api.patch(`${endpoints.LETTERS}${public_id}/`, {
         status: "BURNED",
@@ -106,12 +106,8 @@ export default function Letter() {
       // WHY?: it disconnects the UX. if you want to burn the letter, you should be able to burn the letter
       // TODO: maybe say something like: "the wind is strong today, let's try again"? or maybe something less stupid :3
     } finally {
-      setIsBurning(false);
       setShowBurnModal(false);
       setIgnite(true);
-      setTimeout(() => {
-        setRevealState("BURNED");
-      }, WAIT_FOR_BURN_MS);
     }
   };
 
@@ -290,16 +286,21 @@ export default function Letter() {
       <div className="fixed inset-0 bg-vig pointer-events-none z-0" />
       {isAuthor && <Navbar />}
       <AnimatePresence>
-        {revealState === "SEALED" && (
+        {(revealState === "SEALED" || isBurning) && (
           <motion.div
             key="envelope"
-            className="fixed inset-0 z-50 flex flex-col items-center justify-center perspective-distant pointer-events-none"
-            initial={{ scale: 0.5, opacity: 0 }}
-            animate={{ scale: 0.8, opacity: 1 }}
-            exit={envelopeExit}
-            transition={{ duration: 4, delay: 1 }}
+            className="fixed inset-0 z-50 grid place-items-center pointer-events-none"
+            initial={{ opacity: reduceMotion ? 1 : 0 }}
+            animate={{ opacity: 1 }}
+            exit={
+              isBurning
+                ? { opacity: 0, transition: { duration: 0 } }
+                : envelopeExit
+            }
+            transition={{ duration: reduceMotion ? 0 : 0.25 }}
           >
             <EnvelopeReveal
+              key={isBurning ? "burn" : "read"}
               letterRef={envelopeLetterRef}
               recipient={metadata?.recipient || "Someone dear"}
               date={
@@ -308,13 +309,15 @@ export default function Letter() {
                   : undefined
               }
               onRevealComplete={handleRevealComplete}
+              isInteractive={!isBurning}
               ignite={ignite}
+              onBurnComplete={finishBurn}
             />
           </motion.div>
         )}
       </AnimatePresence>
 
-      {ignite && <PostActionOverlay revealState={revealState} />}
+      {revealState === "BURNED" && <PostActionOverlay />}
 
       {/* mounted and measured behind the envelope, so the reveal is a fade
           rather than a mount and a reflow */}
@@ -350,11 +353,10 @@ export default function Letter() {
           burnLetter={burnLetter}
           isBurning={isBurning}
           setShowBurnModal={setShowBurnModal}
-          setRevealState={setRevealState}
         />
       )}
 
-      {isAuthor && revealState !== "BURNED" && (
+      {isAuthor && !isBurning && revealState !== "BURNED" && (
         // Pinned in both states. In flow these sit below a fold the reader
         // cannot scroll to while sealed, and would jump on opening. Near-opaque
         // rather than the navbar's 60%: this bar crosses the letter, and the

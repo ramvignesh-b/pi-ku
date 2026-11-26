@@ -132,6 +132,29 @@ test.describe("Letter Drafting (Real Backend)", () => {
     // Assuming Close button in ShareModal might need a testid too, but for now let's use text if unique or add testid
     await page.getByTestId("modal-close-btn").click();
     await expect(page.getByTestId("share-letter-modal")).toBeHidden();
+
+    await page.getByTestId("burn-letter-btn").click();
+    const hold = page.getByRole("button", { name: "Hold to burn the letter" });
+    const progress = page.getByRole("progressbar", {
+      name: "Burn confirmation",
+    });
+    await hold.focus();
+    await page.keyboard.down("Space");
+    await expect(progress).not.toHaveAttribute("aria-valuenow", "0");
+    await page.keyboard.up("Space");
+    await expect(progress).toHaveAttribute("aria-valuenow", "0");
+
+    const savedBurn = page.waitForResponse(
+      (response) =>
+        response.request().method() === "PATCH" &&
+        response.request().postDataJSON()?.status === "BURNED",
+    );
+    await page.keyboard.down("Space");
+    expect((await savedBurn).ok()).toBe(true);
+    await page.keyboard.up("Space");
+    await expect(
+      page.getByRole("heading", { name: "It is done" }),
+    ).toBeFocused();
   });
 
   test("should allow author to access sealed letter from escritoire without sharing key", async ({
@@ -183,7 +206,20 @@ test.describe("Letter Drafting (Real Backend)", () => {
     // Reveal and check decrypted content in Reader
     await expect(page.getByTestId("decryption-overlay")).toBeHidden();
     // Flip the envelope and reveal the letter
-    await revealEnvelope(page);
+    const flip = page.getByRole("button", { name: /^Flip envelope/ });
+    const seal = page.getByRole("button", { name: "Break the seal" });
+    const read = page.getByRole("button", { name: "Read the letter" });
+    await expect(seal).toHaveCount(0);
+    await expect(read).toHaveCount(0);
+    await flip.focus();
+    await page.keyboard.press("Enter");
+    await page.keyboard.press("Enter");
+    await expect(seal).toBeFocused();
+    await expect(read).toHaveCount(0);
+    await page.keyboard.press("Space");
+    await expect(read).toBeFocused();
+    await page.keyboard.press("Enter");
+    await expect(page.getByRole("region", { name: "Letter" })).toBeFocused();
     await expect(page.getByTestId("envelope-letter")).toBeHidden();
 
     // Also check if we are redirected to the Reader if we manually go to the Editor URL
@@ -196,5 +232,32 @@ test.describe("Letter Drafting (Real Backend)", () => {
 
     // It should redirect back to the reader
     await expect(page).toHaveURL(letterUrl);
+  });
+});
+
+test.describe("Welcome envelope on a phone", () => {
+  test.use({ hasTouch: true, reducedMotion: "reduce" });
+
+  test("should open through three touch targets with reduced motion", async ({
+    page,
+  }) => {
+    await AuthHelper.registerAndLogin(
+      page,
+      `touch-${Date.now()}-${Math.random()}@example.com`,
+      "Mobile Reader",
+      "Password123!",
+      async (welcome) => {
+        await welcome.setViewportSize({ width: 320, height: 720 });
+        const front = welcome.getByRole("button", { name: /^Flip envelope/ });
+        await expect(front).toBeInViewport({ ratio: 1 });
+        await revealEnvelope(welcome, "touch");
+        await expect(
+          welcome.getByRole("region", { name: "Letter" }),
+        ).toBeFocused();
+        const dismiss = welcome.getByTestId("dismiss-welcome-letter-btn");
+        await dismiss.tap();
+        await expect(dismiss).toBeHidden();
+      },
+    );
   });
 });

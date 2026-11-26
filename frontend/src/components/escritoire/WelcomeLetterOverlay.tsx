@@ -1,12 +1,13 @@
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   getWelcomeLetterContent,
   WELCOME_LETTER_FOOTER_IMAGE,
 } from "../../config/welcomeLetter";
+import { type RevealState, useReveal } from "../../hooks/useReveal";
 import { formatDate } from "../../utils/dateFormat";
 import { EnvelopeReveal } from "../letter/EnvelopeReveal";
-import { type CanvasTools, ComposeCanvas } from "../quill/ComposeCanvas";
+import { LetterPaper } from "../letter/LetterPaper";
 
 export interface WelcomeLetterOverlayProps {
   onComplete: () => void;
@@ -17,57 +18,63 @@ export function WelcomeLetterOverlay({
   onComplete,
   userName,
 }: WelcomeLetterOverlayProps) {
-  const [revealState, setRevealState] = useState<"SEALED" | "REVEALED">(
-    "SEALED",
+  const [revealState, setRevealState] = useState<RevealState>("SEALED");
+  const welcomeContent = useMemo(
+    () => getWelcomeLetterContent(userName),
+    [userName],
   );
-  const canvasRef = useRef<CanvasTools>(null);
-
-  useEffect(() => {
-    if (revealState === "REVEALED" && canvasRef.current) {
-      const welcomeContent = getWelcomeLetterContent(userName);
-      canvasRef.current.loadData(welcomeContent);
-    }
-  }, [revealState, userName]);
+  const {
+    paperRef,
+    envelopeLetterRef,
+    paperControls,
+    reduceMotion,
+    handleRevealComplete,
+    markCanvasReady,
+    isRevealed,
+    showInk,
+    inkTransition,
+    envelopeExit,
+  } = useReveal(revealState, setRevealState);
 
   return (
-    <div className="fixed inset-0 z-30 backdrop-blur-3xl flex flex-col items-center justify-center-safe p-4 md:p-8 overflow-x-hidden overflow-y-auto">
+    <div className="fixed inset-0 z-30 backdrop-blur-3xl">
       <div className="fixed inset-0 bg-vig pointer-events-none z-0" />
 
-      <div className="w-full max-w-4xl z-10 flex shrink-0 flex-col items-center">
-        <AnimatePresence mode="wait">
-          {revealState === "SEALED" && (
-            <motion.div
-              key="envelope"
-              initial={{ scale: 0.5, opacity: 0 }}
-              animate={{ scale: 0.8, opacity: 1 }}
-              exit={{
-                scale: 1,
-                opacity: 0,
-                transition: { duration: 0.5, ease: "easeOut" },
-              }}
-              transition={{ duration: 4, delay: 1 }}
-            >
-              <EnvelopeReveal
-                recipient={userName}
-                date={formatDate(new Date())}
-                onRevealComplete={() => setRevealState("REVEALED")}
-                ignite={false}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
-        <div
-          className={`w-full space-y-8 py-12 ${revealState === "REVEALED" ? "block" : "hidden"}`}
-        >
-          <div className="bg-paper shadow-warm rounded-sm overflow-hidden mx-auto max-w-180">
-            <div className="p-1 md:p-2 bg-base-content/5 opacity-10 pointer-events-none absolute inset-0 z-10" />
-            <ComposeCanvas
-              ref={canvasRef}
-              readOnly
-              footerImageName={WELCOME_LETTER_FOOTER_IMAGE}
+      <AnimatePresence>
+        {!isRevealed && (
+          <motion.div
+            key="envelope"
+            className="absolute inset-0 z-10 grid place-items-center pointer-events-none"
+            initial={{ opacity: reduceMotion ? 1 : 0 }}
+            animate={{ opacity: 1 }}
+            exit={envelopeExit}
+            transition={{ duration: reduceMotion ? 0 : 0.25 }}
+          >
+            <EnvelopeReveal
+              letterRef={envelopeLetterRef}
+              recipient={userName}
+              date={formatDate(new Date())}
+              onRevealComplete={handleRevealComplete}
             />
-          </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
+      <div
+        className={`absolute inset-0 z-20 px-4 py-6 md:p-8 [scrollbar-gutter:stable_both-edges] ${isRevealed ? "overflow-x-hidden overflow-y-auto" : "overflow-hidden pointer-events-none"}`}
+      >
+        <LetterPaper
+          paperRef={paperRef}
+          controls={paperControls}
+          isRevealed={isRevealed}
+          showInk={showInk}
+          inkTransition={inkTransition}
+          data={welcomeContent}
+          footerImageName={WELCOME_LETTER_FOOTER_IMAGE}
+          onCanvasReady={markCanvasReady}
+        />
+
+        {isRevealed && (
           <div className="flex justify-center">
             <button
               type="button"
@@ -97,7 +104,7 @@ export function WelcomeLetterOverlay({
               <span className="relative">I'll see you</span>
             </button>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

@@ -10,6 +10,7 @@ import {
   motion,
   useMotionValue,
   useMotionValueEvent,
+  useReducedMotion,
   useScroll,
   useTransform,
 } from "motion/react";
@@ -27,16 +28,21 @@ import { formatDate } from "../utils/dateFormat";
 import "@fontsource/architects-daughter/index.css";
 
 const SCREEN_WIDTH = 440;
-const SCREEN_IMAGE_TOP = -240;
+const SCREEN_IMAGE_TOP = -110;
 const SCREEN_IMAGE_SCALE = SCREEN_WIDTH / 412;
+const SCREEN_IMAGE_HEIGHT = 913 * SCREEN_IMAGE_SCALE;
+const PHONE_FRAME_INSET = 5;
+const PHONE_FRAME_WIDTH = SCREEN_WIDTH + 2 * PHONE_FRAME_INSET;
+const PHONE_FRAME_HEIGHT =
+  SCREEN_IMAGE_HEIGHT + SCREEN_IMAGE_TOP + 2 * PHONE_FRAME_INSET;
 // Paper bounds in the 412 × 913 editor screenshot.
 const PAPER_X = 13 * SCREEN_IMAGE_SCALE;
 const PAPER_Y = 378 * SCREEN_IMAGE_SCALE;
 const PAPER_WIDTH = 388 * SCREEN_IMAGE_SCALE;
 const PAPER_HEIGHT = 513 * SCREEN_IMAGE_SCALE;
 const PAPER_CENTER_OFFSET = PAPER_X + (PAPER_WIDTH - SCREEN_WIDTH) / 2;
-// The phone's border and padding put the display 11px inside the frame.
-const PAPER_TOP_IN_PHONE = 11 + SCREEN_IMAGE_TOP + PAPER_Y;
+// The border and padding offset the display from the phone frame.
+const PAPER_TOP_IN_PHONE = PHONE_FRAME_INSET + SCREEN_IMAGE_TOP + PAPER_Y;
 const PAPER_LEFT_EDGE = `${PAPER_X}px`;
 const PAPER_RIGHT_EDGE = `${PAPER_X + PAPER_WIDTH}px`;
 const PAPER_TOP_EDGE = `${PAPER_Y}px`;
@@ -46,14 +52,23 @@ const SCREEN_WITHOUT_PAPER = `polygon(evenodd, 0 0, 100% 0, 100% 100%, 0 100%, 0
   ${PAPER_RIGHT_EDGE} ${PAPER_BOTTOM_EDGE}, ${PAPER_LEFT_EDGE} ${PAPER_BOTTOM_EDGE},
   ${PAPER_LEFT_EDGE} ${PAPER_TOP_EDGE})`;
 const PAPER_RELEASE_START = 0.367;
-const INSERT_START = 0.419;
+const PAPER_LIFT_END = 0.395;
+const PAPER_LIFT_DISTANCE = 128;
+const PHONE_DROP_DISTANCE = 92;
+const PHONE_ENTRANCE_DISTANCE = 105;
+const INSERT_START = 0.425;
+const INSERT_END = 0.46;
+const PHONE_PAPER_WIDTH_RATIO = 0.76;
 const INSERTED_PAPER_WIDTH_RATIO = 0.8;
-const FLAP_CLOSE_START = 0.32;
-const FLAP_CLOSED = 0.4;
+const FLAP_CLOSE_START = 0.462;
+const FLAP_CLOSED = 0.474;
 const TITLE_EXIT = 0.105;
 const TITLE_ZOOM_RANGE = [0.005, 0.06, TITLE_EXIT];
+const FUTURE_ME_START = 0.6425;
 const BURN_START = 0.78;
+const BURN_FADE_START = 0.9;
 const BURN_END = 0.94;
+const OUTRO_START = 0.945;
 
 function useScene(scroll: MotionValue<number>, start: number, end: number) {
   const progress = useTransform(scroll, [start, end], [0, 1]);
@@ -72,6 +87,19 @@ function useScene(scroll: MotionValue<number>, start: number, end: number) {
       ]),
     },
   };
+}
+
+function mixOrbColors(
+  progress: number,
+  start: number,
+  end: number,
+  from: string,
+  to: string,
+) {
+  if (progress <= start) return from;
+  if (progress >= end) return to;
+  const percentage = easeInOut((progress - start) / (end - start)) * 100;
+  return `color-mix(in oklab, ${from}, ${to} ${percentage}%)`;
 }
 
 function useOpeningReveal(
@@ -93,8 +121,47 @@ function useOpeningReveal(
   return progress;
 }
 
+function useScrollEntrance(
+  scroll: MotionValue<number>,
+  {
+    start,
+    delay,
+    duration,
+    reduceMotion,
+  }: {
+    start: number;
+    delay: number;
+    duration: number;
+    reduceMotion: boolean | null;
+  },
+) {
+  const inView = useTransform(scroll, (value) => value >= start);
+  const progress = useMotionValue(0);
+
+  useEffect(() => {
+    let animation: ReturnType<typeof animate> | undefined;
+    const reveal = (visible: boolean) => {
+      animation?.stop();
+      animation = animate(progress, Number(visible), {
+        delay: visible && !reduceMotion ? delay : 0,
+        duration: reduceMotion ? 0 : visible ? duration : 0.22,
+        ease: "linear",
+      });
+    };
+    reveal(inView.get());
+    const unsubscribe = inView.on("change", reveal);
+    return () => {
+      unsubscribe();
+      animation?.stop();
+    };
+  }, [delay, duration, inView, progress, reduceMotion]);
+
+  return progress;
+}
+
 export default function Home() {
   const sectionContainer1 = useRef<HTMLDivElement>(null);
+  const reduceMotion = useReducedMotion();
 
   const { scrollYProgress } = useScroll({
     target: sectionContainer1,
@@ -104,13 +171,15 @@ export default function Home() {
   const envelopeRef = useRef<HTMLDivElement>(null);
   const captionShift = useMotionValue(0);
   const pocketHeight = useMotionValue(280);
+  const pocketEntry = useMotionValue(0);
   const envelopeScale = useMotionValue(0.8);
   const phoneScale = useMotionValue(1);
   const phoneTop = useMotionValue(-94);
   useEffect(() => {
     const caption = captionRef.current;
     const envelope = envelopeRef.current;
-    const envelopeFront = envelope?.querySelector<HTMLElement>("#env-front");
+    const envelopeFront =
+      envelope?.querySelector<HTMLElement>(".envelope-front");
     const stage = caption?.offsetParent;
     const viewport = stage?.parentElement;
     if (!(caption && envelope && envelopeFront && stage && viewport)) return;
@@ -129,14 +198,18 @@ export default function Home() {
       );
       const envelopeWidth = envelopeFront.offsetWidth;
       const paperToEnvelope = envelopeWidth / PAPER_WIDTH;
+      const frameBelowPaper = PHONE_FRAME_HEIGHT - PAPER_TOP_IN_PHONE;
       const scale = Math.min(
         matchMedia("(min-width: 768px)").matches ? 0.8 : 0.6,
         Math.max(1, viewport.clientWidth - 32) / envelopeWidth,
-        availableHeight / (PAPER_HEIGHT * paperToEnvelope),
+        availableHeight / (frameBelowPaper * paperToEnvelope),
       );
-      const paperHeight = PAPER_HEIGHT * paperToEnvelope * scale;
-      const paperTop = paperAreaTop + (availableHeight - paperHeight) / 2;
-      const frameTop = paperTop - PAPER_TOP_IN_PHONE * paperToEnvelope * scale;
+      const phoneToEnvelope = paperToEnvelope * PHONE_PAPER_WIDTH_RATIO;
+      const displayedPhoneScale = phoneToEnvelope * scale;
+      const paperTop =
+        paperAreaTop +
+        (availableHeight - frameBelowPaper * displayedPhoneScale) / 2;
+      const frameTop = paperTop - PAPER_TOP_IN_PHONE * displayedPhoneScale;
       const envelopeRect = envelope.getBoundingClientRect();
       const envelopeTop =
         envelopeRect.top -
@@ -151,8 +224,12 @@ export default function Home() {
         ),
       );
       pocketHeight.set(envelope.offsetHeight);
+      // The open flap must also clear the viewport before the pocket enters.
+      pocketEntry.set(
+        (viewport.clientHeight - envelopeTop) / scale + envelope.offsetHeight,
+      );
       envelopeScale.set(scale);
-      phoneScale.set(paperToEnvelope);
+      phoneScale.set(phoneToEnvelope);
       phoneTop.set((frameTop - envelopeTop) / scale);
     };
     const observer = new ResizeObserver(measure);
@@ -164,47 +241,98 @@ export default function Home() {
       observer.disconnect();
       window.removeEventListener("resize", measure);
     };
-  }, [captionShift, envelopeScale, phoneScale, phoneTop, pocketHeight]);
+  }, [
+    captionShift,
+    envelopeScale,
+    phoneScale,
+    phoneTop,
+    pocketHeight,
+    pocketEntry,
+  ]);
   const letterEmphasis = useTransform(
     scrollYProgress,
-    [PAPER_RELEASE_START, 0.402, 0.417],
+    [0.325, 0.347, 0.368],
     [0.2, 0.28, 0.4],
   );
-  const liftRange = [0.2, 0.28];
-  const lift = useTransform(letterEmphasis, liftRange, [0, 1], {
-    ease: easeInOut,
+  const phoneReveal = useScrollEntrance(scrollYProgress, {
+    start: 0.31,
+    delay: 0.42,
+    duration: 0.95,
+    reduceMotion,
   });
-  const phoneOpacity = useTransform(letterEmphasis, liftRange, [1, 0], {
+  // Finish the entrance before the paper lifts, even if the reader skips ahead.
+  const phoneRevealOnScroll = useTransform(
+    scrollYProgress,
+    [0.354, PAPER_RELEASE_START],
+    [0, 1],
+  );
+  const phoneArrival = useTransform(() =>
+    easeOut(Math.max(phoneReveal.get(), phoneRevealOnScroll.get())),
+  );
+  const enteringPhoneTop = useTransform(
+    () =>
+      phoneTop.get() +
+      PHONE_ENTRANCE_DISTANCE * (1 - phoneArrival.get()) * phoneScale.get(),
+  );
+  const liftProgress = useTransform(
+    scrollYProgress,
+    [PAPER_RELEASE_START, PAPER_LIFT_END],
+    [0, 1],
+    { ease: easeInOut },
+  );
+  const lift = useTransform(liftProgress, (progress) =>
+    reduceMotion ? Number(progress >= 0.5) : progress,
+  );
+  const phoneY = useTransform(
+    () =>
+      enteringPhoneTop.get() +
+      PHONE_DROP_DISTANCE * lift.get() * phoneScale.get(),
+  );
+  const phoneFade = useTransform(lift, [0.14, 1], [1, 0], {
     ease: easeOut,
   });
-  const insertion = useTransform(
+  const insertionProgress = useTransform(
     scrollYProgress,
-    [INSERT_START, 0.453],
+    [INSERT_START, INSERT_END],
     [0, 1],
     {
       ease: easeInOut,
     },
+  );
+  const insertion = useTransform(insertionProgress, (progress) =>
+    reduceMotion ? Number(progress >= 0.5) : progress,
   );
   const paperX = useTransform(
     () => PAPER_CENTER_OFFSET * phoneScale.get() * (1 - insertion.get()),
   );
   const paperY = useTransform(() => {
     const liftedTop =
-      phoneTop.get() +
-      (PAPER_TOP_IN_PHONE - 46 * lift.get()) * phoneScale.get();
+      enteringPhoneTop.get() +
+      (PAPER_TOP_IN_PHONE - PAPER_LIFT_DISTANCE * lift.get()) *
+        phoneScale.get();
     return liftedTop + (132 - liftedTop) * insertion.get();
   });
   const paperScale = useTransform(() => {
-    const widthRatio = 1 - (1 - INSERTED_PAPER_WIDTH_RATIO) * insertion.get();
-    return phoneScale.get() * widthRatio;
+    const widthRatio =
+      PHONE_PAPER_WIDTH_RATIO +
+      (INSERTED_PAPER_WIDTH_RATIO - PHONE_PAPER_WIDTH_RATIO) * insertion.get();
+    return phoneScale.get() * (widthRatio / PHONE_PAPER_WIDTH_RATIO);
   });
-  const pocketRise = useTransform(
+  const pocketArrival = useTransform(
     scrollYProgress,
-    [INSERT_START, 0.443],
-    [240, 0],
+    [INSERT_START, 0.45],
+    [0, 1],
     {
       ease: easeInOut,
     },
+  );
+  const pocketRise = useTransform(
+    () =>
+      pocketEntry.get() *
+      (1 - (reduceMotion ? insertion.get() : pocketArrival.get())),
+  );
+  const pocketOpacity = useTransform(() =>
+    reduceMotion ? insertion.get() : Number(pocketArrival.get() > 0),
   );
   const pocketOffset = useTransform(pocketRise, (value) => `${value}px`);
   const paperClip = useTransform(() => {
@@ -221,19 +349,123 @@ export default function Home() {
     () => letters.style.y.get() + captionShift.get(),
   );
   const seal = useScene(scrollYProgress, 0.405, 0.555);
+  const sealCaptionEnter = useTransform(
+    scrollYProgress,
+    [INSERT_END, FLAP_CLOSED],
+    [0, 1],
+  );
+  const sealCaptionOpacity = useTransform(
+    () => seal.style.opacity.get() * sealCaptionEnter.get(),
+  );
+  const sealEmphasis = useTransform(
+    scrollYProgress,
+    [0.476, 0.487, 0.503],
+    [0.2, 0.28, 0.4],
+  );
   const dear = useScene(scrollYProgress, 0.53, 0.655);
+  const flapAngle = useTransform(
+    scrollYProgress,
+    [FLAP_CLOSE_START, FLAP_CLOSED],
+    [180, 0],
+    {
+      ease: easeInOut,
+    },
+  );
+  const flapRotation = useTransform(flapAngle, (angle) =>
+    reduceMotion ? (angle >= 90 ? "180deg" : "0deg") : `${angle}deg`,
+  );
+  const flapLayer = useTransform(flapAngle, (angle) => (angle >= 90 ? 1 : 4));
+  const flipAngle = useTransform(dear.progress, [0.2, 0.4], [180, 0], {
+    ease: easeInOut,
+  });
+  const flipRotation = useTransform(flipAngle, (angle) =>
+    reduceMotion ? (angle >= 90 ? "180deg" : "0deg") : `${angle}deg`,
+  );
   const address = useScene(scrollYProgress, 0.53, 0.755);
   const future = useScene(scrollYProgress, 0.63, 0.755);
   const burn = useScene(scrollYProgress, 0.73, 0.905);
-  const outroProgress = useTransform(scrollYProgress, [0.88, 1], [0, 1]);
+  const burnProgress = useTransform(
+    scrollYProgress,
+    [BURN_START, 0.92],
+    [0, 1],
+  );
+  const earlierOrbColor = useTransform(scrollYProgress, (progress) => {
+    if (progress < 0.48) {
+      return mixOrbColors(
+        progress,
+        0.35,
+        0.48,
+        "var(--color-primary)",
+        "var(--orb-purple)",
+      );
+    }
+    if (progress < 0.58) {
+      return mixOrbColors(
+        progress,
+        0.48,
+        0.58,
+        "var(--orb-purple)",
+        "var(--orb-rose)",
+      );
+    }
+    return mixOrbColors(
+      progress,
+      0.618,
+      FUTURE_ME_START,
+      "var(--orb-rose)",
+      "var(--orb-green)",
+    );
+  });
+  const futureOrbColor = useTransform(scrollYProgress, (progress) =>
+    progress < BURN_FADE_START
+      ? mixOrbColors(
+          progress,
+          BURN_START,
+          0.88,
+          "var(--orb-green)",
+          "var(--orb-ember)",
+        )
+      : mixOrbColors(
+          progress,
+          BURN_FADE_START,
+          OUTRO_START,
+          "var(--orb-ember)",
+          "var(--color-primary)",
+        ),
+  );
+  const outroProgress = useScrollEntrance(scrollYProgress, {
+    start: OUTRO_START,
+    delay: 0.8,
+    duration: 1.4,
+    reduceMotion,
+  });
+  const outroEntry = useTransform(outroProgress, [0, 0.72], [0, 1], {
+    ease: easeOut,
+  });
+  const outroEmphasis = useTransform(
+    outroProgress,
+    [0.46, 0.66, 0.85],
+    [0.2, 0.28, 0.4],
+  );
+  const outroActions = useTransform(outroProgress, [0.85, 1], [0, 1]);
+  const ctaScroll = useTransform(scrollYProgress, [0.96, 0.99], [0, 1]);
+  const ctaProgress = useTransform(() =>
+    Math.min(ctaScroll.get(), outroActions.get()),
+  );
+  const saajanScroll = useTransform(
+    scrollYProgress,
+    [0.95, 0.98, 1],
+    [0, 0.7, 1],
+  );
+  const saajanOpacity = useTransform(
+    () => saajanScroll.get() * outroActions.get(),
+  );
   const opening = useOpeningReveal(scrollYProgress, 6.8, 0);
   const headline = useOpeningReveal(scrollYProgress, 5.5, 0.4);
   const unsaid = useOpeningReveal(scrollYProgress, 5.8, 2);
-  const [recipient, setRecipient] = useState("someone dear");
-  const [ignite, setIgnite] = useState(false);
+  const [isFutureMe, setIsFutureMe] = useState(false);
   useMotionValueEvent(scrollYProgress, "change", (value) => {
-    setRecipient(value >= 0.6425 ? "future me" : "someone dear");
-    setIgnite(value >= BURN_START && value < BURN_END);
+    setIsFutureMe(value >= FUTURE_ME_START);
   });
   const navigate = useNavigate();
   useEffect(() => {
@@ -247,7 +479,7 @@ export default function Home() {
     >
       <section
         ref={sectionContainer1}
-        className="relative w-full h-[1200vh] bg-base-100 font-serif text-neutral-content/90"
+        className="home-story relative w-full h-[1200vh] bg-base-100 font-serif text-neutral-content/90"
       >
         <Link
           to={ROUTES.UNLOCK}
@@ -406,32 +638,32 @@ export default function Home() {
 
             {/* Beat 5: "seal it secure and private." */}
             <motion.h2
-              style={seal.style}
+              style={{ ...seal.style, opacity: sealCaptionOpacity }}
               className="absolute text-4xl md:text-6xl text-center px-10 leading-tight tracking-normal word-spacing-editorial"
             >
               seal it{" "}
               <span className="relative inline-block mx-0.5">
                 <HighlightedWord
-                  progress={seal.progress}
+                  progress={sealEmphasis}
                   className="text-success font-pixel tracking-wider"
                 >
                   secure
                 </HighlightedWord>
                 <WavyUnderline
-                  progress={seal.progress}
+                  progress={sealEmphasis}
                   color="var(--color-success)"
                 />
               </span>{" "}
               and{" "}
               <span className="relative inline-block mx-0.5">
                 <HighlightedWord
-                  progress={seal.progress}
+                  progress={sealEmphasis}
                   className="text-info font-pixel tracking-wider"
                 >
                   private
                 </HighlightedWord>
                 <WavyUnderline
-                  progress={seal.progress}
+                  progress={sealEmphasis}
                   color="var(--color-info)"
                 />
               </span>
@@ -507,34 +739,26 @@ export default function Home() {
             <motion.h2
               className="italic absolute text-4xl md:text-6xl text-center px-10 leading-tight text-neutral-content/60 tracking-normal word-spacing-editorial"
               style={{
-                opacity: useTransform(
-                  scrollYProgress,
-                  [0.88, 0.92, 1],
-                  [0, 1, 1],
-                ),
-                y: useTransform(scrollYProgress, [0.88, 0.92, 1], [30, 0, 0]),
-                scale: useTransform(
-                  scrollYProgress,
-                  [0.88, 0.92, 1],
-                  [0.98, 1, 1],
-                ),
+                opacity: outroEntry,
+                y: useTransform(outroEntry, [0, 1], [30, 0]),
+                scale: useTransform(outroEntry, [0, 1], [0.98, 1]),
                 filter: useTransform(
-                  scrollYProgress,
-                  [0.88, 0.92, 1],
-                  ["blur(14px)", "blur(0px)", "blur(0px)"],
+                  outroEntry,
+                  [0, 1],
+                  ["blur(14px)", "blur(0px)"],
                 ),
               }}
             >
               You've been carrying it{" "}
               <span className="relative inline-block whitespace-nowrap">
                 <HighlightedWord
-                  progress={outroProgress}
+                  progress={outroEmphasis}
                   className="font-display text-primary not-italic"
                 >
                   long enough
                 </HighlightedWord>
                 <WavyUnderline
-                  progress={outroProgress}
+                  progress={outroEmphasis}
                   color="var(--color-primary)"
                   className="translate-y-1 md:translate-y-1.5"
                 />
@@ -546,14 +770,10 @@ export default function Home() {
             <motion.div
               className="z-100 absolute -bottom-12 md:bottom-0 font-hand flex flex-wrap md:flex-nowrap gap-4 md:gap-12 justify-center pointer-events-auto"
               style={{
-                opacity: useTransform(
-                  scrollYProgress,
-                  [0.96, 0.99, 1],
-                  [0, 1, 1],
-                ),
-                y: useTransform(scrollYProgress, [0.96, 0.99, 1], [40, 0, 0]),
-                pointerEvents: useTransform(scrollYProgress, (value) =>
-                  value > 0.96 ? "auto" : "none",
+                opacity: ctaProgress,
+                y: useTransform(ctaProgress, [0, 1], [40, 0]),
+                visibility: useTransform(ctaProgress, (value) =>
+                  value > 0 ? "visible" : "hidden",
                 ),
               }}
             >
@@ -586,54 +806,47 @@ export default function Home() {
                   scale: envelopeScale,
                   opacity: useTransform(
                     scrollYProgress,
-                    [0.28, 0.31, 0.9, BURN_END],
+                    [0.28, 0.31, BURN_FADE_START, BURN_END],
                     [0, 1, 1, 0],
                   ),
-                  "--pocket-opacity": useTransform(
-                    scrollYProgress,
-                    [INSERT_START, 0.437],
-                    [0, 1],
-                  ),
+                  "--pocket-opacity": pocketOpacity,
                   "--pocket-rise": pocketOffset,
-                  "--flap": useTransform(
-                    seal.progress,
-                    [FLAP_CLOSE_START, FLAP_CLOSED],
-                    [-1, 1],
-                  ),
-                  "--flap-layer": useTransform(seal.progress, (p) =>
-                    p < FLAP_CLOSE_START ? 0 : 4,
-                  ),
+                  "--flap": flapRotation,
+                  "--flap-layer": flapLayer,
                   "--wax": useTransform(
-                    seal.progress,
-                    [FLAP_CLOSED + 0.02, 0.49],
+                    scrollYProgress,
+                    [FLAP_CLOSED + 0.003, FLAP_CLOSED + 0.013],
                     [0, 1],
                   ),
-                  "--flip": useTransform(
-                    dear.progress,
-                    [0.2, 0.4],
-                    ["180deg", "0deg"],
-                    { ease: easeInOut },
-                  ),
+                  "--flip": flipRotation,
                 } as MotionStyle
               }
             >
               <div className="relative" inert>
                 <EnvelopeReveal
                   isInteractive={false}
-                  ignite={ignite}
+                  burnProgress={burnProgress}
                   insert={
                     <>
                       <motion.div
                         className="home-letter-mockup absolute z-1 origin-top"
                         style={{
-                          y: phoneTop,
+                          y: phoneY,
                           scale: phoneScale,
-                          opacity: phoneOpacity,
+                          opacity: phoneArrival,
                         }}
                       >
-                        <div className="mockup-phone border-primary/40 shadow-warm">
-                          <div className="mockup-phone-camera" />
-                          <div className="mockup-phone-display">
+                        <motion.div
+                          className="home-phone"
+                          style={{
+                            width: PHONE_FRAME_WIDTH,
+                            height: PHONE_FRAME_HEIGHT,
+                            padding: PHONE_FRAME_INSET,
+                            opacity: phoneFade,
+                          }}
+                        >
+                          <div className="home-phone-camera" />
+                          <div className="home-phone-display">
                             <img
                               src={letterSample}
                               alt="Letter sample"
@@ -643,30 +856,33 @@ export default function Home() {
                               }}
                             />
                           </div>
-                        </div>
+                        </motion.div>
                       </motion.div>
-                      <motion.div
+                      <div
                         aria-hidden="true"
-                        className="home-loose-letter absolute z-2 origin-top"
-                        style={{
-                          width: PAPER_WIDTH,
-                          height: PAPER_HEIGHT,
-                          backgroundImage: `url(${letterSample})`,
-                          backgroundSize: `${SCREEN_WIDTH}px auto`,
-                          // Offset the editor screenshot to the paper's top left corner.
-                          backgroundPosition: `-${PAPER_X}px -${PAPER_Y}px`,
-                          x: paperX,
-                          y: paperY,
-                          scale: paperScale,
-                          clipPath: paperClip,
-                        }}
-                      />
+                        className="home-paper-track absolute inset-y-0 inset-x-1.5 z-2 flex justify-center overflow-x-clip"
+                      >
+                        <motion.div
+                          className="home-loose-letter absolute origin-top"
+                          style={{
+                            width: PAPER_WIDTH,
+                            height: PAPER_HEIGHT,
+                            backgroundImage: `url(${letterSample})`,
+                            backgroundSize: `${SCREEN_WIDTH}px auto`,
+                            // Offset the editor screenshot to the paper's top left corner.
+                            backgroundPosition: `-${PAPER_X}px -${PAPER_Y}px`,
+                            x: paperX,
+                            y: paperY,
+                            scale: paperScale,
+                            opacity: phoneArrival,
+                            clipPath: paperClip,
+                          }}
+                        />
+                      </div>
                     </>
                   }
-                  recipient={recipient}
+                  recipient={isFutureMe ? "future me" : "someone dear"}
                   date={formatDate(new Date().toISOString())}
-                  onRevealComplete={() => {}}
-                  isFlip
                 />
               </div>
             </motion.div>
@@ -675,11 +891,7 @@ export default function Home() {
             <motion.div
               className="fixed bottom-0 z-10 font-sans -mb-6 md:scale-100 md:mb-0"
               style={{
-                opacity: useTransform(
-                  scrollYProgress,
-                  [0.95, 0.98, 1],
-                  [0, 0.7, 1],
-                ),
+                opacity: saajanOpacity,
                 y: useTransform(scrollYProgress, [0.95, 1], [40, -10]),
               }}
             >
@@ -693,26 +905,24 @@ export default function Home() {
 
             {/* Ambient Glowing Color-Morphing Orb (On top of envelope) */}
             <motion.div
-              className="w-64 z-20 h-64 rounded-full blur-3xl opacity-30 pointer-events-none"
-              transition={{
-                backgroundColor: { ease: "easeInOut", duration: 1.5 },
-              }}
-              style={{
-                backgroundColor: useTransform(
-                  scrollYProgress,
-                  [0.35, 0.48, 0.58, 0.68, 0.72, 0.78, 0.88],
-                  [
-                    "var(--color-primary)",
-                    "var(--color-secondary)",
-                    "var(--color-accent)",
-                    "var(--color-accent)",
-                    "var(--color-success)",
-                    "var(--color-success)",
-                    "var(--color-error)",
-                  ],
-                ),
-                scale: useTransform(scrollYProgress, [0, 1], [0.8, 2.6]),
-              }}
+              className="home-ambient-orb z-20 size-64 shrink-0 rounded-full blur-3xl pointer-events-none"
+              data-future-me={isFutureMe || undefined}
+              style={
+                {
+                  "--orb-earlier-color": earlierOrbColor,
+                  "--orb-future-color": futureOrbColor,
+                  scale: useTransform(
+                    scrollYProgress,
+                    [0, BURN_FADE_START, OUTRO_START],
+                    [0.8, 2.43, 1.1],
+                  ),
+                  "--orb-opacity": useTransform(
+                    scrollYProgress,
+                    [BURN_FADE_START, OUTRO_START],
+                    [0.3, 0.045],
+                  ),
+                } as MotionStyle
+              }
             />
           </div>
         </div>

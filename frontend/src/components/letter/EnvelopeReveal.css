@@ -1,0 +1,333 @@
+.envelope {
+  --envelope-radius: 0.45rem;
+  --envelope-hinge: 53%;
+  --envelope-notch: 42%;
+  position: relative;
+  width: min(22rem, 100vw - 2.75rem, 74dvh);
+  aspect-ratio: 11 / 7;
+  container-type: inline-size;
+  pointer-events: none;
+}
+
+.envelope[data-envelope-walkthrough] {
+  width: 27.5rem;
+}
+
+.envelope-mask,
+.envelope-rotor,
+.envelope-face {
+  position: absolute;
+  inset: 0;
+}
+
+.envelope-mask {
+  --burn-origin: circle farthest-corner at 100% 100%;
+  perspective: 75rem;
+}
+
+.envelope-rotor {
+  transform-style: preserve-3d;
+}
+
+.envelope-face {
+  border-radius: var(--envelope-radius);
+  backface-visibility: hidden;
+}
+
+.envelope-front {
+  display: flex;
+  align-items: center;
+  padding: 9%;
+  text-align: left;
+  /* Keep both faces in the 3D context so Firefox hides the mirrored front. */
+  transform: rotateY(0deg);
+  color: var(--color-base-content);
+  background: var(--color-base-200);
+  box-shadow: inset 0 0 0 1px
+    color-mix(in oklch, var(--color-base-content) 9%, transparent);
+}
+
+.envelope-front::after {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  content: "";
+  opacity: var(--burn-char-opacity);
+  background-image:
+    url("../../assets/textures/noise-static.png"),
+    radial-gradient(
+      var(--burn-origin),
+      #2b140b var(--burn-radius),
+      #ecad50 calc(var(--burn-radius) + 0.85%),
+      #ad5427 calc(var(--burn-radius) + 1.6%),
+      #542a17 calc(var(--burn-radius) + 2.5%),
+      #331a11 calc(var(--burn-radius) + var(--burn-char-width))
+    );
+  background-size:
+    85px 85px,
+    100% 100%;
+  background-blend-mode: soft-light;
+  mask-image: radial-gradient(
+    var(--burn-origin),
+    #000 calc(var(--burn-radius) + var(--burn-char-width) * 0.55),
+    transparent calc(var(--burn-radius) + var(--burn-char-width))
+  );
+}
+
+.envelope-address {
+  display: grid;
+  gap: 0.25rem;
+  width: 74%;
+  overflow-wrap: anywhere;
+}
+
+.envelope-recipient {
+  font-size: clamp(1rem, 6.8cqw, 1.875rem);
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.envelope-date {
+  margin-top: 5cqw;
+  font-size: clamp(0.625rem, 3.5cqw, 1rem);
+}
+
+.envelope-date:empty {
+  display: none;
+}
+
+.envelope-stamp {
+  position: absolute;
+  top: 5%;
+  right: 2%;
+  width: 23%;
+  opacity: 0.85;
+  transform: rotate(6deg);
+}
+
+.envelope-postmark {
+  position: absolute;
+  right: 9%;
+  top: 26%;
+  width: 27%;
+  height: auto;
+  color: var(--color-primary);
+}
+
+.envelope-back {
+  display: flex;
+  justify-content: center;
+  transform: rotateY(180deg);
+}
+
+.envelope-folds {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  z-index: 3;
+  overflow: hidden;
+  background: var(--color-base-300);
+  box-shadow: inset 0 0 0 1px
+    color-mix(in oklch, var(--color-base-content) 9%, transparent);
+  clip-path: polygon(0 0, 50% var(--envelope-notch), 100% 0, 100% 100%, 0 100%);
+}
+
+.envelope-fold-bottom {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    color-mix(in oklch, var(--color-base-300) 78%, var(--color-base-content)),
+    var(--color-base-200) 90%
+  );
+  clip-path: polygon(
+    0 100%,
+    0 91%,
+    50% var(--envelope-notch),
+    100% 91%,
+    100% 100%
+  );
+}
+
+.envelope-flap {
+  position: absolute;
+  z-index: 4;
+  inset: 0 0 auto;
+  height: var(--envelope-hinge);
+  transform-origin: top;
+  border-radius: var(--envelope-radius) var(--envelope-radius) 0 0;
+}
+
+.envelope-flap[data-open="true"] {
+  z-index: 1;
+}
+
+.envelope-flap-paper {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(
+    to bottom,
+    var(--color-base-200),
+    var(--color-base-300)
+  );
+  clip-path: polygon(0 0, 100% 0, 100% 7%, 51% 100%, 49% 100%, 0 7%);
+}
+
+.envelope-seal {
+  position: absolute;
+  z-index: 5;
+  top: var(--envelope-hinge);
+  width: max(44px, 18%);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  translate: 0 -50%;
+  transition: opacity 180ms ease-out;
+}
+
+.envelope-seal img {
+  position: absolute;
+  width: 125%;
+  max-width: none;
+  inset: -12.5%;
+  pointer-events: none;
+}
+
+.envelope-seal[data-open="true"] {
+  opacity: 0;
+}
+
+.envelope-paper {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  width: 84%;
+  height: clamp(44px, 22%, 62px);
+  border-radius: 0.125rem 0.125rem 0 0;
+  background: var(--color-paper);
+}
+
+.envelope-hotspot:enabled {
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.envelope-hotspot:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -3px;
+}
+
+.envelope-candle {
+  --candle-wick: 46%;
+  --candle-flicker-duration: 3.4s;
+  position: absolute;
+  z-index: 6;
+  right: 0;
+  bottom: 0;
+  width: clamp(54px, 23%, 96px);
+  transform: translate(45%, 77%);
+}
+
+.envelope-candle::before {
+  position: absolute;
+  inset: -55% -45% 7%;
+  content: "";
+  background: radial-gradient(
+    ellipse at 53% 52%,
+    rgb(245 173 78 / 34%),
+    rgb(210 102 32 / 14%) 34%,
+    transparent 71%
+  );
+  opacity: 0.7;
+  animation: envelope-candle-glow var(--candle-flicker-duration) ease-in-out
+    infinite;
+}
+
+.envelope-candle-body {
+  position: relative;
+  width: 100%;
+  clip-path: inset(var(--candle-wick) 0 0);
+}
+
+.envelope-candle-flame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  clip-path: inset(0 0 calc(100% - var(--candle-wick)));
+  transform-origin: 51% var(--candle-wick);
+  animation: envelope-candle-flicker var(--candle-flicker-duration) ease-in-out
+    infinite;
+}
+
+@keyframes envelope-candle-flicker {
+  0%,
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  9% {
+    transform: scale(0.97, 1.05) skewX(3deg);
+    filter: brightness(1.07);
+  }
+  17% {
+    transform: scale(1.02, 0.98) skewX(-1deg);
+    filter: brightness(0.98);
+  }
+  32% {
+    transform: scale(0.94, 1.08) skewX(-6deg);
+    filter: brightness(1.13);
+  }
+  39% {
+    transform: scale(1.04, 0.93) skewX(2deg);
+    filter: brightness(0.92);
+  }
+  56% {
+    transform: scale(1.01, 1.02) skewX(4deg);
+    filter: brightness(1.02);
+  }
+  64% {
+    transform: scale(0.98, 0.96) skewX(-2deg);
+    filter: brightness(0.96);
+  }
+  81% {
+    transform: scale(0.96, 1.04) skewX(-3deg);
+    filter: brightness(1.05);
+  }
+}
+
+@keyframes envelope-candle-glow {
+  0%,
+  100% {
+    opacity: 0.7;
+  }
+  12% {
+    opacity: 0.81;
+  }
+  33% {
+    opacity: 0.93;
+  }
+  43% {
+    opacity: 0.59;
+  }
+  57% {
+    opacity: 0.77;
+  }
+  66% {
+    opacity: 0.66;
+  }
+  83% {
+    opacity: 0.83;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .envelope-seal {
+    transition: none;
+  }
+
+  .envelope-candle::before,
+  .envelope-candle-flame {
+    animation: none;
+  }
+}

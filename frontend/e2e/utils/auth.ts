@@ -20,6 +20,7 @@ async function registerAndLogin(
   email: string,
   fullName: string,
   password: string,
+  openWelcomeLetter = handleWelcomeLetter,
 ) {
   // Register the User
   logger.info(`[Auth] Registering user: ${email}`);
@@ -53,7 +54,7 @@ async function registerAndLogin(
   await page.getByTestId("login-submit-btn").click();
 
   await expect(page).toHaveURL(/\/escritoire/);
-  await handleWelcomeLetter(page);
+  await openWelcomeLetter(page);
   logger.info(`[Auth] Successfully authenticated ${email}`);
 }
 

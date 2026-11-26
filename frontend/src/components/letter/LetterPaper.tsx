@@ -10,6 +10,7 @@ interface LetterPaperProps {
   inkTransition: Transition;
   data: CanvasJSON | null;
   recipient?: string;
+  footerImageName?: string;
   onCanvasReady: () => void;
 }
 
@@ -24,21 +25,25 @@ export function LetterPaper({
   inkTransition,
   data,
   recipient,
+  footerImageName,
   onCanvasReady,
 }: LetterPaperProps) {
   return (
-    <motion.div
-      ref={paperRef}
+    <div
       className="max-w-180 my-8 mx-auto space-y-8 relative z-60"
-      initial={{ opacity: 0, x: 0, y: 0, scaleX: 1, scaleY: 1 }}
-      animate={controls}
-      style={{
-        transformOrigin: "top left",
-        pointerEvents: isRevealed ? "auto" : "none",
-      }}
-      aria-hidden={!isRevealed}
+      inert={!isRevealed}
     >
-      <div className="relative group perspective-1000">
+      <motion.div
+        ref={paperRef}
+        role="region"
+        aria-label="Letter"
+        tabIndex={-1}
+        className="relative group perspective-1000 outline-none"
+        initial={{ opacity: 0, x: 0, y: 0, scaleX: 1, scaleY: 1 }}
+        animate={controls}
+        style={{ transformOrigin: "top left" }}
+        aria-hidden={!isRevealed}
+      >
         <div className="absolute inset-0 bg-primary/5 blur-3xl rounded-full scale-75 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none" />
 
         <div className="bg-paper shadow-warm rounded-sm overflow-hidden">
@@ -51,17 +56,17 @@ export function LetterPaper({
             <ComposeCanvas
               readOnly
               initialData={data}
+              footerImageName={footerImageName}
               onReady={onCanvasReady}
             />
           </motion.div>
         </div>
-
-        {recipient && (
-          <p className="text-center sm:hidden text-xxs uppercase tracking-widester text-base-content/20 mt-8">
-            For {recipient}
-          </p>
-        )}
-      </div>
-    </motion.div>
+      </motion.div>
+      {isRevealed && recipient && (
+        <p className="text-center sm:hidden text-xxs uppercase tracking-widester text-base-content/20">
+          For {recipient}
+        </p>
+      )}
+    </div>
   );
 }

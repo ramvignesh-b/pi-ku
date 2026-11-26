@@ -211,42 +211,83 @@ i.font-serif,
 /* ---- Boot wave ---------------------------------------------------------- */
 
 .boot-wave {
+  --boot-write-duration: 1.6s;
   width: 240px;
-  height: 24px;
+  height: 36px;
   overflow: hidden;
 }
 
-.boot-wave svg {
+.boot-wave > svg {
   display: block;
-  transform-origin: center;
-  transition: transform 320ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.boot-wave path {
+.boot-wave-ink {
   fill: none;
   stroke: var(--color-primary);
   stroke-width: 1.5;
   stroke-linecap: round;
+  stroke-dasharray: 1;
   opacity: 0.7;
+  vector-effect: non-scaling-stroke;
+  transform-origin: 0 28px;
+  transition: transform 320ms cubic-bezier(0.4, 0, 0.2, 1);
+  animation: boot-wave-write var(--boot-write-duration) linear infinite;
+}
+
+.boot-wave-quill {
+  color: var(--color-primary);
+  offset-anchor: 0 0;
+  offset-rotate: 0deg;
+  transition: opacity 180ms ease-out;
+  animation: boot-quill-write var(--boot-write-duration) linear infinite;
 }
 
 .boot-wave-track {
-  animation: boot-wave-travel 2.2s linear infinite;
+  animation: boot-wave-repeat var(--boot-write-duration) linear infinite;
 }
 
-/* Ready: the wave stops travelling and flattens. With no percentage to report,
+/* Ready: the quill lifts off and the wave flattens. With no percentage to report,
    this is the only thing it ever says. */
-.boot-wave[data-settling] .boot-wave-track {
+.boot-wave[data-settling]
+  :is(.boot-wave-track, .boot-wave-ink, .boot-wave-quill) {
   animation-play-state: paused;
 }
 
-.boot-wave[data-settling] svg {
+.boot-wave[data-settling] .boot-wave-ink {
   transform: scaleY(0.04);
 }
 
-@keyframes boot-wave-travel {
+.boot-wave[data-settling] .boot-wave-quill {
+  opacity: 0;
+}
+
+@keyframes boot-wave-write {
+  from {
+    stroke-dashoffset: 1;
+  }
+  76%,
   to {
-    transform: translateX(-120px);
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes boot-quill-write {
+  from {
+    offset-distance: 0%;
+  }
+  76%,
+  to {
+    offset-distance: 100%;
+  }
+}
+
+@keyframes boot-wave-repeat {
+  from,
+  82% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
   }
 }
 
@@ -262,12 +303,17 @@ i.font-serif,
 @media (prefers-reduced-motion: reduce) {
   /* A still line, and a single frame of grain. The floor stays: pacing is not
      motion, and nobody asking for less animation asked for a faster boot. */
-  .boot-wave-track {
+  .boot-wave :is(.boot-wave-track, .boot-wave-ink, .boot-wave-quill) {
     animation: none;
   }
 
-  .boot-wave svg {
+  .boot-wave-ink {
     transform: scaleY(0.04);
+    transition: none;
+  }
+
+  .boot-wave-quill {
+    offset-distance: 100%;
     transition: none;
   }
 
