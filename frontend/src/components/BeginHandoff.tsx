@@ -23,17 +23,21 @@ export function BeginHandoff({
     const height = window.innerHeight;
     const scale = (Math.max(width, height) * 1.3) / orb.diameter;
     const open = { opacity: 0.36, transform: `scale(${scale})` };
+    const settle = destination
+      ? `translate(${destination.x - orb.origin.x}px, ${destination.y - orb.origin.y}px)`
+      : "";
     const lightFrames = destination
       ? [
           open,
+          { opacity: 0.16, transform: `${settle} scale(1.3)`, offset: 0.75 },
           {
             opacity: 0,
-            transform: `translate(${destination.x - orb.origin.x}px, ${destination.y - orb.origin.y}px) scale(0.72)`,
+            transform: `${settle} scale(0.72)`,
           },
         ]
       : [{ opacity: orb.opacity, transform: "scale(1)" }, open];
     const options: KeyframeAnimationOptions = {
-      duration: destination ? 1050 : 600,
+      duration: destination ? 1750 : 1050,
       easing: "ease-in-out",
       fill: "both",
     };
