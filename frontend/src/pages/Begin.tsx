@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { InfoIcon } from "@phosphor-icons/react";
 import axios from "axios";
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
@@ -27,13 +27,22 @@ const registerSchema = z
 
 type RegisterInputs = z.infer<typeof registerSchema>;
 
-export default function Begin() {
+export default function Begin({
+  onHandoffReady,
+}: {
+  onHandoffReady?: (heading: HTMLHeadingElement) => void;
+}) {
   const navigate = useNavigate();
+  const heading = useRef<HTMLHeadingElement>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
   const [saajanMessage, setSaajanMessage] = useState<string>(
     "I didn't think I'd be here either.\nAnd yet, here we are.",
   );
+
+  useLayoutEffect(() => {
+    if (heading.current) onHandoffReady?.(heading.current);
+  }, [onHandoffReady]);
 
   const {
     register,
@@ -79,10 +88,14 @@ export default function Begin() {
           onSubmit={handleSubmit(onSubmit)}
           className="card-body px-2 gap-4"
         >
-          <div className="card-title font-display text-xl md:text-2xl justify-center text-primary/80 tracking-tight whitespace-nowrap">
+          <h1
+            ref={heading}
+            tabIndex={-1}
+            className="card-title font-display text-xl md:text-2xl justify-center text-primary/80 tracking-tight whitespace-nowrap focus:outline-none"
+          >
             Create a<Logo type="logo" scale={0.6} />
             Account
-          </div>
+          </h1>
 
           {apiError && (
             <div className="alert alert-error text-xs py-2 rounded-md">

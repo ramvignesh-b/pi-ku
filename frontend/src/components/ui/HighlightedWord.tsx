@@ -26,7 +26,9 @@ export const HighlightedWord = ({
         opacity: useTransform(progress, [0, 0.55], [0.4, 1], {
           ease: easeInOut,
         }),
-        y: useTransform(progress, [0, 0.55], [2, 0], { ease: easeInOut }),
+        scale: useTransform(progress, [0, 0.55], [0.98, 1], {
+          ease: easeInOut,
+        }),
       }}
     >
       {children}

@@ -1,3 +1,22 @@
+.home-story {
+  --home-ink: color-mix(
+    in oklab,
+    var(--color-base-content) 78%,
+    var(--color-base-100)
+  );
+  --home-ink-muted: color-mix(
+    in oklab,
+    var(--home-ink) 83%,
+    var(--color-base-100)
+  );
+  --home-reflection-ink: color-mix(
+    in oklab,
+    var(--home-ink) 64%,
+    var(--color-neutral)
+  );
+  color: var(--home-ink);
+}
+
 .home-quill-cta::after {
   content: "";
   position: absolute;
@@ -8,6 +27,15 @@
     0 0 8px color-mix(in oklch, var(--color-primary) 38%, transparent),
     0 0 16px color-mix(in oklch, var(--color-primary) 20%, transparent);
   pointer-events: none;
+}
+
+@media (width < 48rem) {
+  .home-quill-cta::after {
+    inset: 9px 0;
+    border-color: color-mix(in oklch, var(--color-primary) 24%, transparent);
+    box-shadow: 0 0 6px
+      color-mix(in oklch, var(--color-primary) 14%, transparent);
+  }
 }
 
 .home-ready-cta {
@@ -37,7 +65,7 @@
   }
 
   .home-story:has(.home-ready-cta:hover) .home-ambient-orb {
-    scale: 2.35;
+    scale: 1.8;
     opacity: 0.25;
   }
 }

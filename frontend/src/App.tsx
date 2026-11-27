@@ -1,9 +1,11 @@
 import { lazy, Suspense, useEffect, useRef } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { BeginHandoff } from "./components/BeginHandoff";
 import { AutoRedirectRoute, ProtectedRoute } from "./components/RouteGuards";
 import SplashScreen from "./components/SplashScreen";
 import { ROUTES } from "./config/routes";
 import { useAuth } from "./hooks/useAuth";
+import { loadBegin, useBeginHandoff, warmBegin } from "./hooks/useBeginHandoff";
 import { useBootSplash } from "./hooks/useBootSplash";
 
 const Activate = lazy(() => import("./pages/Activate"));
@@ -12,7 +14,7 @@ const Quill = lazy(() => import("./pages/Quill"));
 const Home = lazy(() => import("./pages/Home"));
 const Unlock = lazy(() => import("./pages/Unlock"));
 const Letter = lazy(() => import("./pages/Letter"));
-const Begin = lazy(() => import("./pages/Begin"));
+const Begin = lazy(loadBegin);
 const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
 const About = lazy(() => import("./pages/About"));
 
@@ -27,6 +29,98 @@ function BootReady({ onReady }: { onReady: () => void }) {
   }, [onReady]);
 
   return null;
+}
+
+function AppRoutes({ boot }: { boot: ReturnType<typeof useBootSplash> }) {
+  const begin = useBeginHandoff();
+  return (
+    <>
+      <main
+        inert={!!begin.handoff}
+        className="relative overflow-clip min-h-screen min-w-screen flex items-center justify-center w-full bg-base-200 grain grain-front"
+      >
+        <Suspense
+          fallback={boot.visible || begin.handoff ? null : <SplashScreen />}
+        >
+          <BootReady onReady={boot.markReady} />
+          <Routes>
+            <Route
+              path={ROUTES.HOME}
+              element={
+                <AutoRedirectRoute>
+                  <Home
+                    onBegin={begin.start}
+                    onBeginIntent={warmBegin}
+                    beginPending={!!begin.handoff}
+                    beginFailed={begin.failed}
+                    hideOrb={!!begin.handoff?.orb}
+                  />
+                </AutoRedirectRoute>
+              }
+            />
+
+            <Route
+              path={ROUTES.BEGIN}
+              element={
+                <AutoRedirectRoute>
+                  <Begin
+                    onHandoffReady={
+                      begin.handoff ? begin.onBeginReady : undefined
+                    }
+                  />
+                </AutoRedirectRoute>
+              }
+            />
+            <Route
+              path={ROUTES.UNLOCK}
+              element={
+                <AutoRedirectRoute>
+                  <Unlock />
+                </AutoRedirectRoute>
+              }
+            />
+            <Route
+              path={ROUTES.VERIFY_EMAIL}
+              element={
+                <AutoRedirectRoute>
+                  <VerifyEmail />
+                </AutoRedirectRoute>
+              }
+            />
+            <Route
+              path={ROUTES.ACTIVATE}
+              element={
+                <AutoRedirectRoute>
+                  <Activate />
+                </AutoRedirectRoute>
+              }
+            />
+
+            <Route
+              path={ROUTES.ESCRITOIRE}
+              element={
+                <ProtectedRoute>
+                  <Escritoire />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path={ROUTES.WRITE}
+              element={
+                <ProtectedRoute>
+                  <Quill />
+                </ProtectedRoute>
+              }
+            />
+            <Route path={ROUTES.LETTER} element={<Letter />} />
+            <Route path={ROUTES.ABOUT} element={<About />} />
+            <Route path="*" element={<Navigate to={ROUTES.HOME} replace />} />
+          </Routes>
+        </Suspense>
+      </main>
+      <BeginHandoff {...begin} />
+    </>
+  );
 }
 
 export default function App() {
@@ -44,77 +138,7 @@ export default function App() {
     <>
       {!isInitializing && (
         <BrowserRouter>
-          <main className="relative overflow-clip min-h-screen min-w-screen flex items-center justify-center w-full bg-base-200 grain grain-front">
-            <Suspense fallback={boot.visible ? null : <SplashScreen />}>
-              <BootReady onReady={boot.markReady} />
-              <Routes>
-                <Route
-                  path={ROUTES.HOME}
-                  element={
-                    <AutoRedirectRoute>
-                      <Home />
-                    </AutoRedirectRoute>
-                  }
-                />
-
-                <Route
-                  path={ROUTES.BEGIN}
-                  element={
-                    <AutoRedirectRoute>
-                      <Begin />
-                    </AutoRedirectRoute>
-                  }
-                />
-                <Route
-                  path={ROUTES.UNLOCK}
-                  element={
-                    <AutoRedirectRoute>
-                      <Unlock />
-                    </AutoRedirectRoute>
-                  }
-                />
-                <Route
-                  path={ROUTES.VERIFY_EMAIL}
-                  element={
-                    <AutoRedirectRoute>
-                      <VerifyEmail />
-                    </AutoRedirectRoute>
-                  }
-                />
-                <Route
-                  path={ROUTES.ACTIVATE}
-                  element={
-                    <AutoRedirectRoute>
-                      <Activate />
-                    </AutoRedirectRoute>
-                  }
-                />
-
-                <Route
-                  path={ROUTES.ESCRITOIRE}
-                  element={
-                    <ProtectedRoute>
-                      <Escritoire />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path={ROUTES.WRITE}
-                  element={
-                    <ProtectedRoute>
-                      <Quill />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route path={ROUTES.LETTER} element={<Letter />} />
-                <Route path={ROUTES.ABOUT} element={<About />} />
-                <Route
-                  path="*"
-                  element={<Navigate to={ROUTES.HOME} replace />}
-                />
-              </Routes>
-            </Suspense>
-          </main>
+          <AppRoutes boot={boot} />
         </BrowserRouter>
       )}
 

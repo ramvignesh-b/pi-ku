@@ -1,6 +1,6 @@
 import { FeatherIcon, InfoIcon } from "@phosphor-icons/react";
 import "./Home.css";
-import { ReactLenis } from "lenis/react";
+import { type LenisRef, ReactLenis } from "lenis/react";
 import {
   animate,
   easeInOut,
@@ -14,7 +14,7 @@ import {
   useScroll,
   useTransform,
 } from "motion/react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import letterSample from "../assets/screenshots/letter.webp";
 import Logo from "../components/Logo";
@@ -64,26 +64,44 @@ const FLAP_CLOSE_START = 0.462;
 const FLAP_CLOSED = 0.484;
 const TITLE_EXIT = 0.105;
 const TITLE_ZOOM_RANGE = [0.005, 0.06, TITLE_EXIT];
+const OPENING_DURATION = 7.4;
+const OPENING_SCROLL_END = 0.064;
 const FUTURE_ME_START = 0.6425;
 const BURN_START = 0.78;
 const BURN_FADE_START = 0.9;
+const BURN_COMPLETE = 0.92;
 const BURN_END = 0.94;
 const OUTRO_START = 0.945;
+const WIDE_VIEWPORT = "(min-width: 48rem)";
 
-function useScene(scroll: MotionValue<number>, start: number, end: number) {
+function useScene(
+  scroll: MotionValue<number>,
+  start: number,
+  end: number,
+  {
+    fadeStart,
+    reduceMotion,
+  }: { fadeStart: number; reduceMotion: boolean | null },
+) {
   const progress = useTransform(scroll, [start, end], [0, 1]);
-  const phases = [0, 0.24, 0.76, 1];
+  const phases = [0, 0.24, fadeStart, 1];
   const transition = { ease: easeInOut };
   return {
     progress,
     style: {
       opacity: useTransform(progress, phases, [0, 1, 1, 0], transition),
-      y: useTransform(progress, phases, [25, 0, 0, -20], transition),
-      scale: useTransform(progress, phases, [0.98, 1, 1, 0.98], transition),
+      scale: useTransform(
+        progress,
+        phases,
+        reduceMotion ? [1, 1, 1, 1] : [0.95, 1, 1, 0.99],
+        transition,
+      ),
       filter: useTransform(
         progress,
         phases,
-        ["blur(14px)", "blur(0px)", "blur(0px)", "blur(6px)"],
+        reduceMotion
+          ? ["none", "none", "none", "none"]
+          : ["blur(8px)", "blur(0px)", "blur(0px)", "blur(4px)"],
         transition,
       ),
     },
@@ -103,25 +121,21 @@ function mixOrbColors(
   return `color-mix(in oklab, ${from}, ${to} ${percentage}%)`;
 }
 
-function useOpeningReveal(
-  scroll: MotionValue<number>,
-  duration: number,
-  delay: number,
-) {
+function useOpeningReveal(scroll: MotionValue<number>) {
   const timed = useMotionValue(0);
-  const scrolled = useTransform(scroll, [0, 0.032], [0, 1], {
-    ease: easeInOut,
-  });
+  const scrolled = useTransform(scroll, [0, OPENING_SCROLL_END], [0, 1]);
   const progress = useTransform(() => Math.max(timed.get(), scrolled.get()));
   useEffect(() => {
     const animation = animate(timed, 1, {
-      duration,
-      delay,
-      ease: [0.25, 0.65, 0.35, 1],
+      duration: OPENING_DURATION,
+      ease: "linear",
     });
     return () => animation.stop();
-  }, [timed, duration, delay]);
-  return progress;
+  }, [timed]);
+  return {
+    headline: useTransform(progress, [0.06, 0.37], [0, 1], { ease: easeOut }),
+    unsaid: useTransform(progress, [0.45, 0.92], [0, 1], { ease: easeInOut }),
+  };
 }
 
 function useScrollEntrance(
@@ -162,13 +176,38 @@ function useScrollEntrance(
   return progress;
 }
 
-export default function Home() {
-  const sectionContainer1 = useRef<HTMLDivElement>(null);
-  const reduceMotion = useReducedMotion();
+interface HomeProps {
+  onBegin: (trigger: HTMLButtonElement, orb: HTMLDivElement | null) => void;
+  onBeginIntent: () => void;
+  beginPending: boolean;
+  beginFailed: boolean;
+  hideOrb: boolean;
+}
 
-  const { scrollYProgress } = useScroll({
+export default function Home({
+  onBegin,
+  onBeginIntent,
+  beginPending,
+  beginFailed,
+  hideOrb,
+}: HomeProps) {
+  const sectionContainer1 = useRef<HTMLDivElement>(null);
+  const orbRef = useRef<HTMLDivElement>(null);
+  const lenisRef = useRef<LenisRef>(null);
+  const warmedBegin = useRef(false);
+  const reduceMotion = useReducedMotion();
+  const [isWide, setIsWide] = useState(() => matchMedia(WIDE_VIEWPORT).matches);
+  const captionMotion = { fadeStart: isWide ? 0.76 : 0.85, reduceMotion };
+
+  const { scrollYProgress: measuredProgress } = useScroll({
     target: sectionContainer1,
   });
+  // Use the same measured progress for visuals and cues. A native view
+  // timeline can place opacity and transforms ahead of the scripted beats.
+  const scrollYProgress = useTransform(
+    measuredProgress,
+    (progress) => progress,
+  );
 
   const captionRef = useRef<HTMLHeadingElement>(null);
   const envelopeRef = useRef<HTMLDivElement>(null);
@@ -188,6 +227,8 @@ export default function Home() {
     if (!(caption && envelope && envelopeFront && stage && viewport)) return;
 
     const measure = () => {
+      const wide = matchMedia(WIDE_VIEWPORT).matches;
+      setIsWide(wide);
       const viewportTop = viewport.getBoundingClientRect().top;
       const captionBottom =
         stage.getBoundingClientRect().top -
@@ -203,7 +244,7 @@ export default function Home() {
       const paperToEnvelope = envelopeWidth / PAPER_WIDTH;
       const frameBelowPaper = PHONE_FRAME_HEIGHT - PAPER_TOP_IN_PHONE;
       const scale = Math.min(
-        matchMedia("(min-width: 768px)").matches ? 0.8 : 0.6,
+        wide ? 0.8 : 0.6,
         Math.max(1, viewport.clientWidth - 32) / envelopeWidth,
         availableHeight / (frameBelowPaper * paperToEnvelope),
       );
@@ -237,6 +278,7 @@ export default function Home() {
     };
     const observer = new ResizeObserver(measure);
     observer.observe(caption);
+    observer.observe(viewport);
     observer.observe(document.documentElement);
     window.addEventListener("resize", measure);
     measure();
@@ -256,7 +298,7 @@ export default function Home() {
   const phoneReveal = useScrollEntrance(scrollYProgress, {
     start: 0.31,
     delay: 0.5,
-    duration: 1.2,
+    duration: 1.45,
     reduceMotion,
   });
   // Finish the entrance before the paper lifts, even if the reader skips ahead.
@@ -341,21 +383,29 @@ export default function Home() {
       paperScale.get();
     return `inset(0 0 ${Math.max(0, PAPER_HEIGHT - visible)}px 0)`;
   });
-  const okay = useScene(scrollYProgress, 0.08, 0.205);
-  const safe = useScene(scrollYProgress, 0.18, 0.29);
+  const okay = useScene(scrollYProgress, 0.08, 0.205, captionMotion);
+  const safe = useScene(scrollYProgress, 0.18, 0.29, captionMotion);
   const safeEmphasis = useTransform(safe.progress, [0.14, 0.74], [0, 1]);
-  const letters = useScene(scrollYProgress, 0.28, 0.44);
-  const captionY = useTransform(
-    () => letters.style.y.get() + captionShift.get(),
+  const letters = useScene(
+    scrollYProgress,
+    0.28,
+    isWide ? 0.44 : INSERT_END,
+    captionMotion,
   );
-  const seal = useScene(scrollYProgress, INSERT_END, 0.56);
+  const seal = useScene(scrollYProgress, INSERT_END, 0.56, captionMotion);
   const sealEmphasis = useTransform(
     scrollYProgress,
     [FLAP_CLOSED - 0.009, FLAP_CLOSED + 0.055],
     [0, 1],
   );
-  const dear = useScene(scrollYProgress, 0.53, 0.655);
-  const dearEmphasis = useTransform(dear.progress, [0.12, 0.75], [0, 1]);
+  const secureUnderline = useTransform(scrollYProgress, [0.474, 0.512], [0, 1]);
+  const privateUnderline = useTransform(
+    scrollYProgress,
+    [0.499, 0.544],
+    [0, 1],
+  );
+  const dearProgress = useTransform(scrollYProgress, [0.53, 0.655], [0, 1]);
+  const dearEmphasis = useTransform(dearProgress, [0.12, 0.75], [0, 1]);
   const flapAngle = useTransform(
     scrollYProgress,
     [FLAP_CLOSE_START, FLAP_CLOSED],
@@ -368,20 +418,25 @@ export default function Home() {
     reduceMotion ? (angle >= 90 ? "180deg" : "0deg") : `${angle}deg`,
   );
   const flapLayer = useTransform(flapAngle, (angle) => (angle >= 90 ? 1 : 4));
-  const flipAngle = useTransform(dear.progress, [0.14, 0.49], [180, 0], {
+  const flipAngle = useTransform(dearProgress, [0.14, 0.49], [180, 0], {
     ease: easeInOut,
   });
   const flipRotation = useTransform(flipAngle, (angle) =>
     reduceMotion ? (angle >= 90 ? "180deg" : "0deg") : `${angle}deg`,
   );
-  const address = useScene(scrollYProgress, 0.53, 0.755);
-  const future = useScene(scrollYProgress, 0.63, 0.755);
-  const futureEmphasis = useTransform(future.progress, [0.08, 0.74], [0, 1]);
-  const burn = useScene(scrollYProgress, 0.73, 0.905);
+  const address = useScene(scrollYProgress, 0.53, 0.755, captionMotion);
+  const futureProgress = useTransform(scrollYProgress, [0.63, 0.755], [0, 1]);
+  const futureEmphasis = useTransform(futureProgress, [0.08, 0.74], [0, 1]);
+  const burn = useScene(
+    scrollYProgress,
+    0.73,
+    isWide ? 0.905 : BURN_END,
+    captionMotion,
+  );
   const burnEmphasis = useTransform(burn.progress, [0.14, 0.72], [0, 1]);
   const burnProgress = useTransform(
     scrollYProgress,
-    [BURN_START, 0.92],
+    [BURN_START, BURN_COMPLETE],
     [0, 1],
   );
   const earlierOrbColor = useTransform(scrollYProgress, (progress) => {
@@ -430,15 +485,18 @@ export default function Home() {
   );
   const outroProgress = useScrollEntrance(scrollYProgress, {
     start: OUTRO_START,
-    delay: 0.8,
-    duration: 2.55,
+    delay: 0.45,
+    duration: 6,
     reduceMotion,
   });
-  const outroEntry = useTransform(outroProgress, [0, 0.64], [0, 1], {
+  const outroEntry = useTransform(outroProgress, [0, 0.46], [0, 1], {
+    ease: easeOut,
+  });
+  const outroEmphasis = useTransform(outroProgress, [0.52, 0.96], [0, 1]);
+  const outroPhraseOpacity = useTransform(outroEmphasis, [0, 0.62], [0, 1], {
     ease: easeInOut,
   });
-  const outroEmphasis = useTransform(outroProgress, [0.22, 0.89], [0, 1]);
-  const outroActions = useTransform(outroProgress, [0.69, 1], [0, 1], {
+  const outroActions = useTransform(outroProgress, [0.8, 1], [0, 1], {
     ease: easeInOut,
   });
   const ctaScroll = useTransform(scrollYProgress, [0.96, 0.995], [0, 1], {
@@ -456,13 +514,21 @@ export default function Home() {
   const saajanOpacity = useTransform(
     () => saajanScroll.get() * outroActions.get(),
   );
-  const opening = useOpeningReveal(scrollYProgress, 6.8, 0);
-  const headline = useOpeningReveal(scrollYProgress, 5.5, 0.4);
-  const unsaid = useOpeningReveal(scrollYProgress, 5.8, 2);
+  const { headline, unsaid } = useOpeningReveal(scrollYProgress);
   const [isFutureMe, setIsFutureMe] = useState(false);
   useMotionValueEvent(scrollYProgress, "change", (value) => {
     setIsFutureMe(value >= FUTURE_ME_START);
+    if (value >= OUTRO_START && !warmedBegin.current) {
+      warmedBegin.current = true;
+      onBeginIntent();
+    }
   });
+  useLayoutEffect(() => {
+    const lenis = lenisRef.current?.lenis;
+    if (!(beginPending && lenis)) return;
+    lenis.stop();
+    return () => lenis.start();
+  }, [beginPending]);
   const navigate = useNavigate();
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -470,34 +536,39 @@ export default function Home() {
 
   return (
     <ReactLenis
+      ref={lenisRef}
       root
       options={{ lerp: 0.04, wheelMultiplier: 1, smoothWheel: true }}
     >
       <section
         ref={sectionContainer1}
-        className="home-story relative w-full h-[1360vh] bg-base-100 font-serif text-neutral-content/90"
+        className="home-story relative w-full h-[max(1740svh,670rem)] md:h-[1540vh] bg-base-100 font-serif"
       >
         <Link
           to={ROUTES.UNLOCK}
           aria-label="Unlock"
-          className="home-quill-cta group btn btn-ghost btn-lg absolute top-4 right-4 z-40 h-14 min-w-14 gap-0 rounded-full px-0 text-primary/24! no-underline! duration-700 ease-in-out hover:text-primary! focus-visible:text-primary! motion-reduce:transition-none md:top-6 md:right-6"
+          className="home-quill-cta group btn btn-ghost absolute top-2 right-3 z-40 h-11 min-w-11 gap-1 rounded-full px-2 text-primary/62! no-underline! duration-700 ease-in-out hover:text-primary! focus-visible:text-primary! motion-reduce:transition-none md:btn-lg md:top-6 md:right-6 md:h-14 md:min-w-14 md:gap-0 md:px-0 md:text-primary/24!"
         >
-          <span className="grid size-14 shrink-0 place-items-center">
-            <FeatherIcon aria-hidden="true" size={32} weight="duotone" />
+          <span className="grid size-5 shrink-0 place-items-center md:size-14">
+            <FeatherIcon
+              aria-hidden="true"
+              className="size-4 md:size-8"
+              weight="duotone"
+            />
           </span>
           <span
             aria-hidden="true"
-            className="grid grid-cols-[0fr] opacity-0 transition-[grid-template-columns,opacity] duration-700 ease-in-out group-hover:grid-cols-[1fr] group-hover:opacity-100 group-focus-visible:grid-cols-[1fr] group-focus-visible:opacity-100 motion-reduce:transition-none"
+            className="grid grid-cols-[1fr] ease-in-out md:grid-cols-[0fr] md:opacity-0 md:transition-[grid-template-columns,opacity] md:duration-700 md:group-hover:grid-cols-[1fr] md:group-hover:opacity-100 md:group-focus-visible:grid-cols-[1fr] md:group-focus-visible:opacity-100 motion-reduce:transition-none"
           >
-            <span className="overflow-hidden whitespace-nowrap font-hand">
-              <span className="pr-5">Unlock</span>
+            <span className="overflow-hidden whitespace-nowrap font-hand text-xs font-normal md:[font-size:inherit] md:[font-weight:inherit]">
+              <span className="md:pr-5">Unlock</span>
             </span>
           </span>
         </Link>
-        <div className="sticky top-0 h-screen w-full flex flex-col items-center justify-center overflow-hidden">
+        <div className="sticky top-0 h-dvh md:h-screen w-full flex flex-col items-center justify-center overflow-hidden">
           {/* Beat 1: Initial Header with Mount Entrance + Scroll Zoom */}
           <motion.div
-            className="absolute flex flex-col items-center justify-center pointer-events-none"
+            className="absolute flex flex-col items-center justify-center text-center pointer-events-none motion-reduce:transform-none! motion-reduce:filter-none!"
             style={{
               display: useTransform(scrollYProgress, (value) =>
                 value >= TITLE_EXIT ? "none" : "flex",
@@ -525,50 +596,34 @@ export default function Home() {
               ),
             }}
           >
-            <motion.div
-              className="flex flex-col items-center justify-center text-center"
+            <motion.h1
               style={{
-                opacity: opening,
-                scale: useTransform(opening, [0, 1], [0.9, 1]),
-                y: useTransform(opening, [0, 1], [16, 0]),
+                opacity: headline,
+                scale: useTransform(headline, [0, 1], [0.94, 1]),
                 filter: useTransform(
-                  opening,
+                  headline,
                   [0, 1],
-                  ["blur(16px)", "blur(0px)"],
+                  ["blur(8px)", "blur(0px)"],
                 ),
               }}
+              className="text-4xl md:text-6xl px-6 text-(--home-reflection-ink) tracking-normal word-spacing-editorial motion-reduce:transform-none! motion-reduce:filter-none!"
             >
-              <motion.h1
-                style={{
-                  opacity: headline,
-                  y: useTransform(headline, [0, 1], [16, 0]),
-                  scale: useTransform(headline, [0, 1], [0.9, 1]),
-                  filter: useTransform(
-                    headline,
-                    [0, 1],
-                    ["blur(16px)", "blur(0px)"],
-                  ),
-                }}
-                className="text-neutral text-4xl md:text-6xl text-center px-6 tracking-normal word-spacing-editorial"
-              >
-                You've been carrying something
-              </motion.h1>
-              <motion.h2
-                style={{
-                  opacity: unsaid,
-                  y: useTransform(unsaid, [0, 1], [16, 0]),
-                  scale: useTransform(unsaid, [0, 1], [0.92, 1]),
-                  filter: useTransform(
-                    unsaid,
-                    [0, 1],
-                    ["blur(12px)", "blur(0px)"],
-                  ),
-                }}
-                className="text-primary text-5xl md:text-7xl mt-4 italic font-display font-light tracking-normal"
-              >
-                unsaid
-              </motion.h2>
-            </motion.div>
+              You've been carrying something
+            </motion.h1>
+            <motion.h2
+              style={{
+                opacity: unsaid,
+                scale: useTransform(unsaid, [0, 1], [0.96, 1]),
+                filter: useTransform(
+                  unsaid,
+                  [0, 1],
+                  ["blur(6px)", "blur(0px)"],
+                ),
+              }}
+              className="text-primary text-5xl md:text-7xl mt-4 not-italic font-display font-extralight tracking-normal motion-reduce:transform-none! motion-reduce:filter-none!"
+            >
+              unsaid
+            </motion.h2>
           </motion.div>
 
           {/* Beat 2: "and that's okay..." */}
@@ -576,7 +631,7 @@ export default function Home() {
             className="absolute text-center px-6 pointer-events-none"
             style={okay.style}
           >
-            <div className="mt-6 text-4xl md:text-6xl text-base-content/60 italic font-serif tracking-normal word-spacing-editorial">
+            <div className="mt-6 text-4xl md:text-6xl text-(--home-ink-muted) italic font-serif tracking-normal word-spacing-editorial">
               and that's okay...
             </div>
           </motion.div>
@@ -587,7 +642,7 @@ export default function Home() {
             style={safe.style}
           >
             <Logo type="logo" scale={1.5} ul={true} />
-            <motion.div className="font-serif italic font-light mt-6 text-4xl md:text-6xl text-base-content/70 tracking-normal word-spacing-editorial">
+            <motion.div className="font-serif italic font-light mt-6 text-4xl md:text-6xl tracking-normal word-spacing-editorial">
               is a{" "}
               <span className="relative inline-block mx-0.5">
                 <HighlightedWord
@@ -603,7 +658,7 @@ export default function Home() {
               </span>
               ,<br />
               <motion.span
-                className="text-2xl md:text-5xl font-hand tracking-widest italic text-base-content/70"
+                className="text-2xl md:text-5xl font-hand tracking-widest not-italic text-(--home-ink-muted)"
                 style={{
                   opacity: useTransform(safe.progress, [0.26, 0.7], [0, 0.9], {
                     ease: easeInOut,
@@ -620,7 +675,7 @@ export default function Home() {
             {/* Beat 4: "pen down your unsaid words into letters." */}
             <motion.h2
               ref={captionRef}
-              style={{ ...letters.style, y: captionY }}
+              style={{ ...letters.style, y: captionShift }}
               className="absolute top-[calc(50%-min(13vh,112px))] -translate-y-1/2 text-4xl md:text-6xl text-center px-10 leading-tight tracking-normal word-spacing-editorial"
             >
               pen down your unsaid words into{" "}
@@ -653,7 +708,7 @@ export default function Home() {
                   secure
                 </HighlightedWord>
                 <WavyUnderline
-                  progress={sealEmphasis}
+                  progress={secureUnderline}
                   color="var(--color-success)"
                 />
               </span>{" "}
@@ -666,7 +721,7 @@ export default function Home() {
                   private
                 </HighlightedWord>
                 <WavyUnderline
-                  progress={sealEmphasis}
+                  progress={privateUnderline}
                   color="var(--color-info)"
                 />
               </span>
@@ -676,11 +731,11 @@ export default function Home() {
             {/* Beat 6: "send it to someone dear" (Line 1) / "or yourself in the future." (Line 2) */}
             <motion.h2
               style={address.style}
-              className="absolute text-4xl md:text-6xl text-center px-6 md:px-10 leading-tight max-w-4xl tracking-normal word-spacing-editorial"
+              className="absolute text-[clamp(1.875rem,8vw,2.25rem)] md:text-6xl text-center px-6 md:px-10 leading-tight max-w-4xl tracking-normal word-spacing-editorial"
             >
               <span className="inline-block md:whitespace-nowrap">
                 send it to{" "}
-                <span className="relative inline-block mx-0.5">
+                <span className="relative inline-block mx-0.5 whitespace-nowrap">
                   <HighlightedWord
                     progress={dearEmphasis}
                     className="font-display text-accent"
@@ -694,30 +749,47 @@ export default function Home() {
                 </span>
               </span>
               <motion.span
-                className="block mt-2"
+                className="block mt-4 sm:mt-2 motion-reduce:transform-none!"
                 style={{
-                  opacity: useTransform(future.progress, [0, 0.32], [0, 1], {
+                  opacity: useTransform(futureProgress, [0, 0.32], [0, 1], {
                     ease: easeInOut,
                   }),
-                  y: useTransform(future.progress, [0, 0.32], [14, 0], {
+                  scale: useTransform(futureProgress, [0, 0.32], [0.96, 1], {
                     ease: easeInOut,
                   }),
                 }}
               >
-                <span className="font-display text-neutral">or </span>
-                <span className="relative inline-block mx-0.5 md:whitespace-nowrap">
-                  <HighlightedWord
-                    progress={futureEmphasis}
-                    className="font-display text-success"
-                  >
-                    yourself in the future
-                  </HighlightedWord>
-                  <WavyUnderline
-                    progress={futureEmphasis}
-                    color="var(--color-success)"
-                  />
+                <span className="inline-block whitespace-nowrap">
+                  <span className="font-serif text-(--home-ink-muted)">or</span>{" "}
+                  <span className="relative sm:inline-block sm:mx-0.5">
+                    <HighlightedWord
+                      progress={futureEmphasis}
+                      className="font-display text-success"
+                    >
+                      yourself
+                    </HighlightedWord>{" "}
+                    <br className="sm:hidden" />
+                    <span className="relative inline-block">
+                      <HighlightedWord
+                        progress={futureEmphasis}
+                        className="font-display text-success"
+                      >
+                        in the future
+                      </HighlightedWord>
+                      <WavyUnderline
+                        progress={futureEmphasis}
+                        color="var(--color-success)"
+                        className="sm:hidden"
+                      />
+                    </span>
+                    <WavyUnderline
+                      progress={futureEmphasis}
+                      color="var(--color-success)"
+                      className="hidden sm:block"
+                    />
+                  </span>
+                  <span>.</span>
                 </span>
-                .
               </motion.span>
             </motion.h2>
 
@@ -744,41 +816,48 @@ export default function Home() {
 
             {/* Beat 8: Outro text */}
             <motion.h2
-              className="italic absolute text-4xl md:text-6xl text-center px-10 leading-tight text-neutral-content/60 tracking-normal word-spacing-editorial"
+              className="italic absolute text-4xl md:text-6xl text-center px-10 leading-tight text-(--home-reflection-ink) tracking-normal word-spacing-editorial motion-reduce:transform-none! motion-reduce:filter-none!"
               style={{
                 opacity: outroEntry,
-                y: useTransform(outroEntry, [0, 1], [30, 0]),
-                scale: useTransform(outroEntry, [0, 1], [0.98, 1]),
+                scale: useTransform(outroEntry, [0, 1], [0.94, 1]),
                 filter: useTransform(
                   outroEntry,
                   [0, 1],
-                  ["blur(14px)", "blur(0px)"],
+                  ["blur(8px)", "blur(0px)"],
                 ),
               }}
             >
               You've been carrying it{" "}
-              <span className="relative inline-block whitespace-nowrap">
-                <HighlightedWord
-                  progress={outroEmphasis}
-                  className="font-display text-primary not-italic"
-                >
-                  long enough
-                </HighlightedWord>
-                <WavyUnderline
-                  progress={outroEmphasis}
-                  color="var(--color-primary)"
-                  className="translate-y-1 md:translate-y-1.5"
-                />
-              </span>
-              .
+              <motion.span
+                className="inline-block whitespace-nowrap motion-reduce:transform-none!"
+                style={{
+                  opacity: outroPhraseOpacity,
+                  scale: useTransform(outroPhraseOpacity, [0, 1], [0.96, 1]),
+                }}
+              >
+                <span className="relative inline-block">
+                  <HighlightedWord
+                    progress={outroEmphasis}
+                    className="font-display text-primary not-italic"
+                  >
+                    long enough
+                  </HighlightedWord>
+                  <WavyUnderline
+                    progress={outroEmphasis}
+                    color="var(--color-primary)"
+                    className="translate-y-1 md:translate-y-1.5"
+                  />
+                </span>
+                .
+              </motion.span>
             </motion.h2>
 
             {/* CTA Action Buttons */}
             <motion.div
-              className="z-100 absolute -bottom-12 md:bottom-0 font-hand flex flex-wrap md:flex-nowrap gap-4 md:gap-12 justify-center pointer-events-auto"
+              className="z-100 absolute -bottom-12 md:bottom-0 font-hand flex flex-wrap md:flex-nowrap gap-4 md:gap-12 justify-center pointer-events-auto motion-reduce:transform-none!"
               style={{
                 opacity: ctaProgress,
-                y: useTransform(ctaProgress, [0, 1], [40, 0]),
+                scale: useTransform(ctaProgress, [0, 1], [0.96, 1]),
                 visibility: useTransform(ctaProgress, (value) =>
                   value > 0 ? "visible" : "hidden",
                 ),
@@ -789,16 +868,34 @@ export default function Home() {
                 type="button"
                 onClick={() => navigate(ROUTES.ABOUT, { replace: true })}
               >
-                <InfoIcon className="text-primary" size={24} />
+                <InfoIcon
+                  aria-hidden="true"
+                  className="size-4.5 shrink-0 text-primary md:size-6"
+                />
                 Tell me More
               </button>
               <button
                 className="home-ready-cta btn rounded-full btn-primary btn-wide md:btn-xl motion-safe:hover:-translate-y-1 transition-all duration-900 ease-in-out motion-reduce:transition-none cursor-pointer"
                 type="button"
-                onClick={() => navigate(ROUTES.BEGIN, { replace: true })}
+                onClick={(event) =>
+                  onBegin(event.currentTarget, orbRef.current)
+                }
               >
+                <FeatherIcon
+                  aria-hidden="true"
+                  className="size-4.5 shrink-0 md:size-6"
+                  weight="duotone"
+                />
                 I'm ready
               </button>
+              {beginFailed && (
+                <p
+                  role="status"
+                  className="absolute inset-x-0 top-full mt-2 text-center font-serif text-xs text-(--home-ink)"
+                >
+                  Couldn’t open Begin. Try again.
+                </p>
+              )}
             </motion.div>
           </div>
 
@@ -813,7 +910,12 @@ export default function Home() {
                   scale: envelopeScale,
                   opacity: useTransform(
                     scrollYProgress,
-                    [0.28, 0.33, BURN_FADE_START, BURN_END],
+                    [
+                      0.28,
+                      0.33,
+                      isWide ? BURN_FADE_START : BURN_COMPLETE,
+                      BURN_END,
+                    ],
                     [0, 1, 1, 0],
                     { ease: easeInOut },
                   ),
@@ -916,10 +1018,12 @@ export default function Home() {
 
             {/* Ambient Glowing Color-Morphing Orb (On top of envelope) */}
             <motion.div
-              className="home-ambient-orb z-20 size-64 shrink-0 rounded-full blur-3xl pointer-events-none"
+              ref={orbRef}
+              className="home-ambient-orb z-20 size-[clamp(4.75rem,29vw,9rem)] md:size-52 shrink-0 rounded-full blur-2xl md:blur-3xl pointer-events-none"
               data-future-me={isFutureMe || undefined}
               style={
                 {
+                  visibility: hideOrb ? "hidden" : undefined,
                   "--orb-earlier-color": earlierOrbColor,
                   "--orb-future-color": futureOrbColor,
                   scale: useTransform(
