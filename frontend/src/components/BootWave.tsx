@@ -23,7 +23,13 @@ export default function BootWave({ settling }: { settling: boolean }) {
             style={{ offsetPath: `path("${WAVE}")` }}
           >
             {/* Place the rounded end of the feather shaft at the path origin. */}
-            <FeatherIcon x={-2.875} y={-20.125} size={23} weight="duotone" />
+            <FeatherIcon
+              x={-3.25}
+              y={-22.75}
+              size={26}
+              opacity={0.85}
+              weight="duotone"
+            />
           </g>
         </g>
       </svg>
